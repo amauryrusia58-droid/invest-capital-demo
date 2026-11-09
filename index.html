@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#071321">
+<title>Invest Capital — Simulador educativo</title>
+<style>
+:root{--bg:#071321;--panel:#0d1e30;--panel2:#10263b;--line:#20384f;--text:#eaf2fb;--muted:#91a7bc;--cyan:#37d6c0;--blue:#4da3ff;--gold:#e8bd67;--red:#ff737d;--green:#55d6a3}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0%,#102b42 0,#071321 48%);color:var(--text);font:15px/1.5 Inter,system-ui,Segoe UI,Arial,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);background:#071321eF;position:sticky;top:0;z-index:4;backdrop-filter:blur(12px)}
+.nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px}.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--cyan),var(--blue));display:grid;place-items:center;color:#061522;font-weight:900}
+.pill{font-size:11px;font-weight:800;letter-spacing:.7px;padding:5px 9px;border-radius:30px;color:#ffd88c;background:#49391d;border:1px solid #80642e}
+.demo-banner{margin:18px 0 22px;padding:12px 15px;border:1px solid #8b6b2c;background:#2a2418;border-radius:12px;color:#ffe2a8;font-size:13px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin:24px 0}.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+h1{font-size:clamp(27px,4vw,38px);margin:5px 0 4px;line-height:1.12}h2{font-size:17px;margin:0 0 16px}h3{font-size:14px;margin:0 0 9px}.sub{color:var(--muted);margin:0}
+.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,1fr)}.main{grid-template-columns:1.35fr .85fr;margin-top:16px}.lower{grid-template-columns:1fr 1fr;margin:16px 0 35px}
+.card{background:linear-gradient(160deg,#10243a,#0b1a2a);border:1px solid var(--line);border-radius:16px;padding:19px;box-shadow:0 12px 30px #0002}
+.stat-label{color:var(--muted);font-size:12px}.stat-value{font-size:25px;font-weight:800;margin-top:5px;letter-spacing:-.5px}.stat-note{font-size:11px;color:var(--muted);margin-top:3px}
+.value-cyan{color:var(--cyan)}.value-gold{color:var(--gold)}.value-red{color:var(--red)}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 16px}.tab{background:#10263b;color:#b9c9d8;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:inherit;font-size:12px;cursor:pointer}.tab.active{background:#123c46;color:#a8fff0;border-color:#247f78}
+label{display:block;font-size:12px;color:#b7c8d8;margin:12px 0 6px}input,select{width:100%;background:#081827;border:1px solid #294158;color:var(--text);border-radius:9px;padding:11px 12px;font:inherit;outline:none}input:focus,select:focus{border-color:var(--cyan)}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:10px;padding:11px 15px;font:700 13px inherit;cursor:pointer;background:linear-gradient(100deg,#25bcae,#3d9fe9);color:#061522}.btn.secondary{background:#162c40;color:#d9e8f7;border:1px solid #2a4359}.btn.warn{background:#39272b;color:#ffb2b7;border:1px solid #78434b}.btn:disabled{opacity:.45;cursor:not-allowed}
+.full{width:100%;margin-top:14px}.muted{color:var(--muted)}.tiny{font-size:11px;color:var(--muted)}
+.result{margin-top:13px;border:1px solid #275b56;background:#0d302e;border-radius:10px;padding:12px;font-size:13px;color:#b9f7e6;display:none}
+.chart{height:175px;display:flex;align-items:end;gap:7px;padding:12px 4px 0;border-bottom:1px solid var(--line)}.barcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:6px}.bar{width:100%;max-width:48px;background:linear-gradient(180deg,var(--cyan),#287a9a);border-radius:6px 6px 2px 2px;min-height:3px}.barcol span{font-size:10px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:12px}td,th{text-align:right;padding:10px 5px;border-bottom:1px solid #20364a}td:first-child,th:first-child{text-align:left}th{color:var(--muted);font-weight:600}
+.warning{padding:12px;border:1px solid #78434b;background:#2b1b25;border-radius:10px;color:#ffc0c3;font-size:12px;margin-top:13px}
+.tag{font-size:10px;padding:3px 7px;border-radius:20px;background:#19394b;color:#a8dfff}
+footer{padding:0 0 35px;color:#728ba2;font-size:11px}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.main,.lower{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}}
+@media(max-width:460px){.wrap{padding:0 13px}.card{padding:15px}.stat-value{font-size:21px}.formgrid{grid-template-columns:1fr}.nav{height:62px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+  <div class="brand"><div class="logo">IC</div><span>INVEST CAPITAL</span></div>
+  <span class="pill">SIMULADOR EDUCATIVO</span>
+</div></header>
+<main class="wrap">
+  <div class="demo-banner"><b>ENTORNO DE PRUEBA — SIN DINERO REAL.</b> Plataforma didáctica. No introduzcas datos personales, bancarios ni credenciales reales. No se realizan depósitos, transferencias ni retiros.</div>
+  <section class="hero">
+    <div><div class="eyebrow">Laboratorio de estructuras financieras</div><h1>Panel de simulación</h1><p class="sub">Experimenta con aportaciones ficticias, promesas de rendimiento y crecimiento por referidos.</p></div>
+    <span class="tag">DATOS FICTICIOS · SOLO EN ESTE NAVEGADOR</span>
+  </section>
+
+  <section class="grid stats">
+    <div class="card"><div class="stat-label">Saldo de demostración</div><div class="stat-value value-cyan" id="balance">$1,000.00</div><div class="stat-note">Unidades virtuales iniciales</div></div>
+    <div class="card"><div class="stat-label">Rendimiento hipotético</div><div class="stat-value value-gold" id="return">$120.00</div><div class="stat-note" id="rateLabel">12% ilustrativo, no garantizado</div></div>
+    <div class="card"><div class="stat-label">Participantes simulados</div><div class="stat-value" id="members">248</div><div class="stat-note">Población de ejemplo</div></div>
+    <div class="card"><div class="stat-label">Obligaciones hipotéticas</div><div class="stat-value value-red" id="obligations">$1,200.00</div><div class="stat-note">Si se pagara la promesa ilustrativa</div></div>
+  </section>
+
+  <section class="grid main">
+    <div class="card">
+      <h2>Simulador de participación</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="calc">Calcular escenario</button>
+        <button class="tab" data-tab="growth">Crecimiento en cadena</button>
+      </div>
+      <div id="calcPanel">
+        <p class="muted tiny">Usa valores inventados para observar la diferencia entre aportes y obligaciones prometidas.</p>
+        <div class="formgrid">
+          <div><label for="amount">Aporte ficticio (unidades)</label><input id="amount" type="number" min="1" max="1000000" value="1000"></div>
+          <div><label for="percent">Promesa hipotética (%)</label><input id="percent" type="number" min="0" max="1000" value="12"></div>
+          <div><label for="period">Período ilustrativo</label><select id="period"><option>30 días</option><option>90 días</option><option>180 días</option><option>1 año</option></select></div>
+          <div><label for="newpeople">Nuevos participantes ficticios</label><input id="newpeople" type="number" min="0" max="100000" value="3"></div>
+        </div>
+        <button class="btn full" id="calculate">Calcular simulación</button>
+        <div class="result" id="calcResult"></div>
+        <div class="warning">La cifra de rendimiento es una promesa hipotética elegida para el ejercicio. No representa una inversión, un producto financiero ni una expectativa real de ganancia.</div>
+      </div>
+      <div id="growthPanel" hidden>
+        <p class="muted tiny">Observa cómo aumenta la cantidad de personas requeridas si cada participante incorpora a otras.</p>
+        <div class="formgrid">
+          <div><label for="seed">Participantes iniciales</label><input id="seed" type="number" min="1" max="1000" value="5"></div>
+          <div><label for="factor">Nuevos por participante</label><select id="factor"><option>2</option><option selected>3</option><option>5</option></select></div>
+          <div><label for="levels">Rondas</label><select id="levels"><option>3</option><option selected>5</option><option>7</option><option>9</option></select></div>
+        </div>
+        <button class="btn full" id="grow">Mostrar crecimiento</button>
+        <div class="chart" id="chart"></div>
+        <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>Ronda</th><th>Nuevos</th><th>Acumulados</th></tr></thead><tbody id="growthRows"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Registro de usuario de demostración</h2>
+      <p class="muted tiny">Este formulario es local y ficticio. No se envían ni guardan los datos.</p>
+      <label for="alias">Alias de prueba (no uses tu nombre real)</label><input id="alias" maxlength="24" placeholder="Participante_001">
+      <label for="demoId">Código ficticio de participante</label><input id="demoId" maxlength="16" placeholder="DEMO-001">
+      <label for="demoAmount">Aporte simulado</label><select id="demoAmount"><option value="100">100 unidades virtuales</option><option value="500">500 unidades virtuales</option><option value="1000" selected>1.000 unidades virtuales</option><option value="5000">5.000 unidades virtuales</option></select>
+      <button class="btn full" id="register">Crear perfil ficticio</button>
+      <div class="result" id="registerResult"></div>
+      <div class="warning">No solicites ni introduzcas números de cuenta, tarjetas, documentos, teléfonos, direcciones, contraseñas o datos de billeteras.</div>
+    </div>
+  </section>
+
+  <section class="grid lower">
+    <div class="card">
+      <h2>Libro de movimientos simulado</h2>
+      <div style="overflow-x:auto"><table><thead><tr><th>Movimiento</th><th>Importe</th><th>Estado</th></tr></thead><tbody id="ledger">
+        <tr><td>Saldo inicial de práctica</td><td>1.000,00</td><td><span class="tag">FICTICIO</span></td></tr>
+        <tr><td>Rendimiento hipotético</td><td>120,00</td><td><span class="tag">NO PAGADO</span></td></tr>
+        <tr><td>Obligación ilustrativa</td><td>1.120,00</td><td><span class="tag">SIMULADA</span></td></tr>
+      </tbody></table></div>
+      <p class="tiny">Los estados no representan transacciones reales.</p>
+    </div>
+    <div class="card">
+      <h2>Experimento: ¿qué pasa si dejan de entrar nuevos?</h2>
+      <p class="muted tiny">Prueba un escenario con aportes nuevos y observa la brecha hipotética.</p>
+      <label for="incoming">Aportes nuevos ficticios (unidades)</label><input id="incoming" type="number" min="0" max="10000000" value="0">
+      <label for="due">Pagos prometidos a participantes (unidades)</label><input id="due" type="number" min="0" max="10000000" value="1120">
+      <button class="btn secondary full" id="stress">Evaluar escenario</button>
+      <div class="result" id="stressResult"></div>
+    </div>
+  </section>
+  <footer>Invest Capital es una marca ficticia creada exclusivamente para una demostración educativa. No ofrece inversiones, no capta fondos, no administra activos, no procesa pagos y no garantiza rendimientos. Todos los datos son inventados y se calculan localmente en la página.</footer>
+</main>
+<script>
+const money=n=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const num=n=>new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(n);
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+ document.getElementById('calcPanel').hidden=b.dataset.tab!=='calc';
+ document.getElementById('growthPanel').hidden=b.dataset.tab!=='growth';
+}));
+document.getElementById('calculate').addEventListener('click',()=>{
+ const a=Math.max(0,Number(document.getElementById('amount').value)||0);
+ const p=Math.max(0,Number(document.getElementById('percent').value)||0);
+ const r=a*p/100,box=document.getElementById('calcResult');
+ box.style.display='block';
+ box.innerHTML=`<b>Resultado del escenario ficticio</b><br>Aporte de prueba: ${money(a)} unidades<br>Promesa ilustrativa: ${p}%<br>Ganancia hipotética anunciada: ${money(r)} unidades<br>Obligación total hipotética: ${money(a+r)} unidades<br><br><b>Pregunta para debatir:</b> ¿De qué actividad económica verificable saldría el dinero para cubrir esa obligación?`;
+ document.getElementById('balance').textContent=money(a);
+ document.getElementById('return').textContent=money(r);
+ document.getElementById('obligations').textContent=money(a+r);
+ document.getElementById('rateLabel').textContent=p+'% hipotético · no garantizado';
+});
+function growth(){
+ let n=Math.max(1,Math.min(1000,Number(document.getElementById('seed').value)||1));
+ const f=Number(document.getElementById('factor').value),levels=Number(document.getElementById('levels').value);
+ let total=0,vals=[],rows='';
+ for(let i=0;i<=levels;i++){if(i>0)n*=f;total+=n;vals.push(n);rows+=`<tr><td>${i===0?'Inicio':i}</td><td>${num(n)}</td><td>${num(total)}</td></tr>`}
+ const max=Math.max(...vals);
+ document.getElementById('chart').innerHTML=vals.map((v,i)=>`<div class="barcol"><div class="bar" style="height:${Math.max(3,v/max*100)}%"></div><span>${i===0?'Ini':i}</span></div>`).join('');
+ document.getElementById('growthRows').innerHTML=rows;
+}
+document.getElementById('grow').addEventListener('click',growth);growth();
+document.getElementById('register').addEventListener('click',()=>{
+ const alias=document.getElementById('alias').value.trim()||'Invitado_demo';
+ const id=document.getElementById('demoId').value.trim()||'DEMO-'+Math.floor(100+Math.random()*900);
+ const amt=Number(document.getElementById('demoAmount').value);
+ const box=document.getElementById('registerResult');box.style.display='block';
+ box.innerHTML=`<b>Perfil ficticio creado en pantalla</b><br>Alias: ${alias.replace(/[&<>"']/g,'')}<br>Código: ${id.replace(/[&<>"']/g,'')}<br>Aporte virtual: ${money(amt)} unidades<br><span class="tiny">No se creó una cuenta real ni se guardó información.</span>`;
+});
+document.getElementById('stress').addEventListener('click',()=>{
+ const incoming=Math.max(0,Number(document.getElementById('incoming').value)||0),due=Math.max(0,Number(document.getElementById('due').value)||0),gap=due-incoming;
+ const box=document.getElementById('stressResult');box.style.display='block';
+ box.innerHTML=gap>0?`<b>Brecha hipotética: ${money(gap)} unidades.</b><br>Los nuevos aportes simulados no alcanzan para cubrir las obligaciones ilustrativas.`: `Los aportes nuevos simulados cubrirían esta obligación hipotética por ${money(-gap)} unidades. Esto no demuestra sostenibilidad ni rentabilidad real.`;
+});
+</script>
+</body></html>
