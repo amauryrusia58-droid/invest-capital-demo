@@ -33,8 +33,18 @@
     ['private-strategies', { name: 'Private Strategies', share: 17 }],
     ['digital-exposure', { name: 'Digital Exposure', share: 24 }],
   ]);
-  const selectedPlanKey = new URLSearchParams(window.location.search).get('plan');
+  const accessParams = new URLSearchParams(window.location.search);
+  const selectedPlanKey = accessParams.get('plan');
   const selectedPlan = demoPlans.get(selectedPlanKey);
+  const planField = simulation.elements.plan_key;
+  const titleField = simulation.elements.title;
+  let automaticTitle = titleField.defaultValue;
+  for (const [key, plan] of demoPlans) {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = plan.name;
+    planField.append(option);
+  }
   const registrationEndpoint = 'https://formsubmit.co/ajax/investcapital8310@gmail.com';
   if (selectedPlan) {
     status('selected-plan-auth', 'Elegiste ' + selectedPlan.name + ' · ' + selectedPlan.share +
@@ -71,11 +81,7 @@
     byId('account-email').textContent = user.email || '';
     byId('dashboard-title').focus();
     status('dashboard-status', message);
-    if (selectedPlan) {
-      simulation.elements.title.value = selectedPlan.name + ' · Simulación';
-      status('selected-plan-panel', 'Punto de partida: ' + selectedPlan.name + ' · ' +
-        selectedPlan.share + '% del reparto ficticio. Puedes cambiar los valores antes de guardar.');
-    }
+    showPlan(selectedPlanKey, true);
     byId('registration-notice').hidden = true;
     void sendRegistrationNotice(account);
     await loadHistory();
@@ -269,11 +275,32 @@
       byId('results').replaceChildren();
       byId('results').hidden = true;
       simulation.reset();
+      automaticTitle = titleField.defaultValue;
       showAuth('login', '', 'Sesión cerrada.');
     } catch {
       status('dashboard-status', 'No se pudo cerrar la sesión. Cierra esta pestaña para salir.');
     } finally {
       button.disabled = false;
+    }
+  });
+
+  function showPlan(key, rename = false) {
+    const plan = demoPlans.get(key);
+    planField.value = plan ? key : '';
+    if (rename && titleField.value === automaticTitle) {
+      automaticTitle = plan ? plan.name + ' · Simulación' : titleField.defaultValue;
+      titleField.value = automaticTitle;
+    }
+    status('selected-plan-panel', plan
+      ? plan.name + ' · ' + plan.share + '% del reparto ficticio. Ajusta los valores para tu simulación.'
+      : '');
+  }
+
+  planField.addEventListener('change', () => {
+    showPlan(planField.value, true);
+    if (!byId('results').hidden && simulation.checkValidity()) {
+      const values = scenarioValues();
+      if (values) renderResult(values);
     }
   });
 
@@ -286,17 +313,19 @@
     }
     return {
       title, capital: Number(fields.capital), rate: Number(fields.rate),
-      period: Number(fields.period), participants: Number(fields.participants)
+      period: Number(fields.period), participants: Number(fields.participants),
+      plan_key: demoPlans.has(fields.plan_key) ? fields.plan_key : null
     };
   }
 
-  function renderResult({ capital, rate, period, participants }) {
+  function renderResult({ capital, rate, period, participants, plan_key }) {
     const commitment = capital * (1 + rate / 100);
     const newCapital = capital * participants;
     const difference = newCapital - commitment;
     const target = byId('results');
     target.replaceChildren();
     for (const [label, value] of [
+      ['Plan de simulación', demoPlans.get(plan_key)?.name || 'Sin plan seleccionado'],
       ['Horizonte', periods[period]], ['Compromiso simulado', format.format(commitment)],
       ['Aportes nuevos ficticios', format.format(newCapital)], ['Diferencia simulada', format.format(difference)]
     ]) {
@@ -322,7 +351,7 @@
     byId('history-status').textContent = 'Cargando simulaciones…';
     try {
       const { data, error } = await client.from('invest_demo_scenarios')
-        .select('id,title,capital,rate,period,participants')
+        .select('id,title,capital,rate,period,participants,plan_key')
         .eq('user_id', owner).order('created_at', { ascending: false }).order('id', { ascending: false }).limit(50);
       if (request !== historyRequest || user?.id !== owner) return;
       if (error) throw error;
@@ -336,7 +365,9 @@
         const summary = document.createElement('small');
         const open = document.createElement('button');
         title.textContent = row.title;
-        summary.textContent = format.format(row.capital) + ' ficticios · ' + periods[row.period];
+        const plan = demoPlans.get(row.plan_key);
+        summary.textContent = [plan?.name, format.format(row.capital) + ' ficticios', periods[row.period]]
+          .filter(Boolean).join(' · ');
         text.append(title, summary);
         open.type = 'button';
         open.className = 'secondary';
@@ -344,7 +375,8 @@
         open.setAttribute('aria-label', 'Abrir ' + row.title);
         open.addEventListener('click', () => {
           for (const key of ['title', 'capital', 'rate', 'period', 'participants']) simulation.elements[key].value = row[key];
-          status('selected-plan-panel');
+          automaticTitle = '';
+          showPlan(row.plan_key);
           renderResult(row);
           simulation.elements.title.focus();
         });
@@ -381,5 +413,5 @@
   });
 
   status('system-status');
-  showAuth(selectedPlan ? 'signup' : 'login');
+  showAuth(selectedPlan || accessParams.get('modo') === 'registro' ? 'signup' : 'login');
 })();
