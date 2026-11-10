@@ -23,14 +23,33 @@ const base = [
   {name:'Aporte adicional',ref:'INV-72509',amount:500,date:'20/04/2026',status:'Acreditado'}
 ];
 const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
-let view='resumen', stage=0, session={mode:'local'}, unsubscribe=()=>{}, ledger=[];
+let view='resumen', stage=0, session={mode:'local'}, sessionReady=false, sending=false, unsubscribe=()=>{}, ledger=[];
+const pendingActions=[];
 const overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'), confirmBtn=$('#confirmModal');
 let onConfirm=null;
 try {let saved=JSON.parse(localStorage.getItem('ic_v3_ledger')||'[]'); if(Array.isArray(saved))ledger=saved.filter(x=>x && typeof x.name==='string' && Number.isFinite(x.amount)).slice(0,100);}catch{}
 
 function saveLedger(){localStorage.setItem('ic_v3_ledger',JSON.stringify(ledger.slice(0,100)));}
 function record(type,label,which=view){
-  void logStudent(session,type,label,which).catch(()=>{$('#syncStatus').textContent='Conexión pendiente';});
+ if(!firebaseEnabled)return;
+ pendingActions.push({type,label,view:which});
+ // Se almacenan temporalmente los clics hasta que termina el inicio de sesión.
+ void flushActions();
+}
+async function flushActions(){
+ if(!sessionReady||sending||!firebaseEnabled||session.mode!=='cloud')return;
+ sending=true;
+ try{
+  while(pendingActions.length){
+   const action=pendingActions[0];
+   await logStudent(session,action.type,action.label,action.view);
+   pendingActions.shift();
+  }
+  $('#syncStatus').textContent='Actividad conectada';
+ }catch(err){
+  console.warn('Acción pendiente de sincronización',err);
+  $('#syncStatus').textContent='Acciones pendientes de conexión';
+ }finally{sending=false;}
 }
 function setView(v){
  if(!titles[v])return;
@@ -156,6 +175,7 @@ confirmBtn.addEventListener('click',()=>{if(onConfirm)onConfirm();});
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';
 exit.addEventListener('click',async()=>{
  record('exit','Cerró sesión');
+ await flushActions();
  try{const f=await getFirebase();if(f&&f.auth.currentUser?.isAnonymous)await f.Auth.signOut(f.auth);}catch{}
  localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_ledger');location.replace('index.html');
 });
@@ -165,8 +185,10 @@ renderBalances();
 (async()=>{
  try{
    session=await studentStart(alias);
+   sessionReady=true;
    $('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';
    record('entry','Entró al panel');
+   await flushActions();
    unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sincronización interrumpida';});
  }catch(err){console.error(err);$('#syncStatus').textContent='Sin conexión';}
 })();

@@ -33,10 +33,11 @@ export async function logStudent(session,type,label,view){
  if(session.mode!=='cloud')return;
  const {uid,db,Store}=session;
  const safeType=String(type).slice(0,30),safeLabel=String(label).slice(0,120),safeView=String(view).slice(0,30);
- await Promise.all([
-  Store.addDoc(Store.collection(db,'sessions',uid,'events'),{type:safeType,label:safeLabel,view:safeView,createdAt:Store.serverTimestamp()}),
-  Store.updateDoc(Store.doc(db,'sessions',uid),{lastAction:safeLabel,view:safeView,lastSeen:Store.serverTimestamp()})
- ]);
+ const batch=Store.writeBatch(db);
+ const evt=Store.doc(Store.collection(db,'sessions',uid,'events'));
+ batch.set(evt,{type:safeType,label:safeLabel,view:safeView,createdAt:Store.serverTimestamp()});
+ batch.update(Store.doc(db,'sessions',uid),{lastAction:safeLabel,view:safeView,lastSeen:Store.serverTimestamp()});
+ await batch.commit();
 }
 export function watchStage(session,onChange,onError){
  if(session.mode!=='cloud')return ()=>{};

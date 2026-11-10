@@ -25,7 +25,8 @@ function watch(){
 function refreshStudents(){
  $('#sessionsCount').textContent=String(sessions.length);
  $('#activeCount').textContent=String(sessions.filter(x=>date(x.lastSeen)&&Date.now()-date(x.lastSeen).getTime()<300000).length);
- $('#withdrawCount').textContent=String(sessions.filter(x=>/retiro/i.test(x.lastAction||'')).length);
+ // El contador corresponde solo a los eventos cargados del alumno seleccionado.
+ $('#withdrawCount').textContent=String(events.filter(x=>x.type==='withdraw_attempt').length);
  const list=$('#studentList');list.replaceChildren();
  if(!sessions.length){list.innerHTML='<p class="muted">Todavía no hay sesiones registradas.</p>';return;}
  sessions.forEach(s=>{
@@ -34,10 +35,10 @@ function refreshStudents(){
    name.textContent=s.alias||'Alumno sin alias';meta.className='tiny';meta.textContent=(s.view||'resumen')+' · '+(s.lastAction||'Acceso al panel');
    d.append(name,meta);last.textContent=shortDate(s.lastSeen);b.append(d,last);b.addEventListener('click',()=>select(s.id));list.append(b);
  });
- if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;offEvents();$('#selectedStudent').textContent='Selecciona un alumno';}
+ if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#withdrawCount').textContent='0';}
 }
 function select(uid){
- selectedId=uid;events=[];offEvents();
+ selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';
  const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;
  refreshStudents();$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
  $('#exportCsv').disabled=true;
@@ -48,6 +49,7 @@ function select(uid){
 }
 function renderEvents(){
  const table=$('#activityRows');table.replaceChildren();$('#exportCsv').disabled=!events.length;
+ $('#withdrawCount').textContent=String(events.filter(x=>x.type==='withdraw_attempt').length);
  if(!events.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Este alumno aún no tiene acciones registradas.';tr.append(td);table.append(tr);return;}
  for(const e of events){const tr=document.createElement('tr');for(const text of [shortDate(e.createdAt),String(e.view||'—'),String(e.label||'—')]){const td=document.createElement('td');td.textContent=text;tr.append(td);}table.append(tr);}
 }

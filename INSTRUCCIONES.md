@@ -1,12 +1,12 @@
 # Invest Capital — instalación y panel privado del docente
 
-**Versión:** 3.0 — escenario financiero interactivo para proyección en clase.
+**Versión:** 3.1 revisada — escenario financiero interactivo para proyección en clase.
 
 ## Qué contiene este paquete
 
 - `index.html` — portada financiera rediseñada, con botón verde oscuro y texto blanco.
 - `app.html` / `app.js` — plataforma interactiva: cartera, planes, movimientos, asociados, documentos y soporte.
-- `admin.html` / `admin.js` — consola privada del profesor; muestra alumnos por alias, sus acciones, solicitudes de retiro, exportación CSV y controla cuatro escenarios para toda la clase.
+- `admin.html` / `admin.js` — consola privada del profesor; muestra alumnos por alias, sus acciones, solicitudes de retiro por alumno seleccionado, exportación CSV y controla cuatro escenarios para toda la clase.
 - `styles.css` — diseño adaptable a pantallas grandes y móviles.
 - `backend.js` — conexión opcional con Firebase Authentication y Firestore.
 - `firebase-config.js` — configuración **pública** del proyecto Firebase y dirección de correo del profesor.
@@ -58,3 +58,12 @@
 ## Seguridad
 
 El correo incluido en los archivos NO es una contraseña. Las verificaciones se hacen mediante la cuenta Google autenticada y las reglas de seguridad de Firestore. No modifiques las reglas para dar acceso de lectura a todo el mundo. Antes de proyectar la clase, verifica con otra cuenta de Google que la página `/admin.html` rechaza el acceso.
+
+## 5. Revisión técnica de esta entrega (V3.1)
+
+- Verificados los 11 archivos del paquete original y sus referencias internas.
+- Revisada la sintaxis de todos los módulos JavaScript.
+- Corregido el registro de acciones: los primeros clics se ponen en cola hasta establecer la sesión; las escrituras de evento y resumen son atómicas. Si falla la red, el panel indica que quedan acciones pendientes y vuelve a intentar en otra interacción. **No es una cola persistente**: cerrar la pestaña durante un fallo puede hacer perder eventos pendientes.
+- Corregido el indicador de retiros del profesor: ahora cuenta eventos `withdraw_attempt` del alumno seleccionado y de los **últimos 200 eventos cargados**, en vez de deducirlo de la última acción de todas las sesiones.
+- La vista local sigue siendo exploratoria y los datos no se sincronizan con el docente hasta completar Firebase.
+- No se ha probado una conexión con un proyecto Firebase real, porque esta entrega no incluye credenciales públicas de ese proyecto. Prueba la autenticación y las reglas antes de la clase.
