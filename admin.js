@@ -32,14 +32,14 @@ function refreshStudents(){
  sessions.forEach(s=>{
    const b=document.createElement('button');b.className='admin-item'+(s.id===selectedId?' active':'');
    const d=document.createElement('div'),name=document.createElement('b'),meta=document.createElement('div'),last=document.createElement('small');
-   name.textContent=s.alias||'Alumno sin alias';meta.className='tiny';meta.textContent=(s.view||'resumen')+' · '+(s.lastAction||'Acceso al panel');
+   name.textContent=s.alias||'Alumno sin nombre';meta.className='tiny';meta.textContent=(s.view||'resumen')+' · '+(s.lastAction||'Acceso al panel');
    d.append(name,meta);last.textContent=shortDate(s.lastSeen);b.append(d,last);b.addEventListener('click',()=>select(s.id));list.append(b);
  });
- if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#withdrawCount').textContent='0';}
+ if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#studentProfile').textContent='';$('#withdrawCount').textContent='0';}
 }
 function select(uid){
  selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';
- const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;
+ const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;$('#studentProfile').textContent=[s?.group?'Grupo: '+s.group:'',s?.email?'Correo (declarado): '+s.email:''].filter(Boolean).join(' · ')||'Sin datos adicionales';
  refreshStudents();$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
  $('#exportCsv').disabled=true;
  const {db,Store}=firebase;

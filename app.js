@@ -3,6 +3,8 @@ import {studentStart, logStudent, watchStage, firebaseEnabled, getFirebase} from
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const alias = (localStorage.getItem('ic_v3_alias') || '').trim();
+let profile={name:alias,email:'',group:''};
+try{const p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p&&p.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||'')};}catch{}
 if (localStorage.getItem('ic_v3_consent') !== 'yes' || !alias) location.replace('index.html');
 
 const titles = {
@@ -177,14 +179,14 @@ exit.addEventListener('click',async()=>{
  record('exit','Cerró sesión');
  await flushActions();
  try{const f=await getFirebase();if(f&&f.auth.currentUser?.isAnonymous)await f.Auth.signOut(f.auth);}catch{}
- localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_ledger');location.replace('index.html');
+ localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_ledger');location.replace('index.html');
 });
 $('.side-foot').append(exit);
 $('#userAlias').textContent=alias;
 renderBalances();
 (async()=>{
  try{
-   session=await studentStart(alias);
+   session=await studentStart(profile);
    sessionReady=true;
    $('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';
    record('entry','Entró al panel');

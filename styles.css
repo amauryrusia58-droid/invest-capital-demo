@@ -11,3 +11,147 @@
 .admin-header .brand{font-size:18px}
 .admin-item div{min-width:0}.admin-item .tiny{white-space:normal;overflow-wrap:anywhere;max-width:250px}
 @media(max-width:440px){.hero .btn-primary,.bottom-cta .btn-primary{font-size:15px}}
+
+
+/* =====================================================
+   INVEST CAPITAL V3.2: NOIR / AMETHYST / CHAMPAGNE GOLD
+   Visual redesign for landing, student and teacher views.
+   This section intentionally wins over earlier theme CSS.
+   ===================================================== */
+:root{
+  color-scheme:dark;
+  --bg:#09070f;--bg2:#0d0a16;--panel:#161020;--panel2:#20152e;
+  --line:#443454;--ink:#f5f0fc;--muted:#b4a9c3;
+  --green:#d8b977;--green2:#bb9356;--white:#fff;
+  --red:#ff899a;--font:Inter,'Segoe UI',Arial,sans-serif;
+  --violet:#8352d4;--violet-dark:#4c247f;--gold:#d8b977;
+}
+html{background:#09070f}
+body,.dash-body{background:#09070f;color:var(--ink)}
+body{background-image:radial-gradient(ellipse 65% 38% at 86% -5%,rgba(102,48,166,.2),transparent 72%)}
+a:hover{color:#f0d89d}
+.site-header{border-bottom:1px solid rgba(188,156,222,.13);min-height:88px}
+.brand{font-weight:900;letter-spacing:1.12px;color:#fff;text-shadow:0 0 25px rgba(141,91,220,.17)}
+.brand-highlight{color:#e6c98f}
+.brand-mark span{background:linear-gradient(180deg,#ebd3a5,#ae8148);box-shadow:0 0 9px rgba(234,203,152,.14)}
+.top-nav{color:#b8adca}.top-nav a:hover{color:#f6e2b9}
+.btn{border-radius:12px;min-height:43px;font-weight:800;letter-spacing:.05px;transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ecd095;outline-offset:3px}
+.btn-primary,.btn-primary:hover,.hero .btn-primary,.bottom-cta .btn-primary{
+  background:linear-gradient(117deg,#8350d4 0%,#6434b1 55%,#51258d 100%);
+  color:#fff;border:1px solid #a075ec;text-shadow:none;
+  box-shadow:0 10px 25px rgba(98,46,180,.29),inset 0 1px rgba(255,255,255,.15);
+}
+.btn-primary:hover{background:linear-gradient(115deg,#9b68ee,#6a34b9);box-shadow:0 13px 35px rgba(103,45,198,.36)}
+.btn-primary:disabled,.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-ghost{border:1px solid #755995;color:#f8f0ff;background:#191023}
+.btn-ghost:hover{border-color:#e1bf85;background:#251631;color:#fff}
+.btn-soft{background:#24192f;border-color:#503761;color:#f4ebff}
+.btn-soft:hover{background:#30213f;border-color:#b68bec;color:#fff}
+.btn-large{padding:16px 26px;min-height:54px}
+.eyebrow,.dialog-kicker{color:#e2bf7d;font-weight:850;letter-spacing:2.5px}
+.status-dot{background:#cfad6d;box-shadow:0 0 0 4px rgba(227,182,117,.14)}
+.hero{position:relative;padding-top:66px;padding-bottom:104px;gap:76px;min-height:655px}
+.hero:before{content:'';position:absolute;inset:2% -10% 8% 43%;z-index:-1;background:radial-gradient(ellipse at center,rgba(104,53,155,.25),transparent 68%);pointer-events:none}
+.hero h1{font-weight:850;font-size:clamp(44px,4.9vw,75px);letter-spacing:-2.7px;line-height:1.06;color:#f8f5fc;text-wrap:balance}
+.hero h1 em{color:#e2c48a;background:linear-gradient(96deg,#d4ab6b,#f5ddad,#c99753);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-text>p{color:#b8acc8;font-size:15px;line-height:1.9}
+.cta{margin:35px 0 50px;gap:12px}
+.metrics>div{border-color:#44334d}.metrics strong{font-size:26px;color:#f6e6c4}.metrics small{color:#9f90b2}
+.hero-visual{min-height:450px}
+.halo-a{background:#6c37b1;opacity:.40;filter:blur(75px);right:20px;width:390px;height:390px}
+.halo-b{background:#c59555;opacity:.14;filter:blur(70px)}
+.preview{background:linear-gradient(136deg,rgba(43,26,63,.97),rgba(20,13,31,.99) 55%,rgba(26,16,41,.97));border:1px solid rgba(184,141,220,.53);border-radius:24px;padding:31px 34px 26px;box-shadow:0 28px 85px rgba(0,0,0,.64),inset 0 1px rgba(255,255,255,.08),0 0 65px rgba(100,48,172,.09)}
+.preview:before{content:'';display:block;width:45%;height:2px;position:absolute;left:36px;top:0;background:linear-gradient(90deg,#e7c685,transparent);border-radius:30px}
+.smallcaps{color:#b7a5c6;letter-spacing:2px}
+.preview-value{font-size:48px;color:#fff}
+.preview-value span{color:#baa7c6}
+.preview-pill{background:#39264e;color:#e4c587;border:1px solid #715489}
+.preview-change{color:#e2c489}.preview-change span{color:#a99ab8}
+.preview-bottom{color:#a798b6;border-color:#45314f}
+.preview-foot{color:#bcb0ca}.asset-dot{background:#d7b576}
+.float-chip{background:#251830;border:1px solid #805a9e;box-shadow:0 12px 40px rgba(0,0,0,.46);border-radius:12px}
+.float-chip>span{background:linear-gradient(130deg,#5b378d,#9a62d7);color:#f7dca7}
+.float-chip small{color:#b8a7c5}
+.trust-strip{background:#100b19;border-top:1px solid #382b43;border-bottom:1px solid #382b43;color:#c0a8d3;font-weight:850;letter-spacing:2px}
+.section{padding-top:118px;padding-bottom:108px}
+.section h2,.bottom-cta h2{color:#f6f1fb}
+.section h2 span{color:#e0c185}
+.section-intro>p:last-child,.narrow-split p:not(.eyebrow),.bottom-cta p:not(.eyebrow){color:#ad9fbd}
+.feature{background:linear-gradient(152deg,#21162e,#15101f 78%);border:1px solid #483456;border-radius:19px;box-shadow:0 8px 38px rgba(0,0,0,.12);position:relative;overflow:hidden}
+.feature:before{content:'';height:2px;width:100%;position:absolute;top:0;left:0;background:linear-gradient(90deg,#9b66db,#d6b478,transparent)}
+.feature-icon{background:linear-gradient(138deg,#4f3275,#301f46);color:#f1d298;border:1px solid #62497c}
+.feature h3{color:#f5f0ff}.feature p{color:#ae9ec0}
+.narrow-split{border-color:#42334e}.strategy-list>div{border-color:#3b2c48}.strategy-list strong{color:#d7b679}
+.bottom-cta{background:linear-gradient(112deg,#2b193c,#130c1e);border:1px solid #5f426a;box-shadow:0 22px 60px rgba(0,0,0,.23)}
+.site-footer{border-color:#352541;color:#9986ad}
+.overlay{background:rgba(6,3,12,.92);backdrop-filter:blur(8px)}
+.dialog{background:linear-gradient(138deg,#251833,#15101f 72%);border:1px solid #79518e;box-shadow:0 32px 100px #000c}
+.dialog p{color:#c0b1cd}.field-label{color:#e4d4f1}
+.text-input,.plain-input{background:#0d0915;color:#fff;border:1px solid #59416a}
+.text-input::placeholder,.plain-input::placeholder{color:#8e7b9e}
+.text-input:focus,.plain-input:focus{border-color:#b78be6}
+.dialog-actions{align-items:center}
+/* Student dashboard: ebony background + purple surfaces + champagne-gold metrics. */
+.dash-layout{grid-template-columns:250px minmax(0,1fr)}
+.sidebar{background:linear-gradient(175deg,#120b1c,#0a0811 87%);border-right:1px solid #392745;padding:32px 18px;box-shadow:8px 0 32px rgba(0,0,0,.12)}
+.sidebar-title{color:#a48cb8;letter-spacing:2px}
+.side-link{color:#b4a5c5;font-weight:650;border:1px solid transparent;transition:.2s}
+.side-link:hover{background:#281936;color:#fff;border-color:#513363}
+.side-link.active{background:linear-gradient(90deg,#51307d,#301d46 92%);color:#fff;border:1px solid #79509f;border-left:3px solid #e2c383;box-shadow:inset 0 1px rgba(255,255,255,.08)}
+.side-icon{color:#d6b679}.side-foot{border-color:#402d4b;color:#a28cb0}
+.dash-main{max-width:1550px;padding-top:43px}
+.dash-top h1{font-size:32px;letter-spacing:-.9px}.dash-sub{color:#b2a3c1}
+.user-chip{background:#241833;border:1px solid #6a4985;color:#e8d5f9;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.stat-grid{gap:17px;margin-bottom:20px}
+.stat{background:linear-gradient(140deg,#231630,#160f22 75%);border:1px solid #563c66;border-radius:17px;box-shadow:0 10px 22px rgba(0,0,0,.15)}
+.stat:nth-child(1){background:linear-gradient(128deg,#37204e,#1d1230 82%);border-color:#8b5eb0;box-shadow:0 8px 40px rgba(99,48,153,.17)}
+.stat small{color:#c2b4d0}.stat strong{font-size:29px;color:#f8f4ff;font-weight:850}.stat .delta{color:#e3bf79;font-weight:650}
+.content-grid{gap:18px}
+.pane{background:linear-gradient(160deg,#20142c,#140e1e 85%);border:1px solid #50375f;border-radius:18px;box-shadow:0 10px 35px rgba(0,0,0,.12)}
+.pane h2{font-size:17px;color:#f5edff}.muted{color:#b2a1c1}
+.chart-range button{background:#2b1b3b;border:1px solid #594170;color:#c8b5d5}
+.chart-range button.active{background:#573582;color:#f9e7c3;border-color:#ba925d}
+.asset-row{border-color:#3c2b4a}.asset-logo{background:linear-gradient(130deg,#593b84,#392450);color:#f6dfb4}
+.asset-row small{color:#b19fc4}.asset-row .up{color:#e0bd79}
+.data-table th{color:#baadcc;border-color:#4b3659}.data-table td{color:#e6deee;border-color:#352740}
+.tag{background:#382944;color:#edcd90;border:1px solid #5b4870}
+.tag.warn{color:#f8c18f;background:#503127;border-color:#9c653c}
+.tag.danger{background:#4c2436;color:#ffbac9;border-color:#8a4b62}
+.action-panel{gap:13px}
+.plan-card{background:linear-gradient(145deg,#2d1a3c,#140d20);border:1px solid #6b4a7e;border-radius:19px}
+.plan-card .tier{color:#e3c385}.plan-card .rate{color:#fff;font-size:36px}.plan-card ul{color:#bba9c9}
+.plan-card.featured{border-color:#dfbd79;box-shadow:0 12px 40px rgba(139,85,186,.15);position:relative}
+.plan-card.featured:before{content:'';height:3px;position:absolute;left:23px;right:23px;top:0;background:linear-gradient(90deg,transparent,#edcf97,transparent)}
+.notice{border:1px solid #785b80;background:#2b2035;color:#e1cbea}
+.notice.negative{border-color:#9b6064;background:#3a202c;color:#ffd0c6}
+.activity-list li{color:#e7dceb;border-color:#42304f}.activity-list small{color:#a994b8}
+.referral-code{background:#1c1129;border:1px dashed #9272a4;color:#efca90}
+.modal-note{background:#30223b;color:#e0cee8}
+/* Teacher dashboard, same premium visual language. */
+.admin-layout{background:radial-gradient(ellipse at 92% 4%,rgba(98,54,142,.18),transparent 47%),#09070f}
+.admin-header{border-bottom:1px solid #44314e;padding-bottom:24px}
+.admin-item{color:#eee3f7;border-color:#493252}.admin-item:hover,.admin-item.active{background:#332147}
+.admin-item small,.tiny{color:#a994ba}
+/* Fine details / safe responsive adaptations. */
+::selection{background:#8450ce;color:#fff}
+@media(min-width:1001px){.stat-grid .stat:nth-child(4){border-color:#715084}.hero-visual{transform:translateY(7px)}}
+@media(max-width:750px){.sidebar{background:linear-gradient(95deg,#120b1c,#20132b);border-bottom:1px solid #4a345b}.side-link.active{border-left:1px solid #79509f;border-bottom:3px solid #e2c383}.hero{padding-top:43px}.preview{padding:25px}.admin-layout{padding-left:17px;padding-right:17px}}
+@media(max-width:460px){.stat strong{font-size:23px}.hero h1{font-size:43px}.hero .btn-primary,.bottom-cta .btn-primary{font-size:15px}.preview-value{font-size:41px}.dash-top h1{font-size:26px}}
+
+/* V3.3 — Registration UX matches the black, purple and gold identity. */
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:11px;flex-wrap:wrap}
+.site-header .btn-header-register{padding:12px 19px;min-height:45px;font-size:13px;background:linear-gradient(120deg,#8a50d4,#6733ae)!important;border:1px solid #a777e7!important;color:#fff!important;text-shadow:none!important}
+.site-header .btn-header-register:hover{background:linear-gradient(120deg,#9d69e6,#7744c2)!important}
+.register-dialog{max-width:650px;width:min(650px,calc(100vw - 30px));max-height:min(92vh,920px);overflow-y:auto}
+.registration-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px 14px;margin:23px 0 18px}
+.registration-field{display:flex;flex-direction:column;gap:8px}
+.registration-field.full{grid-column:1/-1}
+.registration-field .text-input{width:100%;min-width:0}
+.field-optional{font-weight:400;color:#ad9aba;font-size:11px}
+.registration-consent{display:grid;grid-template-columns:19px 1fr;gap:11px;align-items:start;background:#21172d;border:1px solid #5c3e73;border-radius:12px;padding:14px 15px;margin:18px 0 14px}
+.registration-consent input{width:18px;height:18px;margin:2px 0 0;accent-color:#9762e1}
+.registration-consent label{font-size:12px;line-height:1.65;color:#d9cde3;cursor:pointer}
+.registration-consent b{color:#f5e2fc}
+@media(max-width:760px){.site-header{flex-wrap:wrap}.header-actions{margin-left:auto}.site-header .btn-header-register{padding:11px 14px}}
+@media(max-width:480px){.site-header{gap:12px}.top-nav{display:none}.header-actions{gap:7px}.site-header .btn{font-size:12px;padding:9px 11px}.registration-fields{grid-template-columns:1fr}.register-dialog{padding:23px 18px}}

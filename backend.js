@@ -16,7 +16,11 @@ export async function getFirebase(){
  return firebaseCache;
 }
 async function authUser(auth,Auth){return await new Promise((resolve,reject)=>{let off=()=>{};off=Auth.onAuthStateChanged(auth,u=>{off();resolve(u);},reject);});}
-export async function studentStart(alias){
+export async function studentStart(profile){
+ const name=String(profile?.name||profile?.alias||'').trim().slice(0,60);
+ const email=String(profile?.email||'').trim().toLowerCase().slice(0,120);
+ const group=String(profile?.group||'').trim().slice(0,40);
+ const alias=name;
  const f=await getFirebase();if(!f)return {mode:'local',uid:'local'};
  const {auth,db,Auth,Store}=f;
  let user=await authUser(auth,Auth);
@@ -25,7 +29,7 @@ export async function studentStart(alias){
  const ref=Store.doc(db,'sessions',user.uid);
  const snap=await Store.getDoc(ref);
  const data={view:'resumen',lastAction:'Acceso al panel',lastSeen:Store.serverTimestamp()};
- if(!snap.exists()) await Store.setDoc(ref,{alias,createdAt:Store.serverTimestamp(),...data});
+ if(!snap.exists()) await Store.setDoc(ref,{alias,email,group,createdAt:Store.serverTimestamp(),...data});
  else await Store.updateDoc(ref,data);
  return {mode:'cloud',uid:user.uid,db,Store};
 }

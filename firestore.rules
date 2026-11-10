@@ -13,11 +13,15 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'anonymous';
     }
     function validSession() {
-      return request.resource.data.keys().hasOnly(['alias', 'createdAt', 'lastSeen', 'lastAction', 'view'])
-        && request.resource.data.keys().hasAll(['alias', 'createdAt', 'lastSeen', 'lastAction', 'view'])
+      return request.resource.data.keys().hasOnly(['alias', 'email', 'group', 'createdAt', 'lastSeen', 'lastAction', 'view'])
+        && request.resource.data.keys().hasAll(['alias', 'email', 'group', 'createdAt', 'lastSeen', 'lastAction', 'view'])
         && request.resource.data.alias is string
         && request.resource.data.alias.size() >= 2
-        && request.resource.data.alias.size() <= 30
+        && request.resource.data.alias.size() <= 60
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 120
+        && request.resource.data.group is string
+        && request.resource.data.group.size() <= 40
         && request.resource.data.lastAction is string
         && request.resource.data.lastAction.size() <= 120
         && request.resource.data.view is string

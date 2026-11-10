@@ -1,3 +1,21 @@
+# Invest Capital V3.3 — Registro de alumnos
+
+**Cambio principal:** ahora se ven dos botones en la portada: **Registrarse** y **Acceder**. El registro abre un formulario con nombre o identificador (obligatorio), correo y grupo (opcionales), y consentimiento académico. Ningún alumno debe dar contraseñas, datos bancarios ni enviar dinero.
+
+El botón **Acceder** reabre la sesión ya creada en el mismo navegador. Como se utiliza Firebase anónimo, **no es una cuenta permanente entre dispositivos**; si se cambia de equipo hay que volver a registrarse. Para compartir un equipo, hay que pulsar **Cerrar sesión** antes de que entre otro alumno.
+
+**Seguimiento:** para que el profesor vea nombres, grupos, correos opcionales y acciones desde otro equipo, es imprescindible activar Firebase, configurar `firebase-config.js`, habilitar inicio anónimo, configurar Firestore y **publicar las nuevas reglas `firestore.rules`**. Con GitHub Pages sin Firebase, los datos solo permanecen en ese navegador. Los correos se guardan como información *declarada*, no verificada.
+
+**IMPORTANTE PARA QUIEN YA USA FIREBASE:** la versión V3.3 introduce los campos `email` y `group` en la colección `sessions`; hay que actualizar las reglas de Firestore ANTES de probar nuevos registros. Registros de versiones anteriores se siguen mostrando.
+
+**Publicación:** descarga y descomprime el ZIP, sube **todos los archivos** de su interior a la raíz del repositorio de GitHub Pages y confirma con Commit changes. Después recarga con `Ctrl + Shift + R`. Prueba Registrarse y Acceder.
+
+---
+
+# Invest Capital V3.2 — Negro, morado y dorado
+
+**Rediseño completo de color y jerarquía visual** en portada `index.html`, panel `app.html` y consola `admin.html`.
+
 # Invest Capital — instalación y panel privado del docente
 
 **Versión:** 3.1 revisada — escenario financiero interactivo para proyección en clase.
@@ -67,3 +85,12 @@ El correo incluido en los archivos NO es una contraseña. Las verificaciones se 
 - Corregido el indicador de retiros del profesor: ahora cuenta eventos `withdraw_attempt` del alumno seleccionado y de los **últimos 200 eventos cargados**, en vez de deducirlo de la última acción de todas las sesiones.
 - La vista local sigue siendo exploratoria y los datos no se sincronizan con el docente hasta completar Firebase.
 - No se ha probado una conexión con un proyecto Firebase real, porque esta entrega no incluye credenciales públicas de ese proyecto. Prueba la autenticación y las reglas antes de la clase.
+
+
+## Cambios de diseño V3.2
+
+- Negro profundo como fondo, morado amatista en paneles y botones, oro champán para acentos y datos destacados.
+- Gráficas violetas y doradas (sin verde ni turquesa), tarjetas de activos con acabado oscuro y barra lateral morada.
+- Botones morados con texto blanco de alto contraste.
+- Se conserva el aviso académico previo a la entrada. No se aceptan pagos, contraseñas ni datos bancarios.
+- Firebase sigue requiriendo configuración para que la consola privada muestre actividad de otros dispositivos.
