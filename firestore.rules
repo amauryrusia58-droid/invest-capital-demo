@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'investcapital8310@gmail.com'
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function isOwner(uid) {
+      return request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+    function validSession() {
+      return request.resource.data.keys().hasOnly(['alias', 'createdAt', 'lastSeen', 'lastAction', 'view'])
+        && request.resource.data.keys().hasAll(['alias', 'createdAt', 'lastSeen', 'lastAction', 'view'])
+        && request.resource.data.alias is string
+        && request.resource.data.alias.size() >= 2
+        && request.resource.data.alias.size() <= 30
+        && request.resource.data.lastAction is string
+        && request.resource.data.lastAction.size() <= 120
+        && request.resource.data.view is string
+        && request.resource.data.view.size() <= 30
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastSeen == request.time;
+    }
+    match /sessions/{uid} {
+      allow get: if isAdmin() || isOwner(uid);
+      allow list: if isAdmin();
+      allow create: if isOwner(uid) && validSession();
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeen','lastAction','view'])
+        && request.resource.data.lastAction is string
+        && request.resource.data.lastAction.size() <= 120
+        && request.resource.data.view is string
+        && request.resource.data.view.size() <= 30
+        && request.resource.data.lastSeen == request.time;
+      allow delete: if false;
+      match /events/{eventId} {
+        allow get, list: if isAdmin() || isOwner(uid);
+        allow create: if isOwner(uid)
+          && exists(/databases/$(database)/documents/sessions/$(uid))
+          && request.resource.data.keys().hasOnly(['type', 'label', 'view', 'createdAt'])
+          && request.resource.data.keys().hasAll(['type', 'label', 'view', 'createdAt'])
+          && request.resource.data.type is string
+          && request.resource.data.type.size() <= 30
+          && request.resource.data.label is string
+          && request.resource.data.label.size() <= 120
+          && request.resource.data.view is string
+          && request.resource.data.view.size() <= 30
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+    match /control/{id} {
+      allow get: if request.auth != null && id == 'global';
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && id == 'global'
+        && request.resource.data.keys().hasOnly(['stage','updatedAt','updatedBy'])
+        && request.resource.data.keys().hasAll(['stage','updatedAt','updatedBy'])
+        && request.resource.data.stage is int
+        && request.resource.data.stage >= 0
+        && request.resource.data.stage <= 3
+        && request.resource.data.updatedBy == 'investcapital8310@gmail.com'
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    match /{document=**} {allow read, write: if false;}
+  }
+}
