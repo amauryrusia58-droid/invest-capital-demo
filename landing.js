@@ -48,6 +48,30 @@ form.addEventListener('submit',async e=>{
       }
     }catch(err){error.textContent='No se pudo iniciar una cuenta nueva: '+err.message;return;}
   }
+  // Notificación independiente del registro en Firestore. No se promete entrega:
+  // FormSubmit exige activar previamente la dirección receptora.
+  const submitBtn=document.getElementById('acceptBtn');
+  submitBtn.disabled=true;
+  submitBtn.textContent='Procesando registro…';
+  let emailStatus='no confirmado';
+  try{
+    const ctrl=new AbortController();
+    const timeout=setTimeout(()=>ctrl.abort(),7000);
+    try{
+      const resp=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{
+        method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({
+          _subject:'Invest Capital — Nuevo registro de alumno',
+          _template:'table',
+          name,grupo:group||'Sin grupo',email:email||'No facilitado',
+          mensaje:'Un alumno se registró en Invest Capital (actividad académica).'
+        }),signal:ctrl.signal
+      });
+      const result=await resp.json();
+      emailStatus=resp.ok && (result.success===true || result.success==='true')?'aceptado por FormSubmit':'no confirmado';
+    }finally{clearTimeout(timeout);}
+  }catch(err){console.warn('Aviso de registro pendiente',err);}
+  localStorage.setItem('ic_v34_mail_status',emailStatus);
   localStorage.removeItem('ic_v3_ledger');
   localStorage.setItem('ic_v3_profile',JSON.stringify(profile));
   localStorage.setItem('ic_v3_alias',name);

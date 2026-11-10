@@ -1,197 +1,66 @@
-import {studentStart, logStudent, watchStage, firebaseEnabled, getFirebase} from './backend.js';
-
-const $ = (s) => document.querySelector(s);
-const $$ = (s) => [...document.querySelectorAll(s)];
-const alias = (localStorage.getItem('ic_v3_alias') || '').trim();
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase} from './backend.js';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
-try{const p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p&&p.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||'')};}catch{}
-if (localStorage.getItem('ic_v3_consent') !== 'yes' || !alias) location.replace('index.html');
-
-const titles = {
-  resumen:['Resumen de cuenta','Estado general de tu cartera'],
-  planes:['Planes de inversión','Condiciones y oportunidades de gestión'],
-  cartera:['Mi cartera','Posiciones y distribución de activos'],
-  movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],
-  referidos:['Programa de asociados','Información de tu red de asociados'],
-  documentos:['Centro documental','Información corporativa y condiciones'],
-  soporte:['Centro de atención','Gestión de solicitudes y consultas']
-};
-const base = [
-  {name:'Aporte inicial',ref:'INV-48210',amount:1500,date:'04/02/2026',status:'Acreditado'},
-  {name:'Asignación a estrategia Advanced',ref:'ALG-40111',amount:-500,date:'16/02/2026',status:'Procesado'},
-  {name:'Rendimiento de cartera',ref:'RNT-77702',amount:137.25,date:'03/03/2026',status:'Aplicado'},
-  {name:'Retiro solicitado',ref:'OUT-60713',amount:-85,date:'18/03/2026',status:'Liquidado'},
-  {name:'Bonificación de asociados',ref:'ASO-50312',amount:48,date:'08/04/2026',status:'Aplicado'},
-  {name:'Aporte adicional',ref:'INV-72509',amount:500,date:'20/04/2026',status:'Acreditado'}
-];
-const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
-let view='resumen', stage=0, session={mode:'local'}, sessionReady=false, sending=false, unsubscribe=()=>{}, ledger=[];
-const pendingActions=[];
-const overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'), confirmBtn=$('#confirmModal');
-let onConfirm=null;
-try {let saved=JSON.parse(localStorage.getItem('ic_v3_ledger')||'[]'); if(Array.isArray(saved))ledger=saved.filter(x=>x && typeof x.name==='string' && Number.isFinite(x.amount)).slice(0,100);}catch{}
-
-function saveLedger(){localStorage.setItem('ic_v3_ledger',JSON.stringify(ledger.slice(0,100)));}
-function record(type,label,which=view){
- if(!firebaseEnabled)return;
- pendingActions.push({type,label,view:which});
- // Se almacenan temporalmente los clics hasta que termina el inicio de sesión.
- void flushActions();
-}
-async function flushActions(){
- if(!sessionReady||sending||!firebaseEnabled||session.mode!=='cloud')return;
- sending=true;
- try{
-  while(pendingActions.length){
-   const action=pendingActions[0];
-   await logStudent(session,action.type,action.label,action.view);
-   pendingActions.shift();
+try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||'')};}catch{}
+if(localStorage.getItem('ic_v3_consent')!=='yes'||!alias)location.replace('index.html');
+const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
+const plans={Essential:{min:100,rate:.012},Advanced:{min:500,rate:.021},Prime:{min:2000,rate:.03}};
+const STORE='ic_v34_'+encodeURIComponent((alias+'|'+profile.group).toLowerCase());
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=n=>Math.round((Number(n)||0)*100)/100;
+let account={cash:0,positions:[],ledger:[],seq:0};
+try{
+  const raw=JSON.parse(localStorage.getItem(STORE)||'null');
+  if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0};
   }
-  $('#syncStatus').textContent='Actividad conectada';
- }catch(err){
-  console.warn('Acción pendiente de sincronización',err);
-  $('#syncStatus').textContent='Acciones pendientes de conexión';
- }finally{sending=false;}
+}catch{}
+let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},onConfirm=null;
+const pending=[], overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'),confirmBtn=$('#confirmModal');
+function save(){localStorage.setItem(STORE,JSON.stringify(account));}
+function record(type,label,which=view){if(!firebaseEnabled)return;pending.push({type,label,view:which});void flush();}
+async function flush(){if(!sessionReady||sending||session.mode!=='cloud')return;sending=true;try{while(pending.length){const a=pending[0];await logStudent(session,a.type,a.label,a.view);pending.shift();}$('#syncStatus').textContent='Actividad conectada';}catch(e){console.warn('Acciones pendientes de conexión',e);$('#syncStatus').textContent='Sincronización pendiente';}finally{sending=false;}}
+function setView(v){if(!titles[v])return;view=v;$$('.workspace-section').forEach(x=>x.classList.toggle('active',x.dataset.section===v));$$('.side-link').forEach(x=>{x.classList.toggle('active',x.dataset.view===v);x.setAttribute('aria-current',x.dataset.view===v?'page':'false');});$('#viewTitle').textContent=titles[v][0];$('#viewSubtitle').textContent=titles[v][1];record('section','Abrió '+titles[v][0],v);window.scrollTo({top:0,behavior:'smooth'});}
+function modal(title,html,callback=null,button='Confirmar'){modalTitle.textContent=title;modalContent.innerHTML=html;onConfirm=callback;confirmBtn.classList.toggle('hidden',!callback);confirmBtn.textContent=button;confirmBtn.disabled=false;overlay.classList.remove('hidden');}
+function close(){overlay.classList.add('hidden');onConfirm=null;}
+function err(text){const e=$('#modalError');if(e){e.textContent=text;e.hidden=false;}}
+function tx(name,amount,status,kind){const seq=++account.seq;account.ledger.unshift({name,amount:num(amount),status,kind,ref:'IC-'+String(Date.now()).slice(-6)+String(seq).padStart(2,'0'),date:new Date().toLocaleDateString('es-ES')});account.ledger=account.ledger.slice(0,100);save();render();}
+function principal(){return num(account.positions.reduce((s,p)=>s+p.amount,0));}
+function gain(){const period=stage===0?0:stage===1?1:2;return num(account.positions.reduce((s,p)=>s+p.amount*p.rate*period,0));}
+function total(){return num(account.cash+principal()+gain());}
+function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
+function render(){const invested=principal(),profit=gain(),value=total(),pos=account.positions.filter(x=>x.amount>0);
+  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(profit);$('#availableVal').textContent=money(account.cash);$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=stage===3?'Retiros suspendidos':stage===2?'Retiros sujetos a validación':account.cash>0?'Disponible para invertir':'Sin saldo libre';
+  const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
+  $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
+  $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
+  $('#positionRows').innerHTML=pos.length?pos.map(p=>`<tr><td>${esc(p.plan)}</td><td>${money(p.amount)}</td><td>${money(num(p.amount*p.rate*(stage===0?0:stage===1?1:2)))}</td><td>${esc(p.date)}</td><td><span class="tag">Activa</span></td></tr>`).join(''):'<tr><td colspan="5">Aún no tienes posiciones.</td></tr>';
+  $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · BEP20</small></span><span class="asset-amount">${money(p.amount)}<small class="up">${stage?`+ ${money(num(p.amount*p.rate*(stage===1?1:2)))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
+  $('#chartCaption').textContent=pos.length?`Capital asignado: ${money(invested)} · Rendimiento registrado: ${money(profit)}`:'Sin operaciones: la gráfica comenzará cuando abras una posición.';
+  const baseY=pos.length?180:210;const pts=Array.from({length:9},(_,i)=>{const x=Math.round(i*87.5);const peak=stage?30+Math.round((i/8)*Math.min(95,stage*40)):0;return `${x},${baseY-peak}`;}).join(' ');$('#chartLine').setAttribute('points',pts);$('#chartArea').setAttribute('d','M'+pts.split(' ').map(t=>t.replace(',',' ')).join(' L')+' L700 230 L0 230 Z');
+  $('#supportStatus').textContent=stage===3?'Servicio limitado: solicitudes de retiro suspendidas.':stage===2?'Volumen elevado de consultas; tiempos de respuesta ampliados.':'Los canales de atención están operativos.';
+  ledgerRows();
 }
-function setView(v){
- if(!titles[v])return;
- view=v;
- $$('.workspace-section').forEach(e=>e.classList.toggle('active',e.dataset.section===v));
- $$('.side-link').forEach(e=>{e.classList.toggle('active',e.dataset.view===v);e.setAttribute('aria-current',e.dataset.view===v?'page':'false');});
- $('#viewTitle').textContent=titles[v][0];$('#viewSubtitle').textContent=titles[v][1];
- record('section',`Abrió ${titles[v][0]}`,v);
- window.scrollTo({top:0,behavior:'smooth'});
-}
-function openModal(title,html,callback=null,buttonLabel='Confirmar'){
- modalTitle.textContent=title;
- modalContent.innerHTML=html;
- onConfirm=callback;
- confirmBtn.classList.toggle('hidden',!callback);
- confirmBtn.textContent=buttonLabel;
- overlay.classList.remove('hidden');
- confirmBtn.disabled=false;
-}
-function closeModal(){overlay.classList.add('hidden');onConfirm=null;}
-function errorModal(text){ const err=$('#modalError');if(err){err.textContent=text;err.hidden=false;} }
-function addMove(name,amount,status='Pendiente'){
- ledger.unshift({name,ref:'IC-'+String(Date.now()).slice(-8),amount,date:new Date().toLocaleDateString('es-ES'),status});
- ledger=ledger.slice(0,100);saveLedger();renderLedger();renderBalances();
-}
-function rowMarkup(x){
- const tone=/pendiente|revisión|validación|proceso|programado/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';
- const amt=(x.amount>0?'+ ':'')+money(x.amount);
- return `<td>${escapeHTML(x.name)}</td><td>${escapeHTML(x.ref)}</td><td>${amt}</td><td>${escapeHTML(x.date)}</td><td><span class="tag ${tone}">${escapeHTML(x.status)}</span></td>`;
-}
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderLedger(){
- const all=[...ledger,...(stage>=2?[{name:'Solicitud de retiro bajo revisión',ref:'OUT-80271',amount:-220,date:'22/05/2026',status:stage===3?'Suspendido':'En validación'}]:[]),...base];
- $('#fullRows').innerHTML=all.map(x=>`<tr>${rowMarkup(x)}</tr>`).join('');
- $('#recentRows').innerHTML=all.slice(0,4).map(x=>`<tr><td>${escapeHTML(x.name)}</td><td>${escapeHTML(x.date)}</td><td>${(x.amount>0?'+ ':'')+money(x.amount)}</td><td><span class="tag ${/suspend/i.test(x.status)?'danger':/revisión|validación|proceso/i.test(x.status)?'warn':''}">${escapeHTML(x.status)}</span></td></tr>`).join('');
-}
-function available(){
- const delta=ledger.reduce((sum,x)=>sum+(x.name==='Capital asignado a cartera'?0:x.name==='Aporte a cuenta'?x.amount:x.name==='Retiro solicitado'?-Math.abs(x.amount):0),0);
- return Math.max(0,314.8+delta);
-}
-function renderBalances(){
- const virtualAdd=ledger.filter(x=>x.name==='Aporte a cuenta').reduce((s,x)=>s+x.amount,0);
- const virtualWithdraw=ledger.filter(x=>x.name==='Retiro solicitado').reduce((s,x)=>s+Math.abs(x.amount),0);
- const bonus=stage===0?0:stage===1?216.42:stage===2?223.10:223.10;
- $('#totalVal').textContent=money(2450.70+virtualAdd-virtualWithdraw+bonus);
- $('#gainVal').textContent=money(450.70+bonus);
- $('#availableVal').textContent=money(stage===3?0:available());
- $('#availabilityStatus').textContent=stage===3?'Operaciones temporalmente suspendidas':stage===2?'Operaciones sujetas a validación':'Disponible para solicitudes';
- const msg=$('#scenarioNotice');
- const messages=['','Actualización de resultados: el crecimiento acumulado del trimestre fue revisado al alza.','Comunicado operativo: las solicitudes de retiro están sujetas a validaciones adicionales.','Comunicado operativo: se suspenden temporalmente nuevos retiros mientras continúa la revisión de liquidez.'];
- msg.classList.toggle('hidden',stage===0);msg.classList.toggle('negative',stage>=2);msg.textContent=messages[stage]||'';
- $('#supportStatus').textContent=stage===3?'Servicio limitado: solicitudes de retiro suspendidas.':stage===2?'Volumen elevado de consultas; tiempos de respuesta ampliados.':'Los canales de atención están operativos.';
- renderLedger();
-}
-function setStage(next){
- stage=Math.max(0,Math.min(3,Number(next)||0));renderBalances();
-}
-const docs={
- 'Resumen de servicios':`La entidad declara la prestación de servicios de gestión digital de cartera y asignaciones a estrategias algorítmicas. Los resultados publicados se elaboran a partir de registros operativos internos. La identificación de custodios y contrapartes no figura en este resumen.`,
- 'Metodología de resultados':`La cifra de rentabilidad se calcula sobre el capital asignado al comienzo del periodo. El modelo incorpora operaciones automatizadas y posiciones en mercados digitales. La metodología íntegra de valuación y el detalle de operaciones no se publican. No se adjunta un informe independiente de auditoría.`,
- 'Estado de registros y autorizaciones':`Documentación corporativa: inscripción de actividad comercial declarada. Número de licencia para gestión de inversiones: no facilitado en el expediente consultable. Autoridad supervisora y país de autorización: pendientes de confirmación documental.`,
- 'Condiciones de salida':`Las solicitudes se procesan según disponibilidad de liquidez y validaciones internas. El plazo operativo habitual anunciado es de hasta 15 días hábiles; la compañía se reserva la posibilidad de modificar plazos en circunstancias extraordinarias.`
-};
-
-// Navigación interna
-$$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
-$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{
- $$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));
- const chart=b.dataset.period==='12M'?'0,204 63,188 124,181 185,159 242,162 299,130 357,140 409,112 466,107 526,89 588,67 645,47 700,26':'0,196 80,184 170,160 270,149 360,127 460,106 570,64 700,37';
- $('#chartLine').setAttribute('points',chart);const pts=chart.replace(/,/g,' ').split(' ').filter(Boolean);$('#chartArea').setAttribute('d','M'+chart.replace(/ /g,' L').replace(/,/g,' ')+' L700 230 L0 230 Z');
- record('chart','Cambió periodo del gráfico a '+b.dataset.period);
-}));
-$$('[data-plan]').forEach(b=>b.addEventListener('click',()=>{
- const plan=b.dataset.plan;
- const rates={Essential:'1,2 %',Advanced:'2,1 %',Prime:'3,0 %'};
- record('plan_view','Consultó condiciones de '+plan,'planes');
- openModal('Condiciones · '+plan,`<p>Rendimiento semanal anunciado: <b>${rates[plan]}</b>. Los importes pueden variar; el rendimiento no se acredita necesariamente hasta el cierre del periodo.</p><p>La liquidación queda sujeta a las condiciones de salida publicadas por la entidad.</p><div class="modal-note">Para solicitar la activación de este plan, selecciona «Solicitar asignación».</div>`,()=>{
- addMove('Solicitud de activación · '+plan,0,'En revisión');record('plan_request','Solicitó activar plan '+plan,'planes');openModal('Solicitud recibida','Tu solicitud ha sido registrada y figura como pendiente en el historial.');
- },'Solicitar asignación');
-}));
-$$('[data-document]').forEach(b=>b.addEventListener('click',()=>{
- const name=b.dataset.document; record('document','Consultó '+name,'documentos');
- openModal(name,`<p>${escapeHTML(docs[name]||'Documento no disponible.')}</p>`);
-}));
-$('#actionDeposit').addEventListener('click',()=>{
- record('deposit_open','Abrió la opción Añadir capital');
- openModal('Añadir capital',`<p>Solicita una asignación adicional para tu cartera. La operación se reflejará en el historial de cuenta.</p><label class="field-label" for="amountValue">Importe (USD)</label><input id="amountValue" type="number" class="plain-input" min="100" max="10000" value="250" step="50"><p id="modalError" class="form-error" hidden></p><p class="tiny">No se solicitan tarjetas, transferencias ni direcciones de criptomonedas.</p>`,()=>{
- const n=Number($('#amountValue').value);if(!Number.isFinite(n)||n<100||n>10000){errorModal('El importe permitido es de 100 a 10.000 USD.');return;}
- addMove('Aporte a cuenta',n,'Acreditado');record('deposit_attempt','Añadió capital por '+money(n));openModal('Operación registrada','El importe figura ahora en el estado de tu cuenta.');
- },'Confirmar operación');
-});
-function withdrawal(){
- record('withdraw_open','Abrió formulario de retiro');
- const can=stage===3?0:available();
- openModal('Solicitud de retiro',`<p>Saldo disponible mostrado: <b>${money(can)}</b>.</p><label class="field-label" for="amountValue">Importe (USD)</label><input id="amountValue" type="number" class="plain-input" min="1" max="${Math.max(1,can)}" value="${Math.min(100,Math.floor(can))}" step="1" ${stage===3?'disabled':''}><p id="modalError" class="form-error" hidden></p>${stage===3?'<div class="notice negative">El servicio de retiros no se encuentra disponible temporalmente.</div>':'<p class="tiny">La solicitud aparecerá en el historial de cuenta.</p>'}`,stage===3?null:()=>{
- const n=Number($('#amountValue').value);if(!Number.isFinite(n)||n<1||n>available()){errorModal('Introduce un importe válido dentro del saldo disponible.');return;}
- const status=stage>=2?'En validación':'En proceso';
- addMove('Retiro solicitado',-n,status);record('withdraw_attempt','Solicitó retiro de '+money(n)+' — '+status);openModal('Solicitud registrada',`<p>Referencia generada. Estado: <b>${status}</b>.</p><p>Consulta el historial de movimientos para continuar el seguimiento.</p>`);
- },'Solicitar retiro');
-}
-$('#actionWithdraw').addEventListener('click',withdrawal);
-$('#withdrawInMovements').addEventListener('click',withdrawal);
-$('#copyRef').addEventListener('click',async()=>{
- record('referral','Consultó o copió identificador de asociados','referidos');
- try{await navigator.clipboard.writeText($('#refCode').textContent.trim());openModal('Código de asociado','Identificador copiado al portapapeles.');}
- catch{openModal('Código de asociado',`<p>${escapeHTML($('#refCode').textContent)}</p>`);}
-});
-$('#sendSupport').addEventListener('click',()=>{
- const reason=$('#supportSubject').value, message=$('#supportText').value.trim();
- if(message.length<5){openModal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}
- // Solo se registra el motivo. Nunca se transmite el texto libre del alumno.
- record('support','Envió consulta: '+reason,'soporte');$('#supportText').value='';
- addMove('Consulta · '+reason,0,'Recibida');
- openModal('Solicitud de atención','Tu consulta se ha registrado correctamente.');
-});
-$('#closeModal').addEventListener('click',closeModal);
-overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal();});
-window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-confirmBtn.addEventListener('click',()=>{if(onConfirm)onConfirm();});
-
-// Salir y cambiar de alumno en un equipo compartido.
-const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';
-exit.addEventListener('click',async()=>{
- record('exit','Cerró sesión');
- await flushActions();
- try{const f=await getFirebase();if(f&&f.auth.currentUser?.isAnonymous)await f.Auth.signOut(f.auth);}catch{}
- localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_ledger');location.replace('index.html');
-});
-$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;
-renderBalances();
-(async()=>{
- try{
-   session=await studentStart(profile);
-   sessionReady=true;
-   $('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';
-   record('entry','Entró al panel');
-   await flushActions();
-   unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sincronización interrumpida';});
- }catch(err){console.error(err);$('#syncStatus').textContent='Sin conexión';}
-})();
+function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
+function deposit(){record('deposit_open','Abrió el formulario de aporte USDT BEP20');modal('Depósito de USDT · BEP20',`
+ <div class="wallet-card"><span class="wallet-network">Activo: <strong>USDT</strong> &nbsp; · &nbsp; Red: <strong>BNB Smart Chain (BEP20)</strong></span><small>Referencia de cartera</small><div class="wallet-reference">IC-DEMO-BEP20-001</div><small>Identificador de aula no válido para recibir criptomonedas.</small></div>
+ <label class="field-label" for="amountValue">Importe del aporte (USDT)</label><input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="100" inputmode="decimal">
+ <p id="modalError" class="form-error" hidden></p><p class="tiny">Este formulario no procesa transferencias ni verifica operaciones en blockchain.</p>`,()=>{const n=num($('#amountValue').value);if(!Number.isFinite(n)||n<1||n>100000||!Number.isFinite(Number($('#amountValue').value))){err('Introduce una cantidad entre 1 y 100.000 USDT.');return;}account.cash=num(account.cash+n);tx('Aporte USDT · BEP20',n,'Registrado','deposit');record('deposit_confirmed',`Registró aporte virtual de ${n.toFixed(2)} USDT por BEP20`);modal('Aporte registrado',`<p>Se registró en tu cuenta un aporte de <strong>${money(n)}</strong>.</p><div class="modal-note">No se ha efectuado una transferencia blockchain. Puedes asignar este saldo a un plan desde la sección «Planes».</div>`,()=>{close();setView('planes');},'Elegir un plan');},'Registrar aporte');}
+function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES')});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
+function withdrawal(){record('withdraw_open','Abrió solicitudes de retiro');const cap=num(account.cash+principal());const blocked=stage===3;
+ modal('Solicitar retiro',`<p>Saldo potencialmente rescatable: <strong>${money(cap)}</strong></p><label class="field-label" for="amountValue">Importe (USDT)</label><input id="amountValue" class="plain-input" type="number" step="0.01" min="1" max="${Math.max(1,cap)}" value="${Math.min(100,cap)}" ${blocked?'disabled':''}><p id="modalError" class="form-error" hidden></p>${blocked?'<div class="notice negative">Las solicitudes de retiro están temporalmente suspendidas.</div>':'<p class="tiny">Los retiros quedan sujetos a validaciones y condiciones de salida.</p>'}`,blocked?null:()=>{const raw=Number($('#amountValue').value),n=num(raw);if(!Number.isFinite(raw)||n<1||n>cap){err('Introduce una cantidad válida dentro de tu saldo rescatable.');return;}
+ let remaining=n;const fromCash=Math.min(account.cash,remaining);account.cash=num(account.cash-fromCash);remaining=num(remaining-fromCash);for(const pos of account.positions){if(remaining<=0)break;const part=Math.min(pos.amount,remaining);pos.amount=num(pos.amount-part);remaining=num(remaining-part);}account.positions=account.positions.filter(p=>p.amount>0);tx('Retiro solicitado',-n,stage>=2?'En validación':'En proceso','withdraw');record('withdraw_attempt',`Solicitó retiro de ${n.toFixed(2)} USDT · ${stage>=2?'En validación':'En proceso'}`);modal('Solicitud registrada',`<p>Solicitud de <strong>${money(n)}</strong> registrada en el historial.</p><p>Estado: <strong>${stage>=2?'En validación':'En proceso'}</strong>. No se ha enviado ninguna criptomoneda.</p>`);},'Solicitar retiro');}
+const docs={'Resumen de servicios':'La entidad declara servicios digitales de gestión de cartera. Los registros son internos. No se detallan custodios ni contrapartes independientes.','Metodología de resultados':'Los resultados comunicados proceden de registros internos. La metodología detallada y la auditoría independiente no se adjuntan.','Estado de registros y autorizaciones':'Número de licencia para gestión de inversiones: no proporcionado. Autoridad supervisora: no identificada en el expediente.','Condiciones de salida':'Las solicitudes pueden quedar sujetas a validaciones y disponibilidad de liquidez. No se garantiza un plazo fijo de procesamiento.'};
+$$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{$$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));record('chart','Consultó gráfica '+b.dataset.period);}));
+$$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
+$$('[data-document]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.document;record('document','Consultó '+name,'documentos');modal(name,`<p>${esc(docs[name]||'Documento no disponible.')}</p>`);}));
+$('#actionDeposit').addEventListener('click',deposit);$('#startDeposit').addEventListener('click',deposit);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
+$('#copyRef').addEventListener('click',async()=>{record('referral','Consultó identificador del programa','referidos');try{await navigator.clipboard.writeText($('#refCode').textContent.trim());modal('Identificador de asociado','Copiado al portapapeles.');}catch{modal('Identificador de asociado',esc($('#refCode').textContent));}});
+$('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
+$('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
+const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser?.isAnonymous)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');location.replace('index.html');});$('.side-foot').append(exit);
+$('#userAlias').textContent=alias;$('#refCode').textContent='IC-'+Array.from(alias).reduce((sum,c)=>sum+c.charCodeAt(0)*7,4280).toString().slice(-6);render();
+(async()=>{try{session=await studentStart(profile);sessionReady=true;$('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';record('entry','Entró al panel');await flush();unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sin conexión';});}catch(e){console.error(e);$('#syncStatus').textContent='Modo local';}})();
 window.addEventListener('pagehide',()=>unsubscribe());
