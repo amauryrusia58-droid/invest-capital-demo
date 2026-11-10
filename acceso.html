@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./acceso.css">
   <script src="./config.js" defer></script>
   <script src="./supabase.js" defer></script>
-  <script src="./acceso.js?v=planes-1" defer></script>
+  <script src="./acceso.js?v=registro-2" defer></script>
 </head>
 <body>
   <header class="top"><div class="wrap top-content">
@@ -39,9 +39,15 @@
         <button type="button" class="link-button" data-view="confirm">Ya tengo el código de registro</button>
       </form>
       <form id="signup" class="auth-form" hidden>
+        <label>Nombre completo<input name="name" type="text" autocomplete="name" maxlength="70" required></label>
         <label>Correo electrónico<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
+        <label>Comentario (opcional)<input name="comment" type="text" maxlength="180" placeholder="¿Qué te gustaría probar en la demo?"></label>
         <label>Contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
         <p class="hint">Usa al menos 12 caracteres. Te enviaremos un código para verificar el correo.</p>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:500">
+          <input name="registrationConsent" type="checkbox" required style="width:16px;height:16px;min-height:0;margin:2px 0 0;flex:none">
+          <span>Acepto que mi nombre, correo, comentario y plan elegido se compartan con el responsable del sitio por FormSubmit para gestionar mi registro en la demo.</span>
+        </label>
         <button type="submit">Crear mi cuenta demo</button>
       </form>
       <form id="confirm" class="auth-form" hidden>
@@ -72,6 +78,10 @@
         <button id="logout" class="secondary" type="button">Cerrar sesión</button>
       </div>
       <p id="dashboard-status" class="message" role="status" hidden></p>
+      <div id="registration-notice" class="message" hidden>
+        <p id="registration-notice-text" role="status"></p>
+        <button id="retry-registration-notice" class="secondary" type="button" style="margin-top:8px">Reintentar aviso</button>
+      </div>
       <div class="dashboard-grid">
         <section class="card">
           <h2>Simulador de escenarios</h2>

@@ -33,7 +33,9 @@
     ['private-strategies', { name: 'Private Strategies', share: 17 }],
     ['digital-exposure', { name: 'Digital Exposure', share: 24 }],
   ]);
-  const selectedPlan = demoPlans.get(new URLSearchParams(window.location.search).get('plan'));
+  const selectedPlanKey = new URLSearchParams(window.location.search).get('plan');
+  const selectedPlan = demoPlans.get(selectedPlanKey);
+  const registrationEndpoint = 'https://formsubmit.co/ajax/investcapital8310@gmail.com';
   if (selectedPlan) {
     status('selected-plan-auth', 'Elegiste ' + selectedPlan.name + ' · ' + selectedPlan.share +
       '% del reparto ficticio. Crea tu cuenta o inicia sesión para simular.');
@@ -42,6 +44,8 @@
   let recovery = false;
   let authBusy = false;
   let historyRequest = 0;
+  const noticesInProgress = new Set();
+  const noticesAccepted = new Set();
 
   function showAuth(view, email = '', message = '') {
     byId('intro').hidden = false;
@@ -72,6 +76,8 @@
       status('selected-plan-panel', 'Punto de partida: ' + selectedPlan.name + ' · ' +
         selectedPlan.share + '% del reparto ficticio. Puedes cambiar los valores antes de guardar.');
     }
+    byId('registration-notice').hidden = true;
+    void sendRegistrationNotice(account);
     await loadHistory();
   }
 
@@ -115,9 +121,23 @@
     await enterDashboard(data.user);
   }, 'No se pudo iniciar sesión. Revisa el correo y la contraseña o usa la recuperación.');
 
-  authForm('signup', async ({ email, password }) => {
+  authForm('signup', async ({ name, email, comment, password, registrationConsent }) => {
     const address = email.trim();
-    const { data, error } = await client.auth.signUp({ email: address, password });
+    const fullName = name.trim();
+    if (!fullName || registrationConsent !== 'on') {
+      status('auth-status', 'Escribe tu nombre y marca el consentimiento para continuar.');
+      return;
+    }
+    const { data, error } = await client.auth.signUp({
+      email: address,
+      password,
+      options: { data: {
+        registro_nombre: fullName,
+        registro_comentario: comment.trim(),
+        registro_plan: selectedPlan ? selectedPlanKey : null,
+        registro_consentimiento: true
+      } }
+    });
     if (error) throw error;
     byId('signup').reset();
     if (data.session) {
@@ -157,6 +177,84 @@
     byId('change').reset();
     await enterDashboard(data.user, 'Contraseña actualizada.');
   }, 'No se pudo actualizar la contraseña. Usa una contraseña nueva de al menos 12 caracteres.');
+
+  function registrationNotice(text = '') {
+    byId('registration-notice').hidden = !text;
+    byId('registration-notice-text').textContent = text;
+  }
+
+  async function sendRegistrationNotice(account) {
+    const metadata = account.user_metadata || {};
+    if (!account.email_confirmed_at || !account.email ||
+        metadata.registro_consentimiento !== true || !metadata.registro_nombre ||
+        metadata.registro_aviso_enviado || noticesAccepted.has(account.id) || noticesInProgress.has(account.id)) return;
+
+    noticesInProgress.add(account.id);
+    try {
+      const deliver = async () => {
+        if (user?.id !== account.id || noticesAccepted.has(account.id)) return;
+        const { data, error } = await client.auth.getUser();
+        const current = data?.user;
+        if (user?.id !== account.id) return;
+        if (error || current?.id !== account.id) throw new Error('No se pudo verificar la cuenta');
+        if (current.user_metadata?.registro_aviso_enviado) return;
+        const plan = demoPlans.get(metadata.registro_plan);
+        const formUrl = new URL('./acceso.html', window.location.href);
+        const result = await fetch(registrationEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          keepalive: true,
+          referrerPolicy: 'origin',
+          signal: AbortSignal.timeout(15000),
+          body: JSON.stringify({
+            _subject: 'Invest Capital Demo - Nueva cuenta confirmada',
+            _template: 'table',
+            _captcha: 'false',
+            _url: formUrl.href,
+            name: String(metadata.registro_nombre).trim().slice(0, 70),
+            email: account.email,
+            comentario: String(metadata.registro_comentario || '').slice(0, 180),
+            plan: plan?.name || 'Sin plan seleccionado',
+            registro: account.id
+          })
+        });
+        const response = await result.json();
+        if (!result.ok || (response?.success !== true && response?.success !== 'true')) {
+          throw new Error('FormSubmit no aceptó el aviso');
+        }
+        noticesAccepted.add(account.id);
+        if (user?.id === account.id) {
+          const { data: updated } = await client.auth.updateUser({ data: { registro_aviso_enviado: true } });
+          if (user?.id === account.id) {
+            if (updated?.user?.id === account.id) user = updated.user;
+            registrationNotice();
+          }
+        }
+      };
+      if (navigator.locks?.request) {
+        await navigator.locks.request('invest-demo-registro:' + account.id, deliver);
+      } else {
+        await deliver();
+      }
+    } catch {
+      if (user?.id === account.id && !noticesAccepted.has(account.id)) {
+        registrationNotice('Tu cuenta está activa. El aviso al administrador está pendiente. Puedes reintentarlo aquí o cuando vuelvas a entrar.');
+      }
+    } finally {
+      noticesInProgress.delete(account.id);
+    }
+  }
+
+  byId('retry-registration-notice').addEventListener('click', async event => {
+    if (!user) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await sendRegistrationNotice(user);
+    } finally {
+      button.disabled = false;
+    }
+  });
 
   byId('logout').addEventListener('click', async event => {
     const button = event.currentTarget;
