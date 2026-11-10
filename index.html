@@ -407,7 +407,8 @@ input:focus,select:focus{border-color:rgba(122,255,186,.5);box-shadow:0 0 0 3px 
           <input id="regMessage" name="comentario" maxlength="180" placeholder="Ej.: Mi primer registro de prueba">
           <label class="consent-label"><input type="checkbox" id="regConsent" name="consentimiento" value="Sí; acepto enviar estos datos para recibir una respuesta sobre la demo" required><span>Acepto que mi nombre, correo y comentario se envíen al responsable del sitio por FormSubmit para gestionar esta solicitud de acceso a la demo. *</span></label>
           <button class="btn" type="submit" style="margin-top:18px;width:100%">Enviar registro de prueba</button>
-          <p class="form-small">FormSubmit puede pedirte una verificación antispam. Cuando termine el envío, verás la confirmación de tu solicitud.</p>
+          <p class="form-small">Al completar el envío, verás la confirmación de tu solicitud.</p>
+          <p id="registrationStatus" class="form-small" role="status" aria-live="polite"></p>
         </form>
       </div>
       <div class="panel">
@@ -433,13 +434,47 @@ input:focus,select:focus{border-color:rgba(122,255,186,.5);box-shadow:0 0 0 3px 
 </main>
 
 <script>
-if (['https:', 'http:'].includes(window.location.protocol)) {
-  const confirmation = document.createElement('input');
-  confirmation.type = 'hidden';
-  confirmation.name = '_next';
-  confirmation.value = new URL('./gracias.html', window.location.href).href;
-  document.getElementById('registrationForm').append(confirmation);
-}
+const registrationForm = document.getElementById('registrationForm');
+const registrationStatus = document.getElementById('registrationStatus');
+const registrationButton = registrationForm.querySelector('button[type="submit"]');
+
+registrationForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (registrationButton.disabled) return;
+  if (!['https:', 'http:'].includes(window.location.protocol)) {
+    registrationStatus.textContent = 'Abre la página publicada para enviar la solicitud.';
+    return;
+  }
+
+  const endpoint = new URL(registrationForm.action);
+  endpoint.pathname = '/ajax' + endpoint.pathname;
+  const fields = Object.fromEntries(new FormData(registrationForm));
+  registrationButton.disabled = true;
+  registrationStatus.textContent = 'Enviando solicitud…';
+  let accepted = false;
+
+  try {
+    const response = await fetch(endpoint.href, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(fields),
+      signal: AbortSignal.timeout(20000)
+    });
+    const result = await response.json();
+    if (!response.ok || (result?.success !== true && result?.success !== 'true')) {
+      registrationStatus.textContent = 'FormSubmit no confirmó el envío. Revisa si llegó el correo antes de intentarlo de nuevo.';
+      return;
+    }
+
+    accepted = true;
+    registrationStatus.textContent = 'Solicitud enviada.';
+    window.location.assign(new URL('./gracias.html', window.location.href).href);
+  } catch {
+    registrationStatus.textContent = 'No pudimos comprobar el envío. Revisa si llegó el correo antes de volver a intentarlo.';
+  } finally {
+    if (!accepted) registrationButton.disabled = false;
+  }
+});
 const money = n => '$ ' + new Intl.NumberFormat('en-US', {maximumFractionDigits: 0}).format(n);
 const capital = document.getElementById('capital');
 const rate = document.getElementById('rate');
