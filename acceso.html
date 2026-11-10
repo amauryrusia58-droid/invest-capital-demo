@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./acceso.css">
   <script src="./config.js" defer></script>
   <script src="./supabase.js" defer></script>
-  <script src="./acceso.js?v=panel-planes-3" defer></script>
+  <script src="./acceso.js?v=acceso-simple-4" defer></script>
 </head>
 <body>
   <header class="top"><div class="wrap top-content">
@@ -25,11 +25,7 @@
     <p id="system-status" class="message" role="status">Comprobando la configuración…</p>
 
     <section id="auth" class="card access-card" hidden aria-labelledby="auth-heading">
-      <div class="switches" aria-label="Opciones de acceso">
-        <button type="button" data-view="login">Iniciar sesión</button>
-        <button type="button" data-view="signup">Crear cuenta</button>
-      </div>
-      <h2 id="auth-heading">Iniciar sesión</h2>
+      <h2 id="auth-heading" tabindex="-1">Iniciar sesión</h2>
       <p id="auth-status" class="message" role="status" hidden></p>
       <form id="login" class="auth-form">
         <label>Correo electrónico<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
@@ -37,6 +33,7 @@
         <button type="submit">Entrar a mi panel</button>
         <button type="button" class="link-button" data-view="forgot">Olvidé mi contraseña</button>
         <button type="button" class="link-button" data-view="confirm">Ya tengo el código de registro</button>
+        <button type="button" class="link-button" data-view="signup">¿Primera vez? Crea una cuenta</button>
       </form>
       <form id="signup" class="auth-form" hidden>
         <label>Nombre completo<input name="name" type="text" autocomplete="name" maxlength="70" required></label>
@@ -49,21 +46,25 @@
           <span>Acepto que mi nombre, correo, comentario y plan elegido se compartan con el responsable del sitio por FormSubmit para gestionar mi registro en la demo.</span>
         </label>
         <button type="submit">Crear mi cuenta demo</button>
+        <button type="button" class="link-button" data-view="login">¿Ya tienes cuenta? Inicia sesión</button>
       </form>
       <form id="confirm" class="auth-form" hidden>
         <label>Correo electrónico<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
         <label>Código de registro<input name="token" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
         <button type="submit">Confirmar y entrar</button>
+        <button type="button" class="link-button" data-view="login">Volver a iniciar sesión</button>
       </form>
       <form id="forgot" class="auth-form" hidden>
         <label>Correo electrónico<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
         <button type="submit">Solicitar código</button>
         <button type="button" class="link-button" data-view="verify">Ya tengo un código de recuperación</button>
+        <button type="button" class="link-button" data-view="login">Volver a iniciar sesión</button>
       </form>
       <form id="verify" class="auth-form" hidden>
         <label>Correo electrónico<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
         <label>Código de recuperación<input name="token" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
         <button type="submit">Verificar código</button>
+        <button type="button" class="link-button" data-view="forgot">Solicitar otro código</button>
       </form>
       <form id="change" class="auth-form" hidden>
         <label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>

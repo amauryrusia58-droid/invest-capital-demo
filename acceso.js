@@ -63,10 +63,6 @@
     byId('dashboard').hidden = true;
     byId('auth-heading').textContent = headings[view];
     for (const name of Object.keys(headings)) byId(name).hidden = name !== view;
-    for (const button of document.querySelectorAll('[data-view]')) {
-      button.setAttribute('aria-pressed', String(button.dataset.view === view));
-    }
-    byId('auth').querySelector('.switches').hidden = recovery;
     byId(view).reset();
     if (email && byId(view).elements.namedItem('email')) byId(view).elements.email.value = email;
     status('auth-status', message);
@@ -92,6 +88,7 @@
       if (authBusy || recovery) return;
       const email = button.closest('form')?.elements.namedItem('email')?.value.trim() || '';
       showAuth(button.dataset.view, email);
+      byId('auth-heading').focus();
     });
   }
 
