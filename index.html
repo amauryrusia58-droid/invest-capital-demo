@@ -121,6 +121,13 @@ h1{font-size:clamp(34px,5vw,64px);line-height:1.02;margin:10px 0 14px;letter-spa
 .alloc-list{display:grid;gap:12px}
 .alloc-item{display:flex;justify-content:space-between;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(122,255,186,.08)}
 .alloc-item .left{display:flex;align-items:center;gap:10px}
+a.alloc-item{align-items:center;color:#ecf8ef;text-decoration:none;border-color:rgba(122,255,186,.22);transition:background .16s,border-color .16s}
+a.alloc-item:hover,a.alloc-item:focus-visible{background:#183f2c;border-color:#8ef2b6}
+a.alloc-item:focus-visible{outline:2px solid #b7ffdb;outline-offset:3px}
+.alloc-item .dot{flex:none}
+.alloc-choice{display:grid;gap:3px;text-align:right;flex:none}
+.alloc-choice small{font-size:11px;color:#b7ffdb}
+#planes{scroll-margin-top:105px}
 .dot{width:10px;height:10px;border-radius:999px}
 .market-list{display:grid;gap:10px;margin-top:18px}
 .row{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:12px;padding:13px 14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(122,255,186,.08);align-items:center}
@@ -183,6 +190,7 @@ input:focus,select:focus{border-color:rgba(122,255,186,.5);box-shadow:0 0 0 3px 
       <a href="#dashboard">Dashboard</a>
       <a href="#insights">Insights</a>
       <a href="#simulador">Simulador</a>
+      <a href="#planes">Planes demo</a>
       <a href="#registro">Registro</a>
       <a href="#mercado">Mercado</a>
       <a class="ghost" href="./acceso.html">Mi cuenta demo</a>
@@ -298,18 +306,18 @@ input:focus,select:focus{border-color:rgba(122,255,186,.5);box-shadow:0 0 0 3px 
 
   <section class="section">
     <div class="grid-2">
-      <div class="panel">
-        <h3>Asignación estratégica</h3>
-        <p>Bloque visual de distribución tipo cartera premium.</p>
+      <div class="panel" id="planes">
+        <h3>Elige un plan de simulación</h3>
+        <p>Pulsa una categoría para crear tu cuenta o entrar y probarla. Los porcentajes representan el reparto de una cartera ficticia.</p>
         <div class="alloc">
           <div class="donut">
             <div class="donut-center"><div><small style="display:block;color:#9cb4a9;font-size:12px;margin-bottom:4px">Diversificación</small><b>100%</b></div></div>
           </div>
           <div class="alloc-list">
-            <div class="alloc-item"><div class="left"><span class="dot" style="background:#58ef9a"></span><strong>Growth Equity</strong></div><strong>36%</strong></div>
-            <div class="alloc-item"><div class="left"><span class="dot" style="background:#28b76b"></span><strong>Cash Reserve</strong></div><strong>23%</strong></div>
-            <div class="alloc-item"><div class="left"><span class="dot" style="background:#b7ffdb"></span><strong>Private Strategies</strong></div><strong>17%</strong></div>
-            <div class="alloc-item"><div class="left"><span class="dot" style="background:#185b3a"></span><strong>Digital Exposure</strong></div><strong>24%</strong></div>
+            <a class="alloc-item" href="./acceso.html?plan=growth-equity" aria-label="Simular Growth Equity, 36% del reparto ficticio"><span class="left"><span class="dot" style="background:#58ef9a" aria-hidden="true"></span><strong>Growth Equity</strong></span><span class="alloc-choice"><strong>36%</strong><small>Simular →</small></span></a>
+            <a class="alloc-item" href="./acceso.html?plan=cash-reserve" aria-label="Simular Cash Reserve, 23% del reparto ficticio"><span class="left"><span class="dot" style="background:#28b76b" aria-hidden="true"></span><strong>Cash Reserve</strong></span><span class="alloc-choice"><strong>23%</strong><small>Simular →</small></span></a>
+            <a class="alloc-item" href="./acceso.html?plan=private-strategies" aria-label="Simular Private Strategies, 17% del reparto ficticio"><span class="left"><span class="dot" style="background:#b7ffdb" aria-hidden="true"></span><strong>Private Strategies</strong></span><span class="alloc-choice"><strong>17%</strong><small>Simular →</small></span></a>
+            <a class="alloc-item" href="./acceso.html?plan=digital-exposure" aria-label="Simular Digital Exposure, 24% del reparto ficticio"><span class="left"><span class="dot" style="background:#185b3a" aria-hidden="true"></span><strong>Digital Exposure</strong></span><span class="alloc-choice"><strong>24%</strong><small>Simular →</small></span></a>
           </div>
         </div>
       </div>

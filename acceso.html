@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./acceso.css">
   <script src="./config.js" defer></script>
   <script src="./supabase.js" defer></script>
-  <script src="./acceso.js" defer></script>
+  <script src="./acceso.js?v=planes-1" defer></script>
 </head>
 <body>
   <header class="top"><div class="wrap top-content">
@@ -20,6 +20,7 @@
       <p class="eyebrow">ENTORNO EDUCATIVO</p>
       <h1>Tu cuenta de demostración</h1>
       <p>Accede a tu espacio para probar el simulador y guardar tus propios escenarios. Las cantidades son ficticias.</p>
+      <p id="selected-plan-auth" class="message" hidden></p>
     </div>
     <p id="system-status" class="message" role="status">Comprobando la configuración…</p>
 
@@ -75,6 +76,7 @@
         <section class="card">
           <h2>Simulador de escenarios</h2>
           <p class="hint">Explora la diferencia entre el compromiso simulado y los aportes ficticios de nuevos participantes.</p>
+          <p id="selected-plan-panel" class="message" hidden></p>
           <form id="scenario">
             <div class="fields">
               <label class="wide">Nombre del escenario<input name="title" type="text" maxlength="80" value="Mi primer escenario" required></label>

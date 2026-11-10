@@ -27,6 +27,17 @@
   const format = new Intl.NumberFormat('es', { maximumFractionDigits: 2 });
   const periods = { 30: '30 días', 90: '90 días', 180: '180 días', 365: '12 meses' };
   const simulation = byId('scenario');
+  const demoPlans = new Map([
+    ['growth-equity', { name: 'Growth Equity', share: 36 }],
+    ['cash-reserve', { name: 'Cash Reserve', share: 23 }],
+    ['private-strategies', { name: 'Private Strategies', share: 17 }],
+    ['digital-exposure', { name: 'Digital Exposure', share: 24 }],
+  ]);
+  const selectedPlan = demoPlans.get(new URLSearchParams(window.location.search).get('plan'));
+  if (selectedPlan) {
+    status('selected-plan-auth', 'Elegiste ' + selectedPlan.name + ' · ' + selectedPlan.share +
+      '% del reparto ficticio. Crea tu cuenta o inicia sesión para simular.');
+  }
   let user = null;
   let recovery = false;
   let authBusy = false;
@@ -56,6 +67,11 @@
     byId('account-email').textContent = user.email || '';
     byId('dashboard-title').focus();
     status('dashboard-status', message);
+    if (selectedPlan) {
+      simulation.elements.title.value = selectedPlan.name + ' · Simulación';
+      status('selected-plan-panel', 'Punto de partida: ' + selectedPlan.name + ' · ' +
+        selectedPlan.share + '% del reparto ficticio. Puedes cambiar los valores antes de guardar.');
+    }
     await loadHistory();
   }
 
@@ -230,6 +246,7 @@
         open.setAttribute('aria-label', 'Abrir ' + row.title);
         open.addEventListener('click', () => {
           for (const key of ['title', 'capital', 'rate', 'period', 'participants']) simulation.elements[key].value = row[key];
+          status('selected-plan-panel');
           renderResult(row);
           simulation.elements.title.focus();
         });
@@ -266,5 +283,5 @@
   });
 
   status('system-status');
-  showAuth('login');
+  showAuth(selectedPlan ? 'signup' : 'login');
 })();
