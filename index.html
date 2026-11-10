@@ -13,13 +13,58 @@
 .hero{margin:24px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;min-height:490px;padding:clamp(25px,5vw,60px);border-radius:23px;color:#eff6ef;background:radial-gradient(ellipse at 90% 4%,#36533f 0%,transparent 54%),linear-gradient(120deg,#142a2d,#102e29 76%);box-shadow:0 17px 44px #17382d2a}.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.15em;font-weight:800;color:#497044;margin-bottom:10px}.hero .eyebrow{color:var(--gold)}h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em;line-height:1.02}h1{font-size:clamp(2.35rem,5.15vw,4.35rem);max-width:530px}.lead{color:#c5d9ce;font-size:clamp(.94rem,1.5vw,1.06rem);max-width:450px;margin:17px 0 22px}.actions{flex-wrap:wrap;gap:10px}.hero-note{color:#b9cbbd;font-size:.75rem;margin-top:17px}.figure{min-width:0;border-radius:16px;border:1px solid #9bb6a33e;background:#102926a8;padding:clamp(12px,2vw,22px)}.figure-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.figure h2{font:750 clamp(.85rem,2vw,1rem) system-ui,sans-serif;letter-spacing:-.015em;color:#eef6e9}.figure-label{display:inline-flex;border:1px solid #abbb8f62;background:#d8c88f15;border-radius:6px;color:#eee1b8;padding:3px 7px;font-size:.66rem;white-space:nowrap}.chart{display:block;width:100%;height:auto;margin:8px 0 0;overflow:visible}.axis,.figure figcaption{color:#abc4b6;font-size:.69rem}.axis{display:flex;justify-content:space-between;margin:3px 0 9px}.figure figcaption{border-top:1px solid #91a99c39;padding-top:9px;line-height:1.45}.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:3px}.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:10px;height:2px;background:var(--mint)}.legend .base{background:#a8bbb0}
 .section{padding-top:clamp(35px,7vw,72px)}.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin-bottom:15px}.section h2{font-size:clamp(1.95rem,4vw,3rem)}.section-head p:last-child,.support{color:var(--muted);max-width:630px;margin-top:7px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:17px}.plan{position:relative;display:flex;flex-direction:column;align-items:flex-start;min-height:176px}.plan h3{font-size:1rem;line-height:1.3;margin:11px 0 4px}.plan p{font-size:.81rem;color:var(--muted);margin-bottom:12px}.weight{border:1px solid #dae8d1;background:#f0f6eb;color:#436344;padding:3px 7px;border-radius:6px;font-size:.69rem;font-weight:760}.plan .text-link{margin-top:auto;font-weight:800}.plan .text-link::after{content:"";position:absolute;inset:0;border-radius:14px}.arrow-icon{width:12px;height:12px;vertical-align:-1px;flex:none}.plan:hover{border-color:#8eab7e}.learn{grid-template-columns:repeat(3,minmax(0,1fr))}.learn h3{font-size:1rem;margin-bottom:5px}.learn p{font-size:.85rem;color:var(--muted)}
 .sim-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:13px}.sim-card h3{font-size:1.05rem}.sim-card .support{font-size:.84rem;margin-bottom:12px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:13px}.fields label{display:block;font-size:.78rem;font-weight:750}.fields input,.fields select{display:block;width:100%;min-width:0;min-height:42px;margin-top:4px;padding:7px 9px;border:1px solid #c8d8cc;border-radius:8px;background:#fcfdfb;color:var(--ink)}.readings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}.reading{background:#eef4ec;border-radius:8px;padding:9px;overflow-wrap:anywhere}.reading span{display:block;color:#486257;font-size:.72rem}.reading strong{font-size:1.05rem}.sim-note{color:var(--muted);font-size:.82rem;line-height:1.45}
-.market{margin-top:clamp(35px,7vw,72px);background:#122b2d;color:#edf5ef;border-top:1px solid #37504a}.market-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px}.market-head h2{font-size:clamp(1.65rem,4vw,2.45rem)}.market-head p{color:#bed1c8;font-size:.78rem;margin-top:5px}.market-pause{background:transparent;color:#e9f3eb;border-color:#738e82}.market-pause:hover{background:#284741}.market-pause[hidden]{display:none}.market-window{overflow:hidden;border-block:1px solid #78958945;background:#0d2325}.market-track{display:flex;width:max-content}.market-window.is-moving .market-track{animation:market-loop 33s linear infinite}.market-list{display:flex;gap:10px;list-style:none;padding:10px 10px 10px 0;margin:0}.market-copy{display:none}.market-window.is-moving .market-copy{display:flex}.market-window.is-still{overflow:auto}.market-window.is-moving:hover .market-track{animation-play-state:paused}@keyframes market-loop{to{transform:translateX(-50%)}}
-.coin{display:flex;align-items:center;gap:8px;min-width:153px;min-height:52px;padding:7px 9px;border:1px solid #78958955;border-radius:8px;background:#193336;color:#f3f8f2;text-align:left}.coin:hover,.coin[aria-pressed=true]{border-color:#dceca4;background:#294844}.coin-icon{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:var(--coin-bg,#e2ebd8);color:#182827;font-size:.9rem;font-weight:850}.coin strong,.coin small{display:block;white-space:nowrap}.coin strong{font-size:.81rem}.coin small{font-size:.68rem;color:#c0d1c9}.market-detail{color:#d0e1d7;min-height:58px;padding:10px 0 16px;font-size:.84rem;line-height:1.45}.market-detail strong{color:#f2edce}.footer{display:flex;justify-content:space-between;gap:13px;flex-wrap:wrap;padding:16px 0 25px;font-size:.75rem;color:var(--muted)}
+.market{margin-top:clamp(35px,7vw,72px);background:#122a2d;color:#eff6f1;border-top:1px solid #385553}
+.market-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 9px}
+.market-head h2{display:flex;align-items:center;gap:9px;font:750 .8rem system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+.market-head h2::before{content:"";width:6px;height:6px;flex:none;background:#e4cc8b;border-radius:50%}
+.market-head p{color:#bbd0cb;font-size:.74rem}
+.market-window{overflow:hidden;border-block:1px solid #66878455;background:#102629}
+.market-window.is-moving{mask-image:linear-gradient(90deg,transparent,#000 2.5%,#000 97.5%,transparent)}
+.market-track{display:flex;width:max-content}
+.market-window.is-moving .market-track{animation:market-loop 38s linear infinite}
+.market-list{display:flex;list-style:none;padding:0;margin:0}
+.market-copy{display:none}.market-window.is-moving .market-copy{display:flex}
+.market-window.is-still{overflow:auto;scrollbar-width:thin;scrollbar-color:#577270 #102629}
+.market-window.is-moving:hover .market-track{animation-play-state:paused}
+@keyframes market-loop{to{transform:translateX(-50%)}}
+.coin{display:flex;align-items:center;gap:10px;min-width:153px;min-height:47px;padding:8px 17px;border:0;border-inline-end:1px solid #66878455;background:transparent;color:#f3f8f5;text-align:left}
+.coin:hover,.coin[aria-pressed=true]{background:#243f41}
+.coin:focus-visible{outline-offset:-3px;outline-color:#e4cc8b}
+.coin-icon{display:block;width:26px;height:26px;flex:none;object-fit:contain}
+.coin strong,.coin small{display:block;white-space:nowrap}
+.coin strong{font-size:.79rem;line-height:1.3}
+.coin small{font-size:.66rem;color:#bbd0cb}
+.market-detail{color:#d0e1d7;padding:10px 0 12px;font-size:.82rem;line-height:1.45}
+.market-detail strong{color:#f2edce}
+.footer{display:flex;justify-content:space-between;gap:13px;flex-wrap:wrap;padding:16px 0 25px;font-size:.75rem;color:var(--muted)}
 @media(max-width:930px){.nav-links{gap:9px}.hero{min-height:0}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.learn{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:720px){.wrap{width:calc(100% - 26px)}.nav{min-height:63px;gap:8px}.nav-links{display:none}.account{gap:8px}.account .text-link{font-size:.76rem}.account .button{font-size:.76rem;padding:6px 9px;min-height:34px}.brand-mark{width:31px;height:31px}.brand{gap:6px;font-size:.88rem}.brand small{font-size:.56rem}.hero{margin-top:12px;grid-template-columns:1fr;gap:18px;border-radius:17px;padding:20px}.section-head{align-items:flex-start;flex-direction:column}.learn,.sim-grid{grid-template-columns:1fr}.card{padding:13px}.plan{min-height:164px}.market-head{padding-top:15px}}
+@media(max-width:720px){.wrap{width:calc(100% - 26px)}.nav{min-height:63px;gap:8px}.nav-links{display:none}.account{gap:8px}.account .text-link{font-size:.76rem}.account .button{font-size:.76rem;padding:6px 9px;min-height:34px}.brand-mark{width:31px;height:31px}.brand{gap:6px;font-size:.88rem}.brand small{font-size:.56rem}.hero{margin-top:12px;grid-template-columns:1fr;gap:18px;border-radius:17px;padding:20px}.section-head{align-items:flex-start;flex-direction:column}.learn,.sim-grid{grid-template-columns:1fr}.card{padding:13px}.plan{min-height:164px}.market-head{padding-top:11px}.market-head h2{font-size:.69rem}.market-head p{font-size:.68rem}.coin{min-width:133px;padding-inline:12px}}
 @media(max-width:355px){.nav{flex-wrap:wrap;padding:7px 0}.fields,.grid{grid-template-columns:1fr}.plan{min-height:0}.hero{padding:15px}.hero .button{font-size:.78rem;padding:7px 9px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.market-window.is-moving .market-track{animation:none}}
 </style>
+<!--
+Web3 Icons — https://github.com/0xa3k5/web3icons
+MIT License
+Copyright (c) 2024 0xa3k5
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
 </head>
 <body>
 <header class="top">
@@ -103,9 +148,9 @@
     </div>
   </section>
   <section class="market" id="mercado" aria-labelledby="market-title">
-    <div class="wrap market-head"><div><h2 id="market-title">Activos digitales</h2><p>Toca un activo para ver su ficha educativa.</p></div><button class="button small market-pause" id="market-pause" type="button" aria-controls="market-ticker" hidden>Pausar cinta</button></div>
+    <div class="wrap market-head"><h2 id="market-title">Activos digitales</h2><p>Toca un activo para detener la cinta y ver su ficha.</p></div>
     <div class="market-window is-still" id="market-ticker"><div class="market-track"><ul class="market-list" id="market-list" aria-label="Activos digitales"></ul></div></div>
-    <p class="wrap market-detail" id="market-detail" aria-live="polite">Explora los nombres y símbolos de la cinta.</p>
+    <p class="wrap market-detail" id="market-detail" aria-live="polite" hidden></p>
   </section>
 </main>
 <footer class="wrap footer"><strong>Invest Capital Demo</strong><span>Simulador educativo · Datos ficticios</span></footer>
@@ -135,36 +180,45 @@ simulation.addEventListener('submit', event => {event.preventDefault();calculate
 calculate();
 
 const assets = [
-  ['₿','Bitcoin','BTC','#f4b661','BTC es el símbolo de bitcoin.'],
-  ['♦','Ethereum','ETH','#c4c9fa','Ether, con el símbolo ETH, es la moneda nativa de Ethereum.'],
-  ['₮','Tether','USDT','#94dfc6','USDT en TRON utiliza el estándar TRC-20. El símbolo del token es USDT.'],
-  ['≋','Solana','SOL','#c2ece3','SOL es el símbolo asociado a Solana.'],
-  ['◇','TRON','TRX','#f5b6af','TRX identifica el activo de TRON. TRC-20 identifica un estándar de tokens de esa red.'],
-  ['C','USD Coin','USDC','#b9d8fa','USDC es el símbolo de USD Coin.'],
-  ['◆','BNB','BNB','#f4da86','BNB es el símbolo del activo BNB.'],
-  ['✕','XRP','XRP','#d4e1e0','XRP es el símbolo del activo XRP.'],
-  ['Ł','Litecoin','LTC','#cad7e6','LTC es el símbolo de litecoin.']
+  ["Bitcoin", "BTC", "BTC es el símbolo de bitcoin."],
+  ["Ethereum", "ETH", "Ether, con el símbolo ETH, es la moneda nativa de Ethereum."],
+  ["Tether", "USDT", "USDT en TRON utiliza el estándar TRC-20. El símbolo del token es USDT."],
+  ["Solana", "SOL", "SOL es el símbolo asociado a Solana."],
+  ["TRON", "TRX", "TRX identifica el activo de TRON. TRC-20 identifica un estándar de tokens de esa red."],
+  ["USD Coin", "USDC", "USDC es el símbolo de USD Coin."],
+  ["BNB", "BNB", "BNB es el símbolo del activo BNB."],
+  ["XRP", "XRP", "XRP es el símbolo del activo XRP."],
+  ["Litecoin", "LTC", "LTC es el símbolo de litecoin."]
 ];
+const assetLogos = {
+  "BTC": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiNGNzkzMUEiIGQ9Ik0xOC43NjMgMTAuMjM2Yy4yOC0xLjg5NS0xLjE1NS0yLjkwNS0zLjEzMS0zLjU5MWwuNjQtMi41NTMtMS41Ni0uMzg5LS42MjMgMi40OS0xLjI0NS0uMjk3LjYzMS0yLjUwOEwxMS45MTUgM2wtLjY0MSAyLjU2Mi0uOTkyLS4yMzR2LS4wMWwtMi4xNTctLjU0LS40MTUgMS42NjhzMS4xNTUuMjcyIDEuMTM3LjI4Yy42MzEuMTYzLjc0LjU3OC43MjIuOTAzbC0uNzIyIDIuOTIzLjE2Mi4wNTQtLjE3MS0uMDM2LTEuMDIgNC4wODdjLS4wNzIuMTktLjI3LjQ3OC0uNzEyLjM2LjAxOC4wMjgtMS4xMjgtLjI3LTEuMTI4LS4yN2wtLjc3NiAxLjc3OCAyLjAzLjUwNSAxLjExLjI4OS0uNjUgMi41OSAxLjU2LjM4Ny42MzMtMi41NjIgMS4yNTMuMzI0LS42NCAyLjU1NCAxLjU2LjM4OC42NDEtMi41OWMyLjY2Mi41MDUgNC42NjUuMzA4IDUuNTA1LTIuMTAyLjY3Ni0xLjk0LS4wMzctMy4wNS0xLjQzNS0zLjc5IDEuMDItLjIyNSAxLjc4Ni0uOTAyIDEuOTg1LTIuMjgyem0tMy41NjQgNC45OTljLS40NzkgMS45NC0zLjc0NS44ODQtNC44LjYzbC44NTctMy40MzZjMS4wNTUuMjcgNC40NDguNzg0IDMuOTQzIDIuNzk2em0uNDc4LTUuMDI2Yy0uNDMzIDEuNzYtMy4xNTguODY2LTQuMDMzLjY1bC43NzUtMy4xMTNjLjg4NS4yMTcgMy43MTguNjMyIDMuMjU4IDIuNDYzIi8+Cjwvc3ZnPgo=",
+  "ETH": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiM4RkZDRjMiIGQ9Ik0xMiAzdjYuNjVsNS42MjUgMi41MTZ6Ii8+CiAgICA8cGF0aCBmaWxsPSIjQ0FCQ0Y4IiBkPSJtMTIgMy01LjYyNSA5LjE2NkwxMiA5LjY1MXoiLz4KICAgIDxwYXRoIGZpbGw9IiNDQkE3RjUiIGQ9Ik0xMiAxNi40Nzd2NC41MjJsNS42MjUtNy43ODR6Ii8+CiAgICA8cGF0aCBmaWxsPSIjNzRBMEYzIiBkPSJNMTIgMjF2LTQuNTIzbC01LjYyNS0zLjI2MnoiLz4KICAgIDxwYXRoIGZpbGw9IiNDQkE3RjUiIGQ9Im0xMiAxNS40MyA1LjYyNS0zLjI2M0wxMiA5LjY1eiIvPgogICAgPHBhdGggZmlsbD0iIzc0QTBGMyIgZD0iTTYuMzc1IDEyLjE2NyAxMiAxNS40MjlWOS42NTF6Ii8+CiAgICA8cGF0aCBmaWxsPSIjMjAyNjk5IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Im0xMiAxNS40MjktNS42MjUtMy4yNjNMMTIgM2w1LjYyNSA5LjE2NnpNNi43NDkgMTEuOWw1LjE2LTguNDF2Ni4xMTV6bS0uMDc3LjIzIDUuMjM4LTIuMzI3djUuMzY0em01LjQxOC0yLjMyN3Y1LjM2NGw1LjIzMy0zLjAzOHptMC0uMTk4IDUuMTYgMi4yOTUtNS4xNi04LjQxeiIgY2xpcC1ydWxlPSJldmVub2RkIi8+CiAgICA8cGF0aCBmaWxsPSIjMjAyNjk5IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xMiAxNi40MDYgNi4zNzUgMTMuMjEgMTIgMjFsNS42MjUtNy43OXptLTQuOTk1LTIuNjMzIDQuOTA1IDIuNzl2NC4wMDV6bTUuMDg1IDIuNzl2NC4wMDVsNC45MDUtNi43OTV6IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz4KPC9zdmc+Cg==",
+  "USDT": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiMwMDkzOTMiIGQ9Im0xMiAxOS4yLTktOC44OEw2LjQzMyA0LjhoMTEuMTM0TDIxIDEwLjMyem0uOS04LjF2LTEuMDk4YzEuNjIuMDggMy4xMzIuMzk2IDMuNi44MDUtLjU0NC40NzctMi40OTMuODI0LTQuNS44MjRzLTMuOTU2LS4zNDctNC41LS44MjRjLjQ2My0uNDEgMS45OC0uNzIgMy42LS44MVYxMS4xem0tNS40LS4yOTd2LjY2MWMuNDYzLjQxIDEuOTc1LjcyIDMuNi44MVYxNC43aDEuOHYtMi40M2MxLjYyLS4wODEgMy4xMzYtLjM5NiAzLjYtLjgwNnYtMS4zMThjLS40NjQtLjQxLTEuOTgtLjcyNS0zLjYtLjgxVjguNGgyLjdWNy4wNUg4LjRWOC40aDIuN3YuOTM2Yy0xLjYyNS4wODUtMy4xMzcuNC0zLjYuODF6Ii8+Cjwvc3ZnPgo=",
+  "SOL": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9InVybCgjU09MX19hKSIgZD0iTTE4LjQxMyA3LjkwM2EuNjIuNjIgMCAwIDEtLjQxMS4xNjRIMy41OGMtLjUxMiAwLS43Ny0uNTg1LS40MTYtLjkyOWwyLjM2OC0yLjI4M2EuNi42IDAgMCAxIC40MS0uMTY5aDE0LjQ3OWMuNTE3IDAgLjc3LjU5LjQxLjkzNHoiLz4KICAgIDxwYXRoIGZpbGw9InVybCgjU09MX19iKSIgZD0iTTE4LjQxMyAxOS4xNTdhLjYuNiAwIDAgMS0uNDExLjE1N0gzLjU4Yy0uNTEyIDAtLjc3LS41OC0uNDE2LS45MjNsMi4zNjgtMi4yODlhLjYuNiAwIDAgMSAuNDEtLjE2M2gxNC40NzljLjUxNyAwIC43Ny41ODUuNDEuOTI4eiIvPgogICAgPHBhdGggZmlsbD0idXJsKCNTT0xfX2MpIiBkPSJNMTguNDEzIDEwLjQ3MmEuNi42IDAgMCAwLS40MTEtLjE1OEgzLjU4Yy0uNTEyIDAtLjc3LjU4LS40MTYuOTIybDIuMzY4IDIuMjlhLjYyLjYyIDAgMCAwIC40MS4xNjNoMTQuNDc5Yy41MTcgMCAuNzctLjU4NS40MS0uOTI4eiIvPgogICAgPGRlZnM+CiAgICAgICAgPGxpbmVhckdyYWRpZW50IGlkPSJTT0xfX2EiIHgxPSIzLjAwMSIgeDI9IjIxLjQzMSIgeTE9IjE2LjMyMiIgeTI9IjE1LjU5MSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICAgICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjNTk5REIwIi8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzQ3RjhDMyIvPgogICAgICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICAgICAgPGxpbmVhckdyYWRpZW50IGlkPSJTT0xfX2IiIHgxPSIzLjAwMSIgeDI9IjIxLjMyMyIgeTE9IjE2Ljk3MyIgeTI9IjE2LjM2NiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICAgICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjQzQ0RkUyIi8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzczQjBEMCIvPgogICAgICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICAgICAgPGxpbmVhckdyYWRpZW50IGlkPSJTT0xfX2MiIHgxPSI0LjAzNSIgeDI9IjIwLjMwMiIgeTE9IjEyLjAwMiIgeTI9IjEyLjAwMiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICAgICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjNzc4Q0JGIi8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVEQ0RDOSIvPgogICAgICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8L2RlZnM+Cjwvc3ZnPgo=",
+  "TRX": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiNDNDM0MkIiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTQuNDE4IDMuMTg2YS41Ni41NiAwIDAgMSAuNTUzLS4xN2wxMS45MDQgMi45MTVxLjEwOC4wMjcuMTk4LjA5MmwyLjQyMiAxLjc2NWEuNTY0LjU2NCAwIDAgMSAuMTMzLjc3NGwtOC4zMzIgMTIuMTkyYS41NjMuNTYzIDAgMCAxLS45OTgtLjEzTDQuMzA2IDMuNzU0YS41Ni41NiAwIDAgMSAuMTEyLS41NjhtMS45NjUgMy4wNDUgNC4xNiAxMS43MTEuNjg0LTYuMDd6bTUuOTU3IDUuODM4LS42OTUgNi4xNzUgNS44ODQtOC42MXptNS43Mi0zLjkzLTMuNzkzIDEuNzggMi41NDMtMi42OTJ6bS0yLjM5NS0xLjM0M0w2LjQxIDQuNTNsNS40MjYgNi4zMnoiIGNsaXAtcnVsZT0iZXZlbm9kZCIvPgo8L3N2Zz4K",
+  "USDC": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiMwQjUzQkYiIGQ9Ik0xMiAyMWE5IDkgMCAxIDAgMC0xOCA5IDkgMCAwIDAgMCAxOCIvPgogICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEzLjYyIDUuNDV2MS4xNTlhNS42NCA1LjY0IDAgMCAxIDQuMDA1IDUuMzk0IDUuNjQgNS42NCAwIDAgMS00LjAwNSA1LjM5NHYxLjE2YTYuNzQgNi43NCAwIDAgMCA1LjEzLTYuNTU0IDYuNzQgNi43NCAwIDAgMC01LjEzLTYuNTUzbS03LjI0NSA2LjU1M2E1LjY0IDUuNjQgMCAwIDEgNC4wMDUtNS4zOTRWNS40NWE2Ljc0IDYuNzQgMCAwIDAtNS4xMyA2LjU1MyA2Ljc0IDYuNzQgMCAwIDAgNS4xMyA2LjU1M3YtMS4xNTlhNS42MyA1LjYzIDAgMCAxLTQuMDA1LTUuMzk0Ii8+CiAgICA8cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTQuNDE5IDEzLjI1OGMwLTIuMzAxLTMuNjA2LTEuMzU2LTMuNjA2LTIuNjI3IDAtLjQ1Ni4zNjYtLjc0OCAxLjA2My0uNzQ4LjgzMyAwIDEuMTIuNDA1IDEuMjEuOTVoMS4xNDdjLS4xMDItMS4wMjQtLjY5LTEuNjctMS42Ny0xLjg2M3YtLjkwNGgtMS4xMjV2Ljg3MmMtMS4wNzUuMTM3LTEuNzUuNzYyLTEuNzUgMS42OTMgMCAyLjMxMiAzLjYxMSAxLjQ0NSAzLjYxMSAyLjY5NCAwIC40NzItLjQ1NS43ODctMS4yMjYuNzg3LTEuMDA3IDAtMS4zMzktLjQ0NC0xLjQ2Mi0xLjA1N0g5LjQ5Yy4wNzMgMS4xMjIuNzY0IDEuODIzIDEuOTQ3IDEuOTk5di44ODZoMS4xMjV2LS44NzVjMS4xNTMtLjE0OSAxLjg1Ni0uODIgMS44NTYtMS44MDciLz4KPC9zdmc+Cg==",
+  "BNB": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiNGMEI5MEIiIGQ9Ik03LjA5IDUuNzU1IDEyIDNsNC45MSAyLjc1NS0xLjggMS4wMkwxMiA1LjAzNWwtMy4xMDUgMS43NHptOS44MiAzLjQ4LTEuOC0xLjAyTDEyIDkuOTU1bC0zLjEwNS0xLjc0LTEuODA1IDEuMDJ2Mi4wMzVsMy4xIDEuNzR2My40NzVsMS44MSAxLjAyIDEuODA1LTEuMDJWMTMuMDFsMy4xMDUtMS43NHptMCA1LjUxNXYtMi4wNGwtMS44IDEuMDJ2Mi4wMzV6bTEuMjg1LjcyLTMuMTA1IDEuNzM1djIuMDRsNC45MS0yLjc2di01LjUxbC0xLjgwNSAxLjAxNXpNMTYuMzkgNy40OTVsMS44IDEuMDJ2Mi4wMzVMMjAgOS41MzV2LTIuMDRsLTEuODA1LTEuMDJMMTYuMzkgNy41em0tNi4yIDEwLjQ1djIuMDM1TDEyIDIxbDEuODA1LTEuMDJ2LTIuMDNMMTIgMTguOTY1bC0xLjgwNS0xLjAyem0tMy4xLTMuMiAxLjggMS4wMlYxMy43M2wtMS44LTEuMDJ2Mi4wNHptMy4xLTcuMjVMMTIgOC41MTVsMS44MDUtMS4wMkwxMiA2LjQ3NSAxMC4xOTUgNy41em0tNC4zODUgMS4wMiAxLjgwNS0xLjAyLTEuOC0xLjAyTDQgNy41djIuMDRsMS44MDUgMS4wMTV6bTAgMy40NzVMNCAxMC45NzV2NS41MWw0LjkxIDIuNzZWMTcuMmwtMy4xLTEuNzM1di0zLjQ4eiIvPgo8L3N2Zz4K",
+  "XRP": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0xOC4zNiA0LjEyNWgyLjYwNWwtNS40MiA1Ljc4MUE0LjkyIDQuOTIgMCAwIDEgMTIgMTEuNDQzYTQuOSA0LjkgMCAwIDEtMy41NDYtMS41MzdMMy4wMjYgNC4xMjVINS42NGw0LjExMiA0LjQyOWMxLjIwNCAxLjI3NyAzLjI5MSAxLjI3NyA0LjQ5NiAwek01LjYwNCAxOS44NjVIM2w1LjQ1My01Ljc2M2E0LjkzIDQuOTMgMCAwIDEgMy41NS0xLjUzNyA0LjkyIDQuOTIgMCAwIDEgMy41NTIgMS41MzhMMjEgMTkuODc1aC0yLjYwNWwtNC4xMzgtNC40MTFjLTEuMjA1LTEuMjc3LTMuMjkxLTEuMjc3LTQuNDk2IDB6Ii8+Cjwvc3ZnPgo=",
+  "LTC": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0id2ViM2ljb25zIj4KICAgIDxwYXRoIGZpbGw9IiMzNDVEOUQiIGQ9Im01LjczNCAxNS42MTEtMS42MDkuNjMuNzc2LTMuMTE2IDEuNjItLjY1Mkw4Ljg2IDNoNS43NzJsLTEuNzEgNi45NzUgMS41ODYtLjY0Mi0uNzY1IDMuMDgzLTEuNTk4LjY1My0uOTU2IDQuMDc0aDguNjg1TDE4Ljg5NSAyMUg0LjQwNnoiLz4KPC9zdmc+Cg=="
+};
 const ticker = document.getElementById('market-ticker');
 const track = ticker.querySelector('.market-track');
 const list = document.getElementById('market-list');
-const pause = document.getElementById('market-pause');
 const detail = document.getElementById('market-detail');
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let paused = motion.matches;
 
-assets.forEach(([glyph, name, symbol, color], index) => {
+assets.forEach(([name, symbol], index) => {
   const item = document.createElement('li');
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'coin';
   button.dataset.asset = index;
   button.setAttribute('aria-pressed', 'false');
-  const icon = document.createElement('span');
+  const icon = document.createElement('img');
   icon.className = 'coin-icon';
-  icon.style.setProperty('--coin-bg', color);
-  icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = glyph;
+  icon.alt = '';
+  icon.src = assetLogos[symbol];
   const label = document.createElement('span');
   const title = document.createElement('strong');
   const tag = document.createElement('small');
@@ -189,14 +243,8 @@ function setPaused(value) {
   ticker.classList.toggle('is-still', value);
   ticker.classList.toggle('is-moving', !value);
   if (!value) ticker.scrollLeft = 0;
-  pause.textContent = value ? 'Reanudar cinta' : 'Pausar cinta';
 }
-pause.hidden = motion.matches;
-pause.addEventListener('click', () => setPaused(!paused));
-motion.addEventListener('change', event => {
-  pause.hidden = event.matches;
-  setPaused(event.matches);
-});
+motion.addEventListener('change', event => setPaused(event.matches));
 ticker.addEventListener('focusin', event => {
   if (event.target.matches('.coin:focus-visible') && !paused) {
     setPaused(true);
@@ -207,13 +255,17 @@ ticker.addEventListener('click', event => {
   const button = event.target.closest('[data-asset]');
   if (!button) return;
   const index = Number(button.dataset.asset);
-  const [, name, symbol, , description] = assets[index];
+  const [name, symbol, description] = assets[index];
+  setPaused(true);
+  const selected = list.querySelector('[data-asset="' + index + '"]');
+  selected.scrollIntoView({block:'nearest', inline:'nearest'});
   ticker.querySelectorAll('[data-asset]').forEach(item => {
     item.setAttribute('aria-pressed', String(item.dataset.asset === button.dataset.asset));
   });
   const label = document.createElement('strong');
   label.textContent = name + ' (' + symbol + ')';
   detail.replaceChildren(label, ' · ' + description);
+  detail.hidden = false;
 });
 setPaused(paused);
 </script>
