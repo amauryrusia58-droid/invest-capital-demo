@@ -1,3 +1,4 @@
+import {initTeacherLab} from './teacher-lab.js?v=86';
 import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries} from './backend.js?v=85';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
@@ -156,7 +157,7 @@ const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle
 function setError(s){$('#loginError').textContent=s;}
 function teacherReady(f){
  firebase=f;$('#adminGate').classList.add('hidden');$('#adminContent').classList.remove('hidden');$('#logoutAdmin').classList.remove('hidden');
- $('#adminIdentity').textContent=f.auth.currentUser.email;watch();
+ $('#adminIdentity').textContent=f.auth.currentUser.email;initTeacherLab();watch();
 }
 function watch(){
  const {db,Store}=firebase;
