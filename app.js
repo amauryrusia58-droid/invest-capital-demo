@@ -140,6 +140,10 @@ function renderCreditRequests(){
 function onCreditRequests(rows){
  creditRequests=rows;
  let changed=false;
+ // V6.1: al actualizar desde V5, las aprobaciones ya estaban acreditadas,
+ // pero la fecha inicial del calendario aún no existía en los datos locales.
+ // Solo migramos cuando no hay fecha guardada; nunca duplicamos saldos.
+ const needsCalendarMigration=!(account.withdrawalAnchor>0);
  for(const req of rows){
   if(req.status!=='approved'||account.approvedRequestIds[req.id])continue;
   const n=num(req.amount);
@@ -152,6 +156,16 @@ function onCreditRequests(rows){
   tx('Crédito virtual aprobado por el profesor',n,'Acreditado','deposit');
   record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT ficticios tras aprobación docente`);
   changed=true;
+ }
+ if(needsCalendarMigration){
+  const dates=rows
+   .filter(r=>r.status==='approved'&&account.approvedRequestIds[r.id])
+   .map(r=>timestampMs(r.decisionAt)||timestampMs(r.createdAt))
+   .filter(t=>Number.isFinite(t)&&t>0&&t<=Date.now()+MS_DAY);
+  if(dates.length){
+   const firstApproval=Math.min(...dates);
+   if(account.withdrawalAnchor!==firstApproval){account.withdrawalAnchor=firstApproval;changed=true;}
+  }
  }
  if(changed){save();render();void flushContributions();}
  renderCreditRequests();
