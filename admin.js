@@ -1,7 +1,7 @@
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL} from './backend.js';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest} from './backend.js';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
-let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},linksMap={},stage=0;
+let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},linksMap={},creditRequests=[],stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
 const knownAmounts=['deposit_confirmed','plan_assign','withdraw_attempt','referral_credit'];
@@ -45,6 +45,43 @@ function renderStudentSummary(){
  const note=addText('p','Saldo actual: no disponible en Firebase. Estas sumas proceden de los eventos visibles (máximo 200 por sesión), pueden ser parciales y NO equivalen al balance de la cuenta. Todos los importes son ficticios.','admin-summary-note');container.append(note);
 }
 
+
+// V5 · Bandeja de solicitudes de crédito exclusivamente ficticio, en tiempo real.
+function renderAdminCreditRequests(){
+ const list=$('#creditApprovalList');list.replaceChildren();
+ const pending=creditRequests.filter(x=>x.status==='pending');
+ $('#pendingApprovals').textContent=String(pending.length);
+ $('#approvalsSummary').textContent=pending.length?`${pending.length} solicitud(es) pendientes de revisión · Actualización en vivo`:'No hay solicitudes pendientes. Las nuevas aparecerán aquí automáticamente.';
+ const recent=[...creditRequests].sort((a,b)=>{
+  if(a.status==='pending'&&b.status!=='pending')return -1;
+  if(b.status==='pending'&&a.status!=='pending')return 1;
+  return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+ }).slice(0,40);
+ if(!recent.length){list.append(addText('p','Todavía no hay solicitudes de práctica.','muted'));return;}
+ for(const r of recent){
+  const row=addText('div','','admin-approval-row');
+  const detail=document.createElement('div');detail.className='admin-approval-detail';
+  const uid=r.studentUid||'';const name=studentName(uid)||r.studentAlias||'Alumno';
+  detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}`,'tiny'));
+  const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
+  row.append(detail,state);
+  if(r.status==='pending'){
+   for(const [decision,caption,variant] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
+    const b=document.createElement('button');b.type='button';b.className='btn '+variant;b.textContent=caption;
+    b.addEventListener('click',async()=>{
+      const action=decision==='approved'?'aprobar':'rechazar';
+      if(!window.confirm(`¿Confirmas ${action} ${money(r.amount)} ficticios para ${name}? Esta acción no puede deshacerse.`))return;
+      row.querySelectorAll('button').forEach(button=>button.disabled=true);
+      $('#approvalsMessage').textContent='Guardando decisión…';
+      try{await reviewVirtualCreditRequest(firebase,r.id,decision);$('#approvalsMessage').textContent='Decisión guardada. El alumno verá el cambio en su panel al estar conectado.';}
+      catch(e){$('#approvalsMessage').textContent='No se pudo guardar: '+e.message;row.querySelectorAll('button').forEach(button=>button.disabled=false);}
+    });row.append(b);
+   }
+  }
+  list.append(row);
+ }
+}
+
 const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'—';};
 function setError(s){$('#loginError').textContent=s;}
 function teacherReady(f){
@@ -53,7 +90,8 @@ function teacherReady(f){
 }
 function watch(){
  const {db,Store}=firebase;
- offSessions();offScenario();offLinks();
+ offSessions();offScenario();offLinks();offCreditRequests();
+    offCreditRequests=watchAdminVirtualCreditRequests(firebase,rows=>{creditRequests=rows;renderAdminCreditRequests();},e=>{$('#approvalsMessage').textContent='Error de permisos o conexión al leer solicitudes: '+e.message;});
  offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
    sessions=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -146,9 +184,9 @@ $('#loginAdmin').addEventListener('click',async()=>{
  try{teacherReady(await adminLogin());}catch(e){setError('Acceso no autorizado o error de inicio de sesión: '+e.message);}
  finally{b.disabled=false;b.textContent='Acceder con Google';}
 });
-$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
+$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
 (async()=>{
  if(!firebaseEnabled){setError('El seguimiento remoto todavía no está activado. Configura Firebase siguiendo INSTRUCCIONES.md.');return;}
  try{const f=await adminCurrent();if(f)teacherReady(f);}catch(e){setError('No se pudo comprobar la sesión: '+e.message);}
 })();
-window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();});
+window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();});

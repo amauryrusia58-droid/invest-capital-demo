@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards} from './backend.js';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests} from './backend.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -32,15 +32,15 @@ function positionProfit(pos){return Math.max(0,num(projected(pos.amount,pos.plan
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
-let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{}};
+let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},contributionQueue:[]};
 try{
   const raw=JSON.parse(localStorage.getItem(STORE)||'null');
   if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
-    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{}};
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
   }
 }catch{}
-let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},onConfirm=null;
-const pendingContributions=[];
+let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},onConfirm=null;
+const pendingContributions=account.contributionQueue;
 const referralRates={1:.15,2:.05,3:.03};
 const pending=[], overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'),confirmBtn=$('#confirmModal');
 function save(){localStorage.setItem(STORE,JSON.stringify(account));}
@@ -81,10 +81,63 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
   ledgerRows();
 }
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
-function deposit(){record('deposit_open','Abrió el formulario de aporte USDT BEP20');modal('Depósito de USDT · BEP20',`
- <div class="wallet-card"><span class="wallet-network">Activo: <strong>USDT</strong> &nbsp; · &nbsp; Red: <strong>BNB Smart Chain (BEP20)</strong></span><small>Referencia de cartera</small><div class="wallet-reference">IC-DEMO-BEP20-001</div><small>Identificador de aula no válido para recibir criptomonedas.</small></div>
- <label class="field-label" for="amountValue">Importe del aporte (USDT)</label><input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="100" inputmode="decimal">
- <p id="modalError" class="form-error" hidden></p><p class="tiny">Este formulario no procesa transferencias ni verifica operaciones en blockchain.</p>`,()=>{const n=num($('#amountValue').value);if(!Number.isFinite(n)||n<1||n>100000||!Number.isFinite(Number($('#amountValue').value))){err('Introduce una cantidad entre 1 y 100.000 USDT.');return;}account.cash=num(account.cash+n);if(!lockAnchor())account.withdrawalAnchor=Date.now();tx('Aporte USDT · BEP20',n,'Registrado','deposit');pendingContributions.push({amount:n,reference:account.ledger[0].ref});void flushContributions();record('deposit_confirmed',`Registró aporte virtual de ${n.toFixed(2)} USDT por BEP20`);modal('Aporte registrado',`<p>Se registró en tu cuenta un aporte de <strong>${money(n)}</strong>.</p><div class="modal-note">No se ha efectuado una transferencia blockchain. Puedes asignar este saldo a un plan desde la sección «Planes».</div>`,()=>{close();setView('planes');},'Elegir un plan');},'Registrar aporte');}
+// Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
+function deposit(){
+ record('deposit_open','Abrió la solicitud de crédito virtual de prueba');
+ modal('Solicitar inversión simulada',`
+ <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong> · No envíes dinero ni criptomonedas. El profesor revisará únicamente una cantidad ficticia.</div>
+ <label class="field-label" for="amountValue">Cantidad virtual (USDT de práctica)</label>
+ <input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="100" inputmode="decimal">
+ <p id="modalError" class="form-error" hidden></p>
+ <p class="tiny">Hasta la aprobación del profesor, el importe no se acredita en el saldo disponible.</p>
+ `,async()=>{
+  const raw=$('#amountValue').value,n=num(raw);
+  if(!raw.trim()||!Number.isFinite(Number(raw))||n<1||n>100000){err('Introduce una cantidad ficticia entre 1 y 100.000.');return;}
+  if(!sessionReady||session.mode!=='cloud'){err('No hay conexión con Firebase. No se ha creado ninguna solicitud ni acreditado saldo.');return;}
+  confirmBtn.disabled=true;
+  try{
+   await requestVirtualCredit(session,n,alias);
+   record('credit_requested',`Solicitó revisión de ${n.toFixed(2)} USDT virtuales`);
+   modal('Pendiente de revisión',`<div class="notice"><strong>${money(n)} ficticios · Pendiente de revisión</strong></div><p>Tu solicitud se ha enviado al panel del profesor. El saldo se acreditará únicamente si la aprueba.</p><p class="tiny">Consulta su estado en el resumen de cuenta. No se realiza ninguna transferencia.</p>`);
+  }catch(e){err('No se pudo registrar la solicitud: '+e.message);confirmBtn.disabled=false;}
+ },'Enviar solicitud');
+}
+let creditRequests=[];
+function renderCreditRequests(){
+ const box=$('#creditRequestBox');if(!box)return;
+ box.replaceChildren();
+ const rows=[...creditRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+ const pending=rows.filter(r=>r.status==='pending');
+ const heading=document.createElement('h2');heading.textContent=`Solicitudes de inversión virtual ${pending.length?'· '+pending.length+' pendiente(s)':''}`;box.append(heading);
+ const note=document.createElement('p');note.className='tiny';note.textContent='Importes ficticios para el aula. Ninguna solicitud aumenta tu saldo antes de la aprobación del profesor.';box.append(note);
+ if(!rows.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Todavía no has enviado solicitudes.';box.append(empty);return;}
+ for(const req of rows.slice(0,8)){
+  const line=document.createElement('div');line.className='credit-request-row';
+  const amount=document.createElement('strong');amount.textContent=money(req.amount||0)+' · Simulado';
+  const state=document.createElement('span');const kind=req.status==='approved'?'Aprobada y acreditada':req.status==='rejected'?'Rechazada':'Pendiente de revisión';
+  state.textContent=kind;state.className='tag '+(req.status==='pending'?'warn':req.status==='rejected'?'danger':'');
+  line.append(amount,state);box.append(line);
+ }
+}
+function onCreditRequests(rows){
+ creditRequests=rows;
+ let changed=false;
+ for(const req of rows){
+  if(req.status!=='approved'||account.approvedRequestIds[req.id])continue;
+  const n=num(req.amount);
+  if(!Number.isFinite(n)||n<1||n>100000)continue;
+  // Un identificador de Firestore solo puede convertirse una vez en saldo del navegador.
+  account.approvedRequestIds[req.id]=true;
+  account.cash=num(account.cash+n);
+  if(!lockAnchor())account.withdrawalAnchor=Date.now();
+  pendingContributions.push({amount:n,reference:req.id.slice(0,35)});
+  tx('Crédito virtual aprobado por el profesor',n,'Acreditado','deposit');
+  record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT ficticios tras aprobación docente`);
+  changed=true;
+ }
+ if(changed){save();render();void flushContributions();}
+ renderCreditRequests();
+}
 function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
 function withdrawal(){
  record('withdraw_open','Consultó el retiro mensual');
@@ -116,7 +169,7 @@ async function flushContributions(){
   while(pendingContributions.length){
     const p=pendingContributions[0];
     await recordClassroomContribution(session,p.amount,p.reference);
-    pendingContributions.shift();
+    pendingContributions.shift();save();
   }
  }catch(e){
   $('#refLinkStatus').textContent='Contribución pendiente de sincronizar: '+e.message;
@@ -199,7 +252,7 @@ $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó id
 $('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();
+$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();
 (async()=>{
  try{
   session=await studentStart(profile);sessionReady=true;
@@ -210,6 +263,7 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
   if(session.mode==='cloud'){
     try{await applyClassroomCode(profile.referralCode||'');}
     catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
+    unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box){box.textContent='No se pudieron consultar las solicitudes: '+e.message;}});
     unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{
       console.warn('Error al consultar bonificaciones',e);
       $('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;
@@ -221,4 +275,4 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
 window.addEventListener('focus',render);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
 window.setInterval(render,60000);
-window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();});
+window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();unsubscribeCredits();});

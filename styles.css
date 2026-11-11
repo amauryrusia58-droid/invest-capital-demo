@@ -266,3 +266,18 @@ a:hover{color:#f0d89d}
 .admin-activity-tools select{min-width:170px}
 @media(max-width:800px){.admin-profile-grid,.admin-event-metrics{grid-template-columns:1fr 1fr}}
 @media(max-width:490px){.admin-filters,.admin-profile-grid,.admin-event-metrics{grid-template-columns:1fr}.admin-activity-tools label{align-items:flex-start;flex-direction:column;width:100%}.admin-activity-tools select{width:100%}}
+
+/* V5 · Peticiones virtuales con aprobación exclusiva del docente */
+.credit-request-panel{margin:0 0 18px;border-color:#73558c}
+.credit-request-panel h2{margin:0 0 8px}
+.credit-request-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:11px 0;border-top:1px solid #4a345b}
+.credit-request-row strong{font-size:13px;color:#f1e8fa}
+.admin-approvals{display:flex;flex-direction:column;gap:10px;margin-top:13px}
+.admin-approval-row{background:#1c1228;border:1px solid #563a67;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.admin-approval-detail{flex:1;min-width:180px}
+.admin-approval-detail strong{font-size:13px;overflow-wrap:anywhere}
+.admin-approval-detail p{margin:5px 0 0}
+.admin-approval-row .btn{padding:9px 12px;min-height:36px}
+@media(max-width:700px){.admin-approval-row{align-items:flex-start}.admin-approval-detail{flex-basis:100%}}
+
+@media(min-width:1101px){.admin-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}}
