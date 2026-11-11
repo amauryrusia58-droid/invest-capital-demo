@@ -9,10 +9,22 @@ const nameInput=$('studentName'),emailInput=$('studentEmail'),passwordInput=$('s
 const legacyRow=$('legacyUpgradeRow'),legacyCheckbox=$('legacyUpgrade');
 const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 let busy=false;
+const publicPlans=new Set(['Essential','Advanced','Prime','Magnate Supremo','Platinum','Signature']);
+let chosenPublicPlan=publicPlans.has(sessionStorage.getItem('ic_selected_plan'))?sessionStorage.getItem('ic_selected_plan'):'';
+function updatePlanHint(){
+ for(const id of ['selectedPlanReg','selectedPlanLogin']){
+  const el=$(id);if(!el)continue;
+  el.classList.toggle('hidden',!chosenPublicPlan);
+  if(chosenPublicPlan)el.textContent='Plan elegido: '+chosenPublicPlan+'. Al entrar, podrás solicitar saldo ficticio para este escenario.';
+ }
+}
+function planDestination(){return chosenPublicPlan?'app.html?plan='+encodeURIComponent(chosenPublicPlan):'app.html';}
+function clearPlanSelection(){chosenPublicPlan='';sessionStorage.removeItem('ic_selected_plan');updatePlanHint();}
+
 function hideAll(){registerOverlay.classList.add('hidden');loginOverlay.classList.add('hidden');}
 function isLegacy(){return localStorage.getItem('ic_v3_consent')==='yes' && !!localStorage.getItem('ic_v3_alias');}
 async function showRegister(){
- hideAll();regError.textContent='';legacyCheckbox.checked=false;legacyRow.classList.add('hidden');registerOverlay.classList.remove('hidden');nameInput.focus();
+ updatePlanHint();hideAll();regError.textContent='';legacyCheckbox.checked=false;legacyRow.classList.add('hidden');registerOverlay.classList.remove('hidden');nameInput.focus();
  // Solo ofrecemos conservar una cuenta cuando la cuenta anónima está abierta aquí.
  if(!firebaseEnabled)return;
  try{const f=await getFirebase();await f.auth.authStateReady();const u=f.auth.currentUser;
@@ -25,8 +37,9 @@ async function showRegister(){
    }
  }catch(e){console.warn('No se pudo consultar cuenta de práctica',e);}
 }
-function showLogin(){hideAll();loginError.textContent='';loginOverlay.classList.remove('hidden');$('loginEmail').focus();}
-for(const id of ['openRegister','startBtn','bottomBtn'])$(id).addEventListener('click',showRegister);
+function showLogin(){updatePlanHint();hideAll();loginError.textContent='';loginOverlay.classList.remove('hidden');$('loginEmail').focus();}
+for(const id of ['openRegister','startBtn','bottomBtn'])$(id).addEventListener('click',()=>{clearPlanSelection();void showRegister();});
+for(const card of document.querySelectorAll('[data-public-plan]'))card.addEventListener('click',()=>{const selected=card.dataset.publicPlan;if(!publicPlans.has(selected))return;chosenPublicPlan=selected;sessionStorage.setItem('ic_selected_plan',selected);updatePlanHint();void showRegister();});
 $('openApp').addEventListener('click',showLogin);
 $('goLogin').addEventListener('click',showLogin);$('goRegister').addEventListener('click',showRegister);
 $('cancelBtn').addEventListener('click',hideAll);$('cancelLogin').addEventListener('click',hideAll);
@@ -100,7 +113,7 @@ reg.addEventListener('submit',async e=>{
   setStudentLocals(actualName,email,actualReferral,user.uid);
   // Solo el nombre/correo del registro: jamás se transmiten contraseñas.
   await notifyRegistration(actualName,email,actualReferral);
-  location.href='app.html';
+  location.href=planDestination();
  }catch(e){regError.textContent=errText(e);}
  finally{busy=false;btn.disabled=false;btn.textContent='Crear cuenta';}
 });
@@ -120,7 +133,7 @@ login.addEventListener('submit',async e=>{
   if(!name)throw new Error('No se encontró un perfil de alumno para esta cuenta. Contacta al profesor.');
   // El referido ya está asociado a su UID en Firestore, no vuelve a elegirse al entrar.
   setStudentLocals(name,email,'',cred.user.uid);
-  location.href='app.html';
+  location.href=planDestination();
  }catch(e){loginError.textContent=errText(e);}
  finally{busy=false;btn.disabled=false;btn.textContent='Entrar a mi cuenta';}
 });

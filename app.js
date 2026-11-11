@@ -5,7 +5,20 @@ let profile={name:alias,email:'',group:''};
 try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||''),referralCode:String(p.referralCode||'')};}catch{}
 if(localStorage.getItem('ic_v3_consent')!=='yes'||!alias)location.replace('index.html');
 const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
-const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20}};
+const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20},Platinum:{min:1500,rate:.085,weeks:24},Signature:{min:3000,rate:.10,weeks:28}};
+const planQuery=new URLSearchParams(location.search).get('plan');
+const publicPlan=plans[planQuery] ? planQuery : (plans[sessionStorage.getItem('ic_selected_plan')] ? sessionStorage.getItem('ic_selected_plan') : '');
+if(publicPlan)sessionStorage.setItem('ic_selected_plan',publicPlan);
+function showChosenPlanBanner(){
+ const box=$('#selectedPlanBanner');if(!box)return;
+ const planName=plans[sessionStorage.getItem('ic_selected_plan')]?sessionStorage.getItem('ic_selected_plan'):'';
+ box.classList.toggle('hidden',!planName);if(!planName)return;
+ const p=plans[planName];const lack=Math.max(0,num(p.min-account.cash));
+ $('#selectedPlanTitle').textContent=planName+' · desde '+money(p.min)+' ficticios';
+ $('#selectedPlanMessage').textContent=lack>0?`Primero solicita ${money(lack)} de capital virtual. El profesor debe aprobarlo antes de que puedas asignarlo a tu plan.`:'Ya tienes saldo virtual suficiente para asignar capital a este plan.';
+ const btn=$('#selectedPlanAction');btn.textContent=lack>0?'Solicitar capital ficticio':'Asignar a este plan';
+ btn.onclick=()=>lack>0?deposit(lack):planSelect(planName);
+}
 const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
 const STORE=storedAuthUid?'ic_v34_uid_'+storedAuthUid:'ic_v34_'+encodeURIComponent((alias+'|'+profile.group).toLowerCase());
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
@@ -189,12 +202,13 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
 }
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
 // Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
-function deposit(){
+function deposit(presetAmount=100){
+ const startAmount=(typeof presetAmount==='number' && Number.isFinite(presetAmount) && presetAmount>=1 && presetAmount<=100000)?presetAmount:100;
  record('deposit_open','Abrió la solicitud de crédito virtual de prueba');
  modal('Solicitar inversión simulada',`
  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong> · No envíes dinero ni criptomonedas. El profesor revisará únicamente una cantidad ficticia.</div>
  <label class="field-label" for="amountValue">Cantidad virtual (USDT de práctica)</label>
- <input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="100" inputmode="decimal">
+ <input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="${startAmount}" inputmode="decimal">
  <p id="modalError" class="form-error" hidden></p>
  <p class="tiny">Hasta la aprobación del profesor, el importe no se acredita en el saldo disponible.</p>
  `,async()=>{
@@ -256,10 +270,10 @@ function onCreditRequests(rows){
    if(account.withdrawalAnchor!==firstApproval){account.withdrawalAnchor=firstApproval;changed=true;}
   }
  }
- if(changed){save();render();void flushContributions();}
+ if(changed){save();render();showChosenPlanBanner();void flushContributions();}
  renderCreditRequests();
 }
-function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
+function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');if(sessionStorage.getItem('ic_selected_plan')===plan){sessionStorage.removeItem('ic_selected_plan');showChosenPlanBanner();}modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
 function renderWithdrawalRequests(){
  const box=$('#withdrawRequestBox');if(!box)return;
  box.replaceChildren();
@@ -445,13 +459,19 @@ $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó id
 $('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();
+$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();showChosenPlanBanner();
 (async()=>{
  try{
   session=await studentStart(profile);sessionReady=true;
   $('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';
   $('#refCode').textContent=session.mode==='cloud'?classroomCode(session.uid):'IC-AULA-LOCAL';
   record('entry','Entró al panel');await flush();
+  if(planQuery && plans[planQuery]){
+   setView('planes');showChosenPlanBanner();
+   if(account.cash>=plans[planQuery].min)planSelect(planQuery);
+   else deposit(Math.max(1,num(plans[planQuery].min-account.cash)));
+   history.replaceState(null,'',location.pathname);
+  }
   unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sin conexión';});
   if(session.mode==='cloud'){
     try{await applyClassroomCode(profile.referralCode||'');}
