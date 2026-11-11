@@ -162,3 +162,38 @@ export async function reviewVirtualCreditRequest(f,requestId,decision){
   tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
  });
 }
+
+// V6 · Peticiones de retirada de saldo exclusivamente ficticio.
+export async function requestVirtualWithdrawal(session, amount, studentAlias){
+ if(session.mode!=='cloud')throw new Error('Necesitas conexión con Firebase para solicitar el retiro de práctica.');
+ const n=Math.round(Number(amount)*100)/100;
+ if(!Number.isFinite(n)||n<1||n>100000)throw new Error('Cantidad virtual fuera de rango.');
+ const {db,Store,uid}=session;
+ const ref=await Store.addDoc(Store.collection(db,'virtualWithdrawalRequests'),{
+  studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
+  amount:n,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
+ });
+ return ref.id;
+}
+export function watchVirtualWithdrawalRequests(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store,uid}=session;
+ const q=Store.query(Store.collection(db,'virtualWithdrawalRequests'),Store.where('studentUid','==',uid));
+ return Store.onSnapshot(q,snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export function watchAdminVirtualWithdrawalRequests(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualWithdrawalRequests'),Store.orderBy('createdAt','desc'),Store.limit(200)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export async function reviewVirtualWithdrawalRequest(f,requestId,decision){
+ if(!['approved','rejected'].includes(decision))throw new Error('Decisión inválida.');
+ if(!/^[A-Za-z0-9]{15,40}$/.test(String(requestId)))throw new Error('Referencia inválida.');
+ const {db,Store}=f,ref=Store.doc(db,'virtualWithdrawalRequests',requestId);
+ await Store.runTransaction(db,async tx=>{
+  const snap=await tx.get(ref);
+  if(!snap.exists())throw new Error('La solicitud no existe.');
+  if(snap.data().status!=='pending')throw new Error('La solicitud ya tiene una decisión.');
+  tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
+ });
+}

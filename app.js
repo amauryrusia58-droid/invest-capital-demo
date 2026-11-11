@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests} from './backend.js';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests} from './backend.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -12,6 +12,11 @@ const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>Math.round((Number(n)||0)*100)/100;
 const MS_DAY=86400000;
+// Días de calendario, no bloques completos de 24 horas: hoy 30, mañana 29.
+function calendarDay(t){const d=new Date(t);return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/MS_DAY);}
+function calendarElapsed(t){return Number.isFinite(t)&&t>0?Math.max(0,calendarDay(Date.now())-calendarDay(t)):0;}
+function timestampMs(x){return x?.toMillis?.()??(Number(x?.seconds)>0?Number(x.seconds)*1000:0);}
+
 // Por día natural transcurrido: tasa semanal proporcional, interés simple,
 // limitado al plazo del plan. No hay precios, tokens ni rendimientos reales.
 function elapsedDays(when){const t=Number(when);return Number.isFinite(t)&&t>0?Math.max(0,Math.floor((Date.now()-t)/MS_DAY)):0;}
@@ -32,14 +37,14 @@ function positionProfit(pos){return Math.max(0,num(projected(pos.amount,pos.plan
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
-let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},contributionQueue:[]};
+let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:""};
 try{
   const raw=JSON.parse(localStorage.getItem(STORE)||'null');
   if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
-    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
   }
 }catch{}
-let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},onConfirm=null;
+let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},unsubscribeWithdrawals=()=>{},onConfirm=null;
 const pendingContributions=account.contributionQueue;
 const referralRates={1:.15,2:.05,3:.03};
 const pending=[], overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'),confirmBtn=$('#confirmModal');
@@ -54,12 +59,24 @@ function tx(name,amount,status,kind){const seq=++account.seq;account.ledger.unsh
 function principal(){return num(account.positions.reduce((s,p)=>s+remainingPrincipal(p),0));}
 function gain(){return num(account.positions.reduce((s,p)=>s+positionProfit(p),0));}
 function total(){return num(account.cash+principal()+gain());}
-// La primera aportación fija las ventanas de retiro: 24 horas cada 30 días.
+// V6 · Calendario de espera basado en la fecha de la primera aprobación y las últimas decisiones.
+// Tras una decisión de retiro (aprobado o rechazado) se inicia un nuevo plazo de 30 días.
 function lockAnchor(){if(account.withdrawalAnchor>0)return account.withdrawalAnchor;const starts=account.positions.map(legacyStart).filter(Number.isFinite);return starts.length?Math.min(...starts):0;}
-function withdrawalStatus(){const anchor=lockAnchor();if(!anchor)return {days:30,open:false,cycle:0,reason:'Primero debes registrar una aportación.'};const days=elapsedDays(anchor),cycle=Math.floor(days/30);const dayInCycle=days%30;const open=days>=30&&dayInCycle===0&&account.lastWithdrawalCycle!==cycle;let remaining=days<30?30-days:(dayInCycle===0&&account.lastWithdrawalCycle!==cycle?0:dayInCycle===0?30:30-dayInCycle);return {days:remaining,open,cycle,reason:open?'Ventana mensual de retiro disponible.':`Faltan ${remaining} día${remaining===1?'':'s'} para la próxima fecha de retiro.`};}
+function hasPendingWithdrawal(){return Boolean(account.pendingWithdrawalRequestId)||withdrawalRequests.some(x=>x.status==='pending');}
+function withdrawalStatus(){
+ const anchor=lockAnchor();
+ if(!anchor)return {days:30,open:false,reason:'La primera aprobación de saldo virtual inicia el calendario de 30 días.'};
+ const remaining=Math.max(0,30-calendarElapsed(anchor));
+ return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para solicitar un retiro ficticio.`:'Ya puedes solicitar un retiro ficticio sujeto a aprobación.'};
+}
 function eligibleProfit(p){return elapsedDays(legacyStart(p))>=30?positionProfit(p):0;}
 function withdrawable(){return num(account.cash+account.positions.reduce((s,p)=>s+eligibleProfit(p)+(planMatured(p)?remainingPrincipal(p):0),0));}
-function renderWithdrawalStatus(){const w=withdrawalStatus();const label=!lockAnchor()?'Consultar retiro':w.open?'Solicitar retiro':`Retiro en ${w.days} día${w.days===1?'':'s'}`;for(const id of ['actionWithdraw','withdrawInMovements'])$('#'+id).textContent=label;$('#withdrawalCountdown').textContent=lockAnchor()?w.open?'Tu ventana mensual está disponible.':w.reason:'La primera aportación inicia el período de espera de 30 días.';}
+function renderWithdrawalStatus(){
+ const w=withdrawalStatus();
+ for(const id of ['actionWithdraw','withdrawInMovements'])$('#'+id).textContent='Retiro';
+ $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?'Retiro ficticio pendiente de revisión del administrador.':w.reason;
+}
+
 function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
 function render(){const invested=principal(),profit=gain(),value=total(),pos=account.positions.filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
@@ -79,6 +96,7 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
   $('#refCount').textContent=String(account.referrals.length);$('#refCommission').textContent=money(account.referrals.reduce((sum,r)=>sum+r.commission,0));
   $('#refRows').innerHTML=account.referrals.length?account.referrals.slice(0,8).map(r=>`<tr><td>${esc(r.alias)}</td><td>Nivel ${r.level}</td><td>${money(r.amount)}</td><td>+${money(r.commission)}</td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay operaciones de la red.</td></tr>';
   ledgerRows();
+  renderWithdrawalRequests();
 }
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
 // Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
@@ -102,7 +120,7 @@ function deposit(){
   }catch(e){err('No se pudo registrar la solicitud: '+e.message);confirmBtn.disabled=false;}
  },'Enviar solicitud');
 }
-let creditRequests=[];
+let creditRequests=[],withdrawalRequests=[];
 function renderCreditRequests(){
  const box=$('#creditRequestBox');if(!box)return;
  box.replaceChildren();
@@ -129,7 +147,7 @@ function onCreditRequests(rows){
   // Un identificador de Firestore solo puede convertirse una vez en saldo del navegador.
   account.approvedRequestIds[req.id]=true;
   account.cash=num(account.cash+n);
-  if(!lockAnchor())account.withdrawalAnchor=Date.now();
+  if(!lockAnchor())account.withdrawalAnchor=timestampMs(req.decisionAt)||timestampMs(req.createdAt)||Date.now();
   pendingContributions.push({amount:n,reference:req.id.slice(0,35)});
   tx('Crédito virtual aprobado por el profesor',n,'Acreditado','deposit');
   record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT ficticios tras aprobación docente`);
@@ -139,25 +157,86 @@ function onCreditRequests(rows){
  renderCreditRequests();
 }
 function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
+function renderWithdrawalRequests(){
+ const box=$('#withdrawRequestBox');if(!box)return;
+ box.replaceChildren();
+ const ordered=[...withdrawalRequests].sort((a,b)=>(timestampMs(b.createdAt)||0)-(timestampMs(a.createdAt)||0));
+ const pending=ordered.filter(r=>r.status==='pending');
+ const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro ficticio'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
+ box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Simulación educativa: ninguna aprobación transfiere dinero ni criptomonedas.'}));
+ if(!ordered.length){box.append(Object.assign(document.createElement('p'),{className:'muted',textContent:'Todavía no hay solicitudes de retiro.'}));return;}
+ for(const r of ordered.slice(0,8)){
+  const row=document.createElement('div');row.className='credit-request-row';
+  const amount=document.createElement('strong');amount.textContent=money(r.amount)+' · virtual';
+  const state=document.createElement('span');state.className='tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
+  state.textContent=r.status==='approved'?'Aprobada · saldo virtual descontado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
+  row.append(amount,state);box.append(row);
+ }
+}
+function consumeApprovedWithdrawal(amount){
+ if(withdrawable()+.001<amount)return false;
+ let left=amount;
+ const useCash=Math.min(left,account.cash);account.cash=num(account.cash-useCash);left=num(left-useCash);
+ for(const p of account.positions){if(left<=0)break;const use=Math.min(left,eligibleProfit(p));p.paidProfit=num((p.paidProfit||0)+use);left=num(left-use);}
+ for(const p of account.positions){if(left<=0)break;if(!planMatured(p))continue;const use=Math.min(left,remainingPrincipal(p));p.principalPaid=num((p.principalPaid||0)+use);left=num(left-use);}
+ return left<=.001;
+}
+function onWithdrawalRequests(rows){
+ withdrawalRequests=rows;
+ let changed=false;
+ for(const r of [...rows].sort((a,b)=>(timestampMs(a.decisionAt)||0)-(timestampMs(b.decisionAt)||0))){
+  if(!['approved','rejected'].includes(r.status)||account.reviewedWithdrawalIds[r.id])continue;
+  const when=timestampMs(r.decisionAt)||Date.now();
+  if(r.status==='approved'){
+   const amount=num(r.amount);
+   if(!Number.isFinite(amount)||amount<1||!consumeApprovedWithdrawal(amount)){
+    $('#syncStatus').textContent='Retiro aprobado: saldo local insuficiente para descontarlo. Revisa la sesión.';
+    continue;
+   }
+   account.reviewedWithdrawalIds[r.id]='approved';
+   account.withdrawalAnchor=when;
+   account.pendingWithdrawalRequestId='';
+   tx('Retiro ficticio aprobado por el profesor',-amount,'Aprobado','withdraw');
+   record('withdraw_approved',`Retiro virtual aprobado por ${amount.toFixed(2)} USDT`,'movimientos');
+  }else{
+   account.reviewedWithdrawalIds[r.id]='rejected';
+   account.withdrawalAnchor=when;
+   account.pendingWithdrawalRequestId='';
+   tx('Retiro ficticio rechazado por el profesor',0,'Rechazado','withdraw');
+   record('withdraw_rejected',`Retiro virtual rechazado de ${num(r.amount).toFixed(2)} USDT`,'movimientos');
+  }
+  changed=true;
+ }
+ if(!rows.some(r=>r.status==='pending')&&account.pendingWithdrawalRequestId){
+  const own=rows.find(r=>r.id===account.pendingWithdrawalRequestId);
+  if(own&&own.status!=='pending'&&account.reviewedWithdrawalIds[own.id]){account.pendingWithdrawalRequestId='';changed=true;}
+ }
+ if(changed)save();
+ render();
+}
 function withdrawal(){
- record('withdraw_open','Consultó el retiro mensual');
+ record('withdraw_open','Consultó retiro ficticio','movimientos');
  const w=withdrawalStatus();
- if(!lockAnchor()){modal('Calendario de retiros','<div class="notice">Necesitas registrar una aportación antes de iniciar el calendario mensual.</div>');return;}
- if(stage===3){modal('Solicitudes suspendidas','<div class="notice negative">Las solicitudes de retiro están temporalmente suspendidas por la plataforma.</div>');return;}
- if(!w.open){record('withdraw_locked',`Consultó bloqueo; faltan ${w.days} días`);modal('Próxima fecha de retiro',`<div class="withdraw-count"><b>${w.days}</b><span>día${w.days===1?'':'s'} restantes</span></div><p>La plataforma habilita solicitudes cada 30 días desde la primera aportación.</p><p class="muted">Los rendimientos mostrados se calculan semanalmente, pero las solicitudes solo están disponibles en la ventana mensual. El capital de una posición puede solicitarse al finalizar el plazo de su plan.</p>`);return;}
+ if(!lockAnchor()){modal('Retiro · simulación',`<div class="notice">${esc(w.reason)}</div>`);return;}
+ if(hasPendingWithdrawal()){modal('Pendiente de revisión','<div class="notice">Ya tienes una solicitud de retiro ficticio pendiente de decisión. Cuando el profesor responda aparecerá aquí el resultado.</div>');return;}
+ if(stage===3){modal('Escenario: retiros suspendidos','<div class="notice negative">La simulación está en un escenario de retiros suspendidos.</div>');return;}
+ if(!w.open){record('withdraw_locked',`Consultó calendario: faltan ${w.days} días`,'movimientos');modal('Retiro · calendario',`<div class="withdraw-count"><b>${w.days}</b><span>día${w.days===1?'':'s'} para solicitar</span></div><p>${esc(w.reason)}</p><p class="tiny">El conteo avanza por fechas del calendario, aunque no hayan pasado 24 horas completas. Los retiros son exclusivamente ficticios.</p>`);return;}
  const cap=withdrawable();
- if(cap<1){modal('Ventana mensual disponible','<div class="notice">La ventana de este mes está abierta, pero aún no hay saldo elegible. Los rendimientos de cada posición requieren 30 días desde su apertura; el capital asignado permanece hasta el vencimiento del plan.</div>');return;}
- modal('Retiro mensual',`<p>Importe disponible en esta ventana: <strong>${money(cap)}</strong></p><label class="field-label" for="amountValue">Cantidad que deseas solicitar (USDT)</label><input id="amountValue" class="plain-input" type="number" step="0.01" min="1" max="${cap}" value="${Math.min(100,cap)}"><p id="modalError" class="form-error" hidden></p><p class="tiny">El importe puede incluir saldo libre, rendimientos elegibles y capital de posiciones vencidas. Esta solicitud no transfiere criptomonedas.</p>`,()=>{
-  const raw=Number($('#amountValue').value),n=num(raw),now=withdrawalStatus();
-  if(!now.open){err('Esta ventana de retiro ya no está disponible.');return;}
-  if(!Number.isFinite(raw)||n<1||n>withdrawable()){err('Introduce una cantidad entre 1 USDT y el saldo elegible.');return;}
-  let remaining=n;const useCash=Math.min(remaining,account.cash);account.cash=num(account.cash-useCash);remaining=num(remaining-useCash);
-  for(const p of account.positions){if(remaining<=0)break;const available=eligibleProfit(p);const use=Math.min(remaining,available);p.paidProfit=num((p.paidProfit||0)+use);remaining=num(remaining-use);}
-  for(const p of account.positions){if(remaining<=0)break;if(!planMatured(p))continue;const available=remainingPrincipal(p);const use=Math.min(remaining,available);p.principalPaid=num((p.principalPaid||0)+use);remaining=num(remaining-use);}
-  account.lastWithdrawalCycle=now.cycle;tx('Retiro mensual solicitado',-n,stage===2?'En validación':'En proceso','withdraw');
-  record('withdraw_attempt',`Solicitó ${n.toFixed(2)} USDT en ciclo mensual ${now.cycle}`);
-  modal('Solicitud registrada',`<p>Se registró una solicitud virtual por <strong>${money(n)}</strong>.</p><p>Estado: <strong>${stage===2?'En validación':'En proceso'}</strong>. La próxima ventana será dentro de 30 días.</p><div class="modal-note">No se ha realizado ninguna transferencia.</div>`);
- },'Solicitar retiro');
+ if(cap<1){modal('Retiro disponible','<div class="notice">Ya cumpliste los 30 días, pero no hay saldo virtual elegible para solicitar. Los rendimientos requieren 30 días de posición y el principal queda sujeto al plazo del plan.</div>');return;}
+ modal('Solicitar retiro ficticio',`<div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong> · No se realiza ningún pago.</div><p>Saldo virtual elegible: <strong>${money(cap)}</strong></p><label class="field-label" for="amountValue">Cantidad ficticia (USDT)</label><input id="amountValue" class="plain-input" type="number" step="0.01" min="1" max="${cap}" value="${Math.min(100,cap)}"><p id="modalError" class="form-error" hidden></p><p class="tiny">La solicitud quedará pendiente en el panel del profesor. No descontaremos el saldo virtual hasta que sea aprobada.</p>`,async()=>{
+  const raw=$('#amountValue').value,n=num(Number(raw));
+  if(!raw.trim()||!Number.isFinite(Number(raw))||n<1||n>withdrawable()){err('Introduce una cantidad ficticia entre 1 y el saldo elegible.');return;}
+  if(!withdrawalStatus().open||hasPendingWithdrawal()){err('La solicitud no está disponible en este momento.');return;}
+  if(!sessionReady||session.mode!=='cloud'){err('Sin conexión Firebase: no se ha creado ninguna solicitud.');return;}
+  confirmBtn.disabled=true;
+  try{
+   const id=await requestVirtualWithdrawal(session,n,alias);
+   account.pendingWithdrawalRequestId=id;save();
+   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT ficticios`,'movimientos');
+   render();
+   modal('Retiro pendiente',`<div class="notice"><strong>${money(n)} ficticios · Pendiente de revisión</strong></div><p>El profesor recibió la solicitud. Solo su aprobación descontará el importe del saldo virtual; si la rechaza verás «Rechazada» y se iniciará un nuevo plazo de 30 días.</p>`);
+  }catch(e){err('No se pudo enviar la solicitud: '+e.message);confirmBtn.disabled=false;}
+ },'Enviar solicitud de retiro');
 }
 // Una aportación realizada en el aula notifica a las cuentas antecesoras (hasta 3 niveles).
 // La comisión se calcula desde ese movimiento, no desde formularios manuales.
@@ -252,7 +331,7 @@ $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó id
 $('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();
+$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();
 (async()=>{
  try{
   session=await studentStart(profile);sessionReady=true;
@@ -264,6 +343,7 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
     try{await applyClassroomCode(profile.referralCode||'');}
     catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
     unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box){box.textContent='No se pudieron consultar las solicitudes: '+e.message;}});
+    unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,onWithdrawalRequests,e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
     unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{
       console.warn('Error al consultar bonificaciones',e);
       $('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;
@@ -275,4 +355,4 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
 window.addEventListener('focus',render);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
 window.setInterval(render,60000);
-window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();unsubscribeCredits();});
+window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();});
