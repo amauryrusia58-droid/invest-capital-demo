@@ -19,7 +19,7 @@ function timestampMs(x){return x?.toMillis?.()??(Number(x?.seconds)>0?Number(x.s
 
 // Por día natural transcurrido: tasa semanal proporcional, interés simple,
 // limitado al plazo del plan. No hay precios, tokens ni rendimientos reales.
-function elapsedDays(when){const t=Number(when);return Number.isFinite(t)&&t>0?Math.max(0,Math.floor((Date.now()-t)/MS_DAY)):0;}
+function elapsedDays(when){return calendarElapsed(Number(when));}
 function legacyStart(pos){
  if(Number.isFinite(pos.openedAt)&&pos.openedAt>0)return pos.openedAt;
  const m=String(pos.date||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -45,6 +45,7 @@ try{
   }
 }catch{}
 let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},unsubscribeWithdrawals=()=>{},onConfirm=null;
+let chartProjectionDays=30; // 30D o 90D de proyección, diferenciada de la evolución ya calculada.
 const pendingContributions=account.contributionQueue;
 const referralRates={1:.15,2:.05,3:.03};
 const pending=[], overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'),confirmBtn=$('#confirmModal');
@@ -78,6 +79,99 @@ function renderWithdrawalStatus(){
 }
 
 function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
+// V7: evolución del simulador, no cotizaciones ni rentabilidad real.
+// La línea continua llega SOLO hasta hoy; el trazo discontinuo es una PROYECCIÓN hipotética.
+function drawPortfolioChart(pos, invested, profit){
+ const line=$('#chartLine'), area=$('#chartArea'), caption=$('#chartCaption');
+ const svg=line?.ownerSVGElement;
+ if(!line||!area||!caption||!svg)return;
+ const svgNs='http://www.w3.org/2000/svg';
+ function part(id,tag){
+  let el=svg.querySelector('#'+id);
+  if(!el){el=document.createElementNS(svgNs,tag);el.id=id;svg.appendChild(el);}
+  return el;
+ }
+ const projection=part('chartProjection','polyline');
+ const todayMark=part('chartTodayMark','line');
+ const nowDot=part('chartNowDot','circle');
+ const label=part('chartTodayLabel','text');
+ const legendId='chartSimulationLegend';
+ let legend=document.getElementById(legendId);
+ if(!legend){
+  legend=document.createElement('div');legend.id=legendId;
+  legend.style.cssText='font-size:11px;line-height:1.55;color:#cdb9de;margin-top:8px';
+  caption.insertAdjacentElement('afterend',legend);
+ }
+ if(!pos.length){
+  caption.textContent='Sin posiciones activas. La evolución comienza al asignar capital virtual a un plan.';
+  legend.textContent='Simulación educativa · No representa cotizaciones ni pagos reales.';
+  line.setAttribute('points','0,210 700,210');
+  area.setAttribute('d','M0 210 L700 210 L700 230 L0 230 Z');
+  for(const element of [projection,todayMark,nowDot,label])element.setAttribute('visibility','hidden');
+  return;
+ }
+ for(const element of [projection,todayMark,nowDot,label])element.removeAttribute('visibility');
+ const today=calendarDay(Date.now());
+ const openDays=pos.map(p=>calendarDay(legacyStart(p))).filter(Number.isFinite);
+ const firstDay=Math.min(today,...openDays);
+ // Historial de hasta 90 días; el resto es una proyección de 30 o 90 días.
+ const fromDay=Math.max(firstDay,today-90);
+ const toDay=today+chartProjectionDays;
+ const xSpan=Math.max(1,toDay-fromDay);
+ const positionValue=(p,day)=>{
+  const start=calendarDay(legacyStart(p));
+  if(day<start)return 0;
+  const paid=Math.max(0,num(p.paidProfit||0));
+  const profitAtDay=Math.max(0,num(projected(p.amount,p.plan,day-start,p.rate).profit-paid));
+  return num(remainingPrincipal(p)+profitAtDay);
+ };
+ const valueAt=day=>num(pos.reduce((sum,p)=>sum+positionValue(p,day),0));
+ // Daily day-by-day model, with maximum 91 history + 91 future datapoints.
+ const actualDays=Array.from({length:today-fromDay+1},(_,i)=>fromDay+i);
+ const projectedDays=Array.from({length:chartProjectionDays+1},(_,i)=>today+i);
+ const actualVals=actualDays.map(valueAt);
+ const futureVals=projectedDays.map(valueAt);
+ const vals=[...actualVals,...futureVals];
+ const minVal=Math.min(...vals),maxVal=Math.max(...vals);
+ const breathing=Math.max(1,(maxVal-minVal)*.1);
+ const yMin=Math.max(0,minVal-breathing),yMax=maxVal+breathing;
+ const px=day=>Number(((day-fromDay)/xSpan*700).toFixed(2));
+ const py=v=>Number((210-(v-yMin)/Math.max(1,yMax-yMin)*175).toFixed(2));
+ const toPoints=(days,values)=>days.map((day,i)=>`${px(day)},${py(values[i])}`).join(' ');
+ const actualPoints=toPoints(actualDays,actualVals);
+ line.setAttribute('points',actualPoints);
+ line.setAttribute('stroke','#e3bd76');
+ line.setAttribute('stroke-width','3.5');
+ line.setAttribute('stroke-linejoin','round');
+ area.setAttribute('d',`M ${actualPoints.replaceAll(' ',', L ').replaceAll(',',' ')} L ${px(today)} 230 L ${px(fromDay)} 230 Z`);
+ const futurePoints=toPoints(projectedDays,futureVals);
+ projection.setAttribute('points',futurePoints);
+ projection.setAttribute('fill','none');
+ projection.setAttribute('stroke','#af83e9');
+ projection.setAttribute('stroke-width','2.5');
+ projection.setAttribute('stroke-dasharray','9 7');
+ projection.setAttribute('stroke-linecap','round');
+ projection.setAttribute('stroke-linejoin','round');
+ todayMark.setAttribute('x1',px(today));todayMark.setAttribute('x2',px(today));
+ todayMark.setAttribute('y1','26');todayMark.setAttribute('y2','213');
+ todayMark.setAttribute('stroke','#c5a5ea');todayMark.setAttribute('stroke-width','1.5');
+ todayMark.setAttribute('stroke-dasharray','3 6');
+ nowDot.setAttribute('cx',px(today));nowDot.setAttribute('cy',py(actualVals.at(-1)));
+ nowDot.setAttribute('r','5');nowDot.setAttribute('fill','#e3bd76');
+ nowDot.setAttribute('stroke','#190f25');nowDot.setAttribute('stroke-width','2');
+ label.setAttribute('x',Math.max(8,Math.min(650,px(today)+8)));
+ label.setAttribute('y','24');label.setAttribute('fill','#e9d0fb');label.setAttribute('font-size','12');
+ label.textContent='HOY';
+ const maxElapsed=Math.max(0,...pos.map(p=>calendarElapsed(legacyStart(p))));
+ const dailyEstimated=num(pos.reduce((sum,p)=>{
+  const d=calendarElapsed(legacyStart(p));
+  const conf=plans[p.plan];
+  if(!conf||d>=conf.weeks*7)return sum;
+  return sum+(projected(p.amount,p.plan,d+1,p.rate).profit-projected(p.amount,p.plan,d,p.rate).profit);
+ },0));
+ caption.textContent=`Capital asignado: ${money(invested)} · rendimiento simulado hasta hoy: ${money(profit)} · día ${maxElapsed} desde la primera posición`;
+ legend.textContent=`Línea continua: cálculo hasta hoy · Línea discontinua: proyección ficticia de ${chartProjectionDays} días · Próximo incremento estimado: ${money(dailyEstimated)} (mañana).`;
+}
 function render(){const invested=principal(),profit=gain(),value=total(),pos=account.positions.filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
   $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(profit);$('#availableVal').textContent=money(account.cash);$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=stage===3?'Retiros suspendidos':stage===2?'Retiros sujetos a validación':account.cash>0?'Disponible para invertir':'Sin saldo libre';
@@ -86,12 +180,7 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
   $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
   $('#positionRows').innerHTML=pos.length?pos.map(p=>`<tr><td>${esc(p.plan)}</td><td>${money(remainingPrincipal(p))}</td><td>${money(positionProfit(p))}</td><td>${Math.min(elapsedDays(legacyStart(p)),plans[p.plan].weeks*7)}</td><td>${esc(p.date)}</td><td><span class="tag">Activa</span></td></tr>`).join(''):'<tr><td colspan="6">Aún no tienes posiciones.</td></tr>';
   $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · BEP20</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
-  $('#chartCaption').textContent=pos.length?`Capital asignado: ${money(invested)} · Rendimiento calculado hasta hoy: ${money(profit)}`:'Sin operaciones: la gráfica comenzará cuando abras una posición.';
-  const maxDays=Math.max(1,...pos.map(p=>elapsedDays(legacyStart(p))));
-  const values=Array.from({length:9},(_,i)=>{const at=Math.round(maxDays*i/8);return num(pos.reduce((s,p)=>s+p.amount+projected(p.amount,p.plan,Math.max(0,at-(maxDays-elapsedDays(legacyStart(p)))),p.rate).profit,0));});
-  const low=Math.min(...values),high=Math.max(...values),span=Math.max(1,high-low);
-  const pts=values.map((v,i)=>`${Math.round(i*87.5)},${pos.length?Math.round(191-118*(v-low)/span):210}`).join(' ');
-  $('#chartLine').setAttribute('points',pts);$('#chartArea').setAttribute('d','M'+pts.split(' ').map(t=>t.replace(',',' ')).join(' L')+' L700 230 L0 230 Z');
+  drawPortfolioChart(pos,invested,profit);
   $('#supportStatus').textContent=stage===3?'Servicio limitado: solicitudes de retiro suspendidas.':stage===2?'Volumen elevado de consultas; tiempos de respuesta ampliados.':'Los canales de atención están operativos.';
   $('#refCount').textContent=String(account.referrals.length);$('#refCommission').textContent=money(account.referrals.reduce((sum,r)=>sum+r.commission,0));
   $('#refRows').innerHTML=account.referrals.length?account.referrals.slice(0,8).map(r=>`<tr><td>${esc(r.alias)}</td><td>Nivel ${r.level}</td><td>${money(r.amount)}</td><td>+${money(r.commission)}</td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay operaciones de la red.</td></tr>';
@@ -336,7 +425,18 @@ $$('[data-calc-days]').forEach(button=>button.addEventListener('click',()=>{$('#
 $('#calcPlan').addEventListener('change',()=>{const p=plans[$('#calcPlan').value];if(Number($('#calcCapital').value)<p.min)$('#calcCapital').value=p.min;updateCalculator();});
 ['calcCapital','calcDays'].forEach(id=>$('#'+id).addEventListener('change',()=>record('calculator',`Simuló ${$('#calcCapital').value} USDT durante ${$('#calcDays').value} días en ${$('#calcPlan').value}`,'calculadora')));
 updateCalculator();
-$$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{$$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));record('chart','Consultó gráfica '+b.dataset.period);}));
+$$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));$$('[data-period]').forEach(b=>{
+ const isShort=b.dataset.period==='6M';
+ b.dataset.projectionDays=isShort?'30':'90';
+ b.textContent=isShort?'30D':'90D';
+ b.setAttribute('title',`Proyección simulada a ${b.dataset.projectionDays} días`);
+ b.addEventListener('click',()=>{
+  chartProjectionDays=Number(b.dataset.projectionDays);
+  $$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));
+  render();
+  record('chart',`Consultó proyección ficticia de ${chartProjectionDays} días`);
+ });
+});
 $$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
 $$('[data-document]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.document;record('document','Consultó '+name,'documentos');modal(name,`<p>${esc(docs[name]||'Documento no disponible.')}</p>`);}));
 $('#sideInvest').addEventListener('click',deposit);$('#actionDeposit').addEventListener('click',deposit);$('#startDeposit').addEventListener('click',deposit);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
