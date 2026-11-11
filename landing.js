@@ -1,6 +1,6 @@
 // Invest Capital V4.0: registro y acceso separados, con Firebase Authentication.
 // No se almacena ninguna contraseña en localStorage, Firestore ni formularios de correo.
-import {getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js';
+import {getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js?v=84';
 const $=id=>document.getElementById(id);
 const registerOverlay=$('consent'),loginOverlay=$('loginOverlay');
 const reg=$('registrationForm'),login=$('loginForm');

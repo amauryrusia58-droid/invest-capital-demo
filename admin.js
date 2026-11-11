@@ -1,4 +1,4 @@
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest} from './backend.js';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest} from './backend.js?v=84';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;

@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests} from './backend.js?v=83';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests} from './backend.js?v=84';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -6,12 +6,26 @@ try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name==
 if(localStorage.getItem('ic_v3_consent')!=='yes'||!alias)location.replace('index.html');
 const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
 const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20},Platinum:{min:1500,rate:.085,weeks:24},Signature:{min:3000,rate:.10,weeks:28}};
+const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
+// Guardar la elección por cuenta, no solo por pestaña, evita perder el plan
+// cuando el alumno regresa al dashboard después de que el profesor rechace.
+const SELECTED_PLAN_KEY='ic_selected_plan_for_'+(storedAuthUid||encodeURIComponent(alias.toLowerCase()));
 const planQuery=new URLSearchParams(location.search).get('plan');
-const publicPlan=plans[planQuery] ? planQuery : (plans[sessionStorage.getItem('ic_selected_plan')] ? sessionStorage.getItem('ic_selected_plan') : '');
-if(publicPlan)sessionStorage.setItem('ic_selected_plan',publicPlan);
+function currentChosenPlan(){
+ const fromTab=sessionStorage.getItem('ic_selected_plan');
+ const fromAccount=localStorage.getItem(SELECTED_PLAN_KEY);
+ return plans[fromTab]?fromTab:(plans[fromAccount]?fromAccount:'');
+}
+function rememberChosenPlan(plan){
+ if(!plans[plan])return;
+ sessionStorage.setItem('ic_selected_plan',plan);
+ localStorage.setItem(SELECTED_PLAN_KEY,plan);
+}
+const publicPlan=plans[planQuery]?planQuery:currentChosenPlan();
+if(publicPlan)rememberChosenPlan(publicPlan);
 function showChosenPlanBanner(){
  const box=$('#selectedPlanBanner');if(!box)return;
- const name=plans[sessionStorage.getItem('ic_selected_plan')]?sessionStorage.getItem('ic_selected_plan'):'';
+ const name=currentChosenPlan();
  box.classList.toggle('hidden',!name);if(!name)return;
  const p=plans[name],btn=$('#selectedPlanAction'),message=$('#selectedPlanMessage');
  $('#selectedPlanTitle').textContent=`${name} · ${money(p.min)} en USDT ficticios`;
@@ -24,7 +38,6 @@ function showChosenPlanBanner(){
  btn.textContent=rejected?'Volver a invertir':'Invertir para activar';btn.disabled=planSubmitBusy;btn.onclick=()=>openPlanWallet(name);
 }
 
-const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
 const STORE=storedAuthUid?'ic_v34_uid_'+storedAuthUid:'ic_v34_'+encodeURIComponent((alias+'|'+profile.group).toLowerCase());
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -67,6 +80,25 @@ let chartProjectionDays=30; // 30D o 90D de proyección, diferenciada de la evol
 const pendingContributions=account.contributionQueue;
 const referralRates={1:.15,2:.05,3:.03};
 const pending=[], overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'),confirmBtn=$('#confirmModal');
+let connectionFailure=null;
+function explainFirebaseIssue(error){
+ const code=String(error?.code||'').toLowerCase();
+ const msg=String(error?.message||'');
+ if(!firebaseEnabled)return 'Firebase no está configurado en esta versión.';
+ if(code.includes('permission-denied'))return 'Firebase rechazó los permisos de la solicitud. Comprueba que las reglas V8.3 estén publicadas y que uses tu cuenta de alumno.';
+ if(code.includes('network')||code.includes('unavailable'))return 'No se pudo conectar a Firebase. Comprueba Internet y vuelve a intentar.';
+ if(/sesión|cuenta|profesor|alumno|login|contraseña/i.test(msg))return msg;
+ return 'No se pudo completar la conexión con Firebase: '+(msg||code||'Error desconocido');
+}
+function showFirebaseIssue(error){
+ const box=$('#modalError');if(!box)return;
+ const msg=explainFirebaseIssue(error);
+ box.hidden=false;box.replaceChildren(document.createTextNode(msg));
+ // No cerramos sesión ni eliminamos datos del alumno automáticamente.
+ const link=document.createElement('a');link.href='index.html?login=1';
+ link.textContent=' Volver a iniciar sesión';link.style.display='block';link.style.marginTop='8px';
+ box.append(link);
+}
 function save(){localStorage.setItem(STORE,JSON.stringify(account));}
 function record(type,label,which=view){if(!firebaseEnabled)return;pending.push({type,label,view:which});void flush();}
 async function flush(){if(!sessionReady||sending||session.mode!=='cloud')return;sending=true;try{while(pending.length){const a=pending[0];await logStudent(session,a.type,a.label,a.view);pending.shift();}$('#syncStatus').textContent='Actividad conectada';}catch(e){console.warn('Acciones pendientes de conexión',e);$('#syncStatus').textContent='Sincronización pendiente';}finally{sending=false;}}
@@ -210,7 +242,7 @@ function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
 let planActivationRequests=[],planSubmitBusy=false,planSubmitId='';
 function choosePlan(plan){
  if(!plans[plan])return;
- sessionStorage.setItem('ic_selected_plan',plan);
+ rememberChosenPlan(plan);
  setView('planes');showChosenPlanBanner();
  document.getElementById('selectedPlanBanner')?.scrollIntoView({behavior:'smooth',block:'center'});
 }
@@ -236,13 +268,13 @@ function openPlanWallet(plan){
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya existe una solicitud pendiente.');return;}
-  if(!sessionReady||session.mode!=='cloud'){err('Se necesita conexión con Firebase para enviar la solicitud de práctica.');return;}
   planSubmitBusy=true;confirmBtn.disabled=true;
   try{
+   await ensureStudentFirebaseSession();
    planSubmitId=await requestVirtualPlanActivation(session,plan,alias);
    record('plan_requested',`Solicitó activar ${plan} con ${cfg.min.toFixed(2)} USDT DEMO`,'planes');
    modal('Plan pendiente de revisión',`<div class="notice"><b>${esc(plan)} · ${money(cfg.min)} ficticios</b></div><p>El profesor recibió tu simulación de envío. El plan no estará activo hasta que lo apruebe.</p><p class="tiny">No se ha acreditado saldo libre ni transferido ninguna criptomoneda.</p>`);
-  }catch(e){err('No se pudo registrar: '+e.message);confirmBtn.disabled=false;}
+  }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
  },`Simular envío de ${money(cfg.min)}`);
 }
@@ -283,12 +315,18 @@ function onPlanActivationRequests(rows){
  if(changed){save();render();void flushContributions();}
  renderPlanActivationRequests();showChosenPlanBanner();
 }
-// Los controles generales de «Invertir» abren un plan, nunca un saldo genérico.
+// Todos los botones «Invertir» llegan a la cartera demo del plan elegido.
+// Si no hay un plan pendiente, un selector breve permite abrir la misma cartera.
 function startPlanInvestment(){
- const selected=sessionStorage.getItem('ic_selected_plan');
- if(plans[selected]){openPlanWallet(selected);return;}
- setView('planes');
- modal('Selecciona un plan','<p>Elige primero un plan en la sección «Planes». Después se abrirá la cartera USDT ficticia de ese plan para simular su activación.</p>');
+ const selected=currentChosenPlan();
+ const approved=planActivationRequests.some(r=>r.plan===selected&&r.status==='approved');
+ if(plans[selected]&&!approved){openPlanWallet(selected);return;}
+ const entries=Object.entries(plans).map(([name,p])=>
+   `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)} DEMO</button>`).join('');
+ modal('Seleccionar plan para la cartera ficticia',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud propia y la aprobación del profesor.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
+ modalContent.querySelectorAll('[data-choose-wallet-plan]').forEach(b=>b.addEventListener('click',()=>{
+  const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
+ }));
 }
 // Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
 function deposit(presetAmount=100){
@@ -574,32 +612,49 @@ $('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').val
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
 $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
+async function attachStudentListeners(){
+ unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();unsubscribePlanRequests();
+ unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='No se pudo leer el escenario';});
+ if(session.mode==='cloud'){
+  try{await applyClassroomCode(profile.referralCode||'');}
+  catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
+  unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box)box.textContent='No se pudieron consultar las solicitudes: '+e.message;});
+  unsubscribePlanRequests=watchVirtualPlanRequests(session,onPlanActivationRequests,e=>{console.error('Error leyendo activaciones',e);const box=$('#planActivationBox');if(box)box.textContent='No se pudieron consultar activaciones: '+e.message;});
+  unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,onWithdrawalRequests,e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
+  unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{$('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;});
+  await flushContributions();
+ }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre alumnos.';}
+}
+async function ensureStudentFirebaseSession(){
+ if(!firebaseEnabled)throw new Error('Firebase no está configurado.');
+ const f=await getFirebase();if(!f)throw new Error('Firebase no está disponible.');
+ await f.auth.authStateReady();
+ const user=f.auth.currentUser;
+ if(!user)throw new Error('Tu sesión de alumno terminó. Inicia sesión desde la portada para continuar.');
+ if(storedAuthUid&&user.uid!==storedAuthUid)throw new Error('Firebase tiene otra cuenta activa en esta pestaña. Vuelve a entrar como alumno desde la portada.');
+ if(user.providerData?.some(p=>p.providerId==='google.com'))throw new Error('Esta pestaña tiene una cuenta de profesor. Entra con la cuenta de alumno para invertir de forma ficticia.');
+ if(sessionReady&&session.mode==='cloud'&&session.uid===user.uid)return session;
+ session=await studentStart(profile);
+ if(session.mode!=='cloud')throw new Error('No se pudo establecer la sesión de Firebase.');
+ sessionReady=true;connectionFailure=null;
+ $('#syncStatus').textContent='Actividad conectada';$('#refCode').textContent=classroomCode(session.uid);
+ await attachStudentListeners();await flush();
+ return session;
+}
 (async()=>{
  try{
-  session=await studentStart(profile);sessionReady=true;
-  $('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';
-  $('#refCode').textContent=session.mode==='cloud'?classroomCode(session.uid):'IC-AULA-LOCAL';
+  await ensureStudentFirebaseSession();
   record('entry','Entró al panel');await flush();
-  if(planQuery && plans[planQuery]){
+  if(planQuery&&plans[planQuery]){
    setView('planes');showChosenPlanBanner();
-   // No abrir solicitudes automáticas ni acreditar capital al llegar del registro.
-   // El alumno decide pulsar «Invertir para activar» cuando vea el aviso.
    history.replaceState(null,'',location.pathname);
   }
-  unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sin conexión';});
-  if(session.mode==='cloud'){
-    try{await applyClassroomCode(profile.referralCode||'');}
-    catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
-    unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box){box.textContent='No se pudieron consultar las solicitudes: '+e.message;}});
-    unsubscribePlanRequests=watchVirtualPlanRequests(session,onPlanActivationRequests,e=>{console.error('Error leyendo activaciones',e);const box=$('#planActivationBox');if(box)box.textContent='No se pudieron consultar activaciones: '+e.message;});
-    unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,onWithdrawalRequests,e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
-    unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{
-      console.warn('Error al consultar bonificaciones',e);
-      $('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;
-    });
-    await flushContributions();
-  }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre alumnos.';}
- }catch(e){console.error(e);$('#syncStatus').textContent='Sin conexión a Firebase';$('#refLinkStatus').textContent='Conexión de red no disponible.';if(String(e?.message||'').includes('sesión ha caducado'))location.replace('index.html?login=1');}
+ }catch(e){
+  console.error('No se pudo iniciar la sesión del alumno',e);
+  connectionFailure=e;sessionReady=false;
+  $('#syncStatus').textContent=explainFirebaseIssue(e);
+  $('#refLinkStatus').textContent='La sesión de Firebase necesita revisión. Puedes iniciar sesión nuevamente desde la portada.';
+ }
 })();
 window.addEventListener('focus',render);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});

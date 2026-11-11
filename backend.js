@@ -11,8 +11,14 @@ export async function getFirebase(){
      import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
    ]);
    const app=getApps().length?getApp():initializeApp(firebaseConfig);
-   return {app,auth:Auth.getAuth(app),db:Store.getFirestore(app),Auth,Store};
- })();
+   const auth=Auth.getAuth(app);
+   // Cuenta docente y alumno en distintas pestañas del mismo navegador.
+   // Firebase por defecto usa persistencia LOCAL compartida, que sustituye
+   // una cuenta al iniciar otra. SESSION separa el inicio de sesión por pestaña.
+   // La primera migración puede requerir volver a iniciar sesión una vez.
+   await Auth.setPersistence(auth,Auth.browserSessionPersistence);
+   return {app,auth,db:Store.getFirestore(app),Auth,Store};
+ })().catch(error=>{firebaseCache=undefined;throw error;});
  return firebaseCache;
 }
 async function authUser(auth,Auth){return await new Promise((resolve,reject)=>{let off=()=>{};off=Auth.onAuthStateChanged(auth,u=>{off();resolve(u);},reject);});}
@@ -24,8 +30,9 @@ export async function studentStart(profile){
  const f=await getFirebase();if(!f)return {mode:'local',uid:'local'};
  const {auth,db,Auth,Store}=f;
  let user=await authUser(auth,Auth);
- if(!user) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión desde la portada.');
- if(!user.isAnonymous && !user.providerData.some(p=>p.providerId==='password')) throw new Error('Debes entrar con tu cuenta de alumno, no con Google.');
+ if(!user) throw new Error('Tu sesión de alumno ha terminado. Vuelve a iniciar sesión desde la portada.');
+ if(!user.isAnonymous && !user.providerData.some(p=>p.providerId==='password')) throw new Error('Hay una sesión de profesor u otra cuenta activa en esta pestaña. Inicia sesión como alumno desde la portada.');
+ if(email&&user.email&&user.email.toLowerCase()!==email) throw new Error('La sesión de Firebase corresponde a otro alumno. Inicia sesión con la cuenta correcta.');
  const ref=Store.doc(db,'sessions',user.uid);
  const snap=await Store.getDoc(ref);
  const data={view:'resumen',lastAction:'Acceso al panel',lastSeen:Store.serverTimestamp()};
