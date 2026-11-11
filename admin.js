@@ -3,6 +3,48 @@ const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},linksMap={},stage=0;
 const date=x=>x?.toDate?x.toDate():null;
+const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+const knownAmounts=['deposit_confirmed','plan_assign','withdraw_attempt','referral_credit'];
+const eventAmount=e=>{if(!knownAmounts.includes(String(e.type||'')))return null;const m=String(e.label||'').match(/(\d+(?:[.,]\d{1,2})?)\s*USDT/i);return m?Number(m[1].replace(',','.')):null;};
+const emptyDisplay=x=>String(x??'').trim()||'—';
+function addText(tag,content,className){const node=document.createElement(tag);node.textContent=content;if(className)node.className=className;return node;}
+function csvCell(value){let text=String(value??'');if(/^[\s\u0000-\u001f]*[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';}
+function downloadCsv(filename,columns,rows){
+ const lines=[columns,...rows].map(row=>row.map(csvCell).join(','));
+ const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function getVisibleStudents(){const q=$('#studentSearch').value.trim().toLocaleLowerCase('es');const filter=$('#studentFilter').value;
+ return sessions.filter(s=>{
+  const haystack=[s.alias,s.email,s.id,s.group].join(' ').toLocaleLowerCase('es');
+  if(q&&!haystack.includes(q))return false;
+  if(filter==='recent'&&!(date(s.lastSeen)&&Date.now()-date(s.lastSeen).getTime()<300000))return false;
+  if(filter==='linked'&&!linksMap[s.id]&&!Object.values(linksMap).includes(s.id))return false;
+  return true;
+ });
+}
+function filteredEvents(){const f=$('#eventTypeFilter').value;return events.filter(e=>f==='all'||(f==='other'?!knownAmounts.includes(String(e.type||'')):String(e.type||'')===f));}
+function countDescendants(uid){
+ const children=(parent)=>Object.keys(linksMap).filter(child=>linksMap[child]===parent);
+ const first=children(uid);const second=first.flatMap(children);const third=second.flatMap(children);
+ return [new Set(first).size,new Set(second).size,new Set(third).size];
+}
+function renderStudentSummary(){
+ const container=$('#studentSummary');container.replaceChildren();
+ const s=sessions.find(x=>x.id===selectedId);if(!s){container.append(addText('p','Selecciona un alumno para consultar los datos disponibles.','muted'));return;}
+ const wrapper=addText('div','','admin-profile-grid');
+ const [l1,l2,l3]=countDescendants(s.id);
+ const details=[['Nombre declarado',emptyDisplay(s.alias)],['Correo de contacto',emptyDisplay(s.email)],['Registro',shortDate(s.createdAt)],['Última actividad',shortDate(s.lastSeen)],['Vinculado a',linksMap[s.id]?studentName(linksMap[s.id]):'Sin vínculo'],['Referidos directos',String(l1)],['Segundo nivel',String(l2)],['Tercer nivel',String(l3)]];
+ for(const [label,value] of details){const field=addText('div','','admin-profile-field');field.append(addText('small',label),addText('strong',value));wrapper.append(field);}
+ container.append(wrapper);
+ const titles=[['deposit_confirmed','Aportes ficticios registrados'],['plan_assign','Capital asignado (eventos)'],['withdraw_attempt','Retiros solicitados (eventos)'],['referral_credit','Bonos simulados registrados']];
+ const metrics=addText('div','','admin-event-metrics');
+ for(const [type,label] of titles){const matching=events.filter(e=>e.type===type);const amounts=matching.map(eventAmount).filter(v=>v!==null&&Number.isFinite(v));const val=amounts.length?money(amounts.reduce((a,b)=>a+b,0)):'—';
+ const item=addText('div','','admin-metric');item.append(addText('small',label),addText('strong',val),addText('span',`${matching.length} evento(s) registrado(s)`,'tiny'));metrics.append(item);}
+ container.append(metrics);
+ const note=addText('p','Saldo actual: no disponible en Firebase. Estas sumas proceden de los eventos visibles (máximo 200 por sesión), pueden ser parciales y NO equivalen al balance de la cuenta. Todos los importes son ficticios.','admin-summary-note');container.append(note);
+}
+
 const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'—';};
 function setError(s){$('#loginError').textContent=s;}
 function teacherReady(f){
@@ -12,10 +54,10 @@ function teacherReady(f){
 function watch(){
  const {db,Store}=firebase;
  offSessions();offScenario();offLinks();
- offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();if(selectedId)showSelectedProfile();},err=>console.warn('No se pudo listar la red del aula',err));
+ offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
    sessions=snap.docs.map(d=>({id:d.id,...d.data()}));
-   $('#connectionBadge').textContent='Sincronizado';refreshStudents();renderLinks();
+   $('#connectionBadge').textContent='Sincronizado';refreshStudents();renderLinks();if(selectedId){showSelectedProfile();renderStudentSummary();}
  },err=>{$('#connectionBadge').textContent='Error de lectura';console.error(err);});
  offScenario=Store.onSnapshot(Store.doc(db,'control','global'),snap=>{
    stage=snap.exists()?Number(snap.data().stage)||0:0;
@@ -29,14 +71,16 @@ function refreshStudents(){
  // El contador corresponde solo a los eventos cargados del alumno seleccionado.
  $('#withdrawCount').textContent=String(events.filter(x=>x.type==='withdraw_attempt').length);
  const list=$('#studentList');list.replaceChildren();
- if(!sessions.length){list.innerHTML='<p class="muted">Todavía no hay sesiones registradas.</p>';return;}
- sessions.forEach(s=>{
+ const visible=getVisibleStudents();$('#studentResults').textContent=`${visible.length} de ${sessions.length} sesiones`;
+ $('#exportStudents').disabled=!visible.length;
+ if(!visible.length){list.append(addText('p',sessions.length?'No hay alumnos que coincidan con el filtro.':'Todavía no hay sesiones registradas.','muted'));return;}
+ visible.forEach(s=>{
    const b=document.createElement('button');b.className='admin-item'+(s.id===selectedId?' active':'');
    const d=document.createElement('div'),name=document.createElement('b'),meta=document.createElement('div'),last=document.createElement('small');
    name.textContent=s.alias||'Alumno sin nombre';meta.className='tiny';meta.textContent=(s.view||'resumen')+' · '+(s.lastAction||'Acceso al panel');
    d.append(name,meta);last.textContent=shortDate(s.lastSeen);b.append(d,last);b.addEventListener('click',()=>select(s.id));list.append(b);
  });
- if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#studentProfile').textContent='';$('#withdrawCount').textContent='0';}
+ if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#studentProfile').textContent='';$('#withdrawCount').textContent='0';renderStudentSummary();}
 }
 
 function studentName(uid){return sessions.find(s=>s.id===uid)?.alias||'Alumno '+String(uid).slice(0,6);}
@@ -60,20 +104,21 @@ function renderLinks(){
 }
 
 function select(uid){
- selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';
+ selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';$('#eventTypeFilter').value='all';
  const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;showSelectedProfile();
- refreshStudents();$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
+ refreshStudents();renderStudentSummary();$('#eventResults').textContent='Cargando eventos…';$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
  $('#exportCsv').disabled=true;
  const {db,Store}=firebase;
  offEvents=Store.onSnapshot(Store.query(Store.collection(db,'sessions',uid,'events'),Store.orderBy('createdAt','desc'),Store.limit(200)),snap=>{
-   events=snap.docs.map(d=>d.data());renderEvents();
- },err=>{$('#activityRows').innerHTML='<tr><td colspan="3">No se pudo acceder a esta actividad.</td></tr>';console.error(err);});
+   events=snap.docs.map(d=>d.data());renderEvents();renderStudentSummary();
+ },err=>{$('#activityRows').innerHTML='<tr><td colspan="3">No se pudo acceder a esta actividad.</td></tr>';$('#eventResults').textContent='Error de lectura de la actividad';console.error(err);});
 }
 function renderEvents(){
- const table=$('#activityRows');table.replaceChildren();$('#exportCsv').disabled=!events.length;
+ const table=$('#activityRows');table.replaceChildren();const visible=filteredEvents();$('#exportCsv').disabled=!visible.length;
  $('#withdrawCount').textContent=String(events.filter(x=>x.type==='withdraw_attempt').length);
- if(!events.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Este alumno aún no tiene acciones registradas.';tr.append(td);table.append(tr);return;}
- for(const e of events){const tr=document.createElement('tr');for(const text of [shortDate(e.createdAt),String(e.view||'—'),String(e.label||'—')]){const td=document.createElement('td');td.textContent=text;tr.append(td);}table.append(tr);}
+ $('#eventResults').textContent=`Mostrando ${visible.length} de ${events.length} eventos cargados (hasta 200)`;
+ if(!visible.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent=events.length?'No hay acciones de este tipo.':'Este alumno aún no tiene acciones registradas.';tr.append(td);table.append(tr);return;}
+ for(const e of visible){const tr=document.createElement('tr');for(const text of [shortDate(e.createdAt),String(e.view||'—'),String(e.label||'—')]){const td=document.createElement('td');td.textContent=text;tr.append(td);}table.append(tr);}
 }
 $$('[data-stage]').forEach(b=>b.addEventListener('click',async()=>{
  if(!firebase)return;const next=Number(b.dataset.stage);b.disabled=true;
@@ -82,11 +127,19 @@ $$('[data-stage]').forEach(b=>b.addEventListener('click',async()=>{
  finally{b.disabled=false;}
 }));
 $('#refreshAdmin').addEventListener('click',()=>{refreshStudents();if(selectedId)renderEvents();});
+$('#studentSearch').addEventListener('input',refreshStudents);
+$('#studentFilter').addEventListener('change',refreshStudents);
+$('#eventTypeFilter').addEventListener('change',renderEvents);
+$('#exportStudents').addEventListener('click',()=>{
+ const visible=getVisibleStudents();
+ downloadCsv('invest-capital-alumnos-simulacion.csv',['Alumno','Correo declarado','Grupo','Fecha de registro','Ultima actividad','Vinculado a','Referidos nivel 1','Nivel 2','Nivel 3'],visible.map(s=>{
+ const counts=countDescendants(s.id);return[s.alias||'',s.email||'',s.group||'',shortDate(s.createdAt),shortDate(s.lastSeen),linksMap[s.id]?studentName(linksMap[s.id]):'',...counts];
+ }));
+});
 $('#exportCsv').addEventListener('click',()=>{
  const s=sessions.find(x=>x.id===selectedId);
- const q=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
- const lines=[['Fecha','Seccion','Accion'].map(q).join(','),...events.map(e=>[shortDate(e.createdAt),e.view,e.label].map(q).join(','))];
- const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='actividad-'+(s?.alias||'alumno').replace(/[^a-z0-9-_]/gi,'_')+'.csv';a.click();URL.revokeObjectURL(url);
+ downloadCsv('invest-capital-actividad-'+(s?.alias||'alumno').replace(/[^a-z0-9-_]/gi,'_')+'.csv',
+ ['Fecha','Seccion','Accion','Tipo','Importe ficticio USDT (si consta)'],filteredEvents().map(e=>[shortDate(e.createdAt),e.view,e.label,e.type,eventAmount(e)??'']));
 });
 $('#loginAdmin').addEventListener('click',async()=>{
  setError('');const b=$('#loginAdmin');b.disabled=true;b.textContent='Verificando cuenta…';

@@ -244,3 +244,25 @@ a:hover{color:#f0d89d}
 .auth-dialog .legacy-upgrade input{margin-top:3px;accent-color:#b17bf2}
 .auth-dialog .form-error{min-height:20px}
 @media(max-width:540px){.auth-dialog{padding:19px}.auth-dialog .registration-fields{grid-template-columns:1fr}.auth-dialog .registration-field.full{grid-column:auto}.auth-dialog .dialog-actions{flex-wrap:wrap}.auth-dialog .dialog-actions button{flex:1}}
+
+/* V4: consulta y ficha individual del panel del docente. */
+.admin-filters{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(145px,1fr);gap:10px;margin:16px 0 9px}
+.admin-filter-label{display:flex;flex-direction:column;gap:6px;font-size:11px;color:#c7b8d6;font-weight:700}
+.admin-search{width:100%;min-width:0;border-radius:10px;background:#130d1d;border:1px solid #67477f;color:#f6edff;min-height:42px;padding:9px 11px;outline-offset:2px}
+.admin-search:focus-visible{outline:2px solid #c79df5}
+.admin-list-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:7px}
+.admin-export-mini{padding:7px 10px;font-size:11px;min-height:34px}
+.admin-profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 14px}
+.admin-profile-field{min-width:0;background:#160f21;border:1px solid #473257;border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:6px}
+.admin-profile-field small,.admin-metric small{font-size:11px;color:#ad9dbf}
+.admin-profile-field strong{font-size:12px;overflow-wrap:anywhere;color:#f3ebf9}
+.admin-event-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.admin-metric{display:flex;flex-direction:column;gap:7px;background:linear-gradient(135deg,#302041,#1d1429);border:1px solid #624577;border-radius:12px;padding:12px}
+.admin-metric strong{font-size:17px;color:#ebd8fc;overflow-wrap:anywhere}
+.admin-summary-note{font-size:11px;color:#d8c1ea;line-height:1.6;border-left:3px solid #9460c4;background:#24182d;padding:10px 12px;margin:14px 0 17px}
+.admin-activity-tools{display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid #483150;padding-top:13px}
+.admin-activity-tools h3{font-size:15px;margin:0 0 9px}
+.admin-activity-tools label{font-size:11px;color:#c7b8d6;display:flex;align-items:center;gap:8px}
+.admin-activity-tools select{min-width:170px}
+@media(max-width:800px){.admin-profile-grid,.admin-event-metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:490px){.admin-filters,.admin-profile-grid,.admin-event-metrics{grid-template-columns:1fr}.admin-activity-tools label{align-items:flex-start;flex-direction:column;width:100%}.admin-activity-tools select{width:100%}}
