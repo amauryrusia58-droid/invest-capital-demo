@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=87';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=88';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -64,7 +64,12 @@ function projected(amount,plan,days,rateAtOpen=null){
  const profit=num(amount*r*effectiveDays/7);
  return {profit,effectiveDays,total:num(amount+profit)};
 }
-function positionProfit(pos){return Math.max(0,num(projected(pos.amount,pos.plan,elapsedDays(legacyStart(pos)),pos.rate).profit-(Number(pos.paidProfit)||0)));}
+// V8.8 · El saldo no se deduce de un descuento local que puede perderse.
+// La fuente de los retiros aprobados son los documentos de Firebase de esta cuenta.
+function positionProfit(pos){
+ const gross=num(projected(pos.amount,pos.plan,elapsedDays(legacyStart(pos)),pos.rate).profit);
+ return Math.max(0,num(gross-planWithdrawalAllocation(pos)));
+}
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
@@ -112,17 +117,69 @@ function close(){overlay.classList.add('hidden');onConfirm=null;}
 function err(text){const e=$('#modalError');if(e){e.textContent=text;e.hidden=false;}}
 function tx(name,amount,status,kind){const seq=++account.seq;account.ledger.unshift({name,amount:num(amount),status,kind,ref:'IC-'+String(Date.now()).slice(-6)+String(seq).padStart(2,'0'),date:new Date().toLocaleDateString('es-ES')});account.ledger=account.ledger.slice(0,100);save();render();}
 function principal(){return num(account.positions.reduce((s,p)=>s+remainingPrincipal(p),0));}
-function teacherBonusAvailable(){return Math.max(0,num(testSettings.bonus-(account.teacherBonusPaid||0)));}
-function basePlanGain(){return num(account.positions.reduce((s,p)=>s+positionProfit(p),0));}
-// El bono docente se suma a ganancias ficticias pero no al capital ni a bonificaciones por referidos.
+// V8.8 · Libro de retiros de práctica aprobado, reconstruible tras cada recarga.
+// Un retiro aprobado se descuenta SIEMPRE en el cálculo, nunca sólo de localStorage.
+// Si falta conectar con Firebase no se habilitan retiros nuevos ni se muestran
+// ganancias disponibles hasta conocer el historial completo.
+let withdrawalHistoryReady=false,teacherSettingsReady=false;
+function earningsSynced(){return withdrawalHistoryReady&&teacherSettingsReady;}
+function approvedWithdrawalTotal(upToDay=null){
+ if(!earningsSynced())return 0;
+ const seen=new Set();let total=0;
+ for(const r of withdrawalRequests){
+  if(!r||r.status!=='approved'||!r.id||seen.has(r.id))continue;
+  if(upToDay!==null){
+   const time=timestampMs(r.decisionAt)||timestampMs(r.createdAt);
+   if(!time||calendarDay(time)>upToDay)continue;
+  }
+  const amount=Number(r.amount);
+  if(!Number.isFinite(amount)||amount<0||amount>100000)continue;
+  seen.add(r.id);total+=amount;
+ }
+ return num(total);
+}
+function earningsLedger(upToDay=null){
+ const paid=approvedWithdrawalTotal(upToDay);
+ const grossTeacher=num(testSettings.bonus);
+ const grossReferrals=num(account.referrals.reduce((s,r)=>s+num(r.commission),0));
+ const grossPlans=num(account.positions.reduce((s,p)=>{
+  const days=upToDay===null?elapsedDays(legacyStart(p)):Math.max(0,upToDay-calendarDay(legacyStart(p))+testSettings.extraDays);
+  return s+projected(p.amount,p.plan,days,p.rate).profit;
+ },0));
+ const teacherUsed=Math.min(paid,grossTeacher);
+ const referralUsed=Math.min(Math.max(0,num(paid-teacherUsed)),grossReferrals);
+ const planUsed=Math.min(Math.max(0,num(paid-teacherUsed-referralUsed)),grossPlans);
+ return {grossTeacher,grossReferrals,grossPlans,teacherUsed,referralUsed,planUsed,
+  teacherAvailable:Math.max(0,num(grossTeacher-teacherUsed)),
+  referralAvailable:Math.max(0,num(grossReferrals-referralUsed)),
+  planAvailable:Math.max(0,num(grossPlans-planUsed)),
+  approved:paid,uncovered:Math.max(0,num(paid-teacherUsed-referralUsed-planUsed))};
+}
+function planWithdrawalAllocation(target,upToDay=null){
+ let paid=earningsLedger(upToDay).planUsed;
+ for(const p of account.positions){
+  const days=upToDay===null?elapsedDays(legacyStart(p)):Math.max(0,upToDay-calendarDay(legacyStart(p))+testSettings.extraDays);
+  const gross=projected(p.amount,p.plan,days,p.rate).profit;
+  const used=Math.min(paid,gross);
+  if(p===target)return num(used);
+  paid=num(paid-used);
+ }
+ return 0;
+}
+function teacherBonusAvailable(){return earningsSynced()?earningsLedger().teacherAvailable:0;}
+function basePlanGain(){return earningsSynced()?earningsLedger().planAvailable:0;}
 function gain(){return num(basePlanGain()+teacherBonusAvailable());}
-// Rendimiento bruto acumulado y saldo pendiente son métricas diferentes.
-function grossYield(){return num(account.positions.reduce((s,p)=>s+projected(p.amount,p.plan,elapsedDays(legacyStart(p)),p.rate).profit,0)+testSettings.bonus); }
-function total(){return num(account.cash+principal()+gain());}
+// Rendimiento bruto histórico, sin restar retiros, para mostrar cuánto se generó.
+function grossYield(){return num(account.positions.reduce((s,p)=>s+projected(p.amount,p.plan,elapsedDays(legacyStart(p)),p.rate).profit,0)+testSettings.bonus);}
 function referralEarned(){return num(account.referrals.reduce((s,r)=>s+num(r.commission),0));}
-function referralAvailable(){return Math.max(0,num(Math.min(account.cash,Math.max(0,referralEarned()-account.referralPaid))));}
-// El capital del plan NO es ganancia ni está disponible para este tipo de retiro.
-function withdrawable(){return num(gain()+referralAvailable());}
+function referralAvailable(){return earningsSynced()?earningsLedger().referralAvailable:0;}
+function withdrawable(){return earningsSynced()?num(gain()+referralAvailable()):0;}
+function total(){
+ // Evita contar dos veces las comisiones ya incluidas en cash de versiones previas.
+ const legacyReferralCash=Math.max(0,num(referralEarned()-(account.referralPaid||0)));
+ const otherCash=Math.max(0,num(account.cash-legacyReferralCash));
+ return num(otherCash+principal()+gain()+referralAvailable());
+}
 function lockAnchor(){if(account.withdrawalAnchor>0)return account.withdrawalAnchor;const starts=account.positions.map(legacyStart).filter(Number.isFinite);return starts.length?Math.min(...starts):0;}
 function hasPendingWithdrawal(){return Boolean(account.pendingWithdrawalRequestId)||withdrawalRequests.some(x=>x.status==='pending');}
 function withdrawalStatus(){
@@ -147,7 +204,7 @@ function earningSnapshot(){return {
  daysRemaining:withdrawalStatus().days,currency:'USDT-DEMO'
 };}
 async function syncEarningsSummary(force=false){
- if(!sessionReady||session.mode!=='cloud'||earningSyncBusy)return;
+ if(!sessionReady||session.mode!=='cloud'||earningSyncBusy||!earningsSynced())return;
  const data=earningSnapshot(),fingerprint=JSON.stringify(data),now=Date.now();
  if(!force&&fingerprint===lastEarningSync&&now-lastEarningSyncAt<900000)return;
  earningSyncBusy=true;
@@ -199,7 +256,7 @@ function drawPortfolioChart(pos, invested, profit){
  const positionValue=(p,day)=>{
   const start=calendarDay(legacyStart(p));
   if(day<start)return 0;
-  const paid=Math.max(0,num(p.paidProfit||0));
+  const paid=planWithdrawalAllocation(p,day);
   const profitAtDay=Math.max(0,num(projected(p.amount,p.plan,day-start,p.rate).profit-paid));
   return num(remainingPrincipal(p)+profitAtDay);
  };
@@ -252,7 +309,7 @@ function drawPortfolioChart(pos, invested, profit){
 }
 function render(){const invested=principal(),profit=gain(),value=total(),pos=account.positions.filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
-  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(grossYield());$('#availableVal').textContent=money(withdrawable());$('#earningYield').textContent=money(gain());$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';
+  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(grossYield());$('#availableVal').textContent=money(withdrawable());$('#earningYield').textContent=money(gain());$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
   $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
@@ -471,44 +528,21 @@ function renderWithdrawalRequests(){
   row.append(amount,state);box.append(row);
  }
 }
-function consumeApprovedWithdrawal(amount){
- if(withdrawable()+.001<amount)return false;
- let left=num(amount);
- // Primero consumimos el complemento del profesor, para que NO reaparezca al recalcular.
- const teacherUsed=Math.min(left,teacherBonusAvailable());
- account.teacherBonusPaid=num((account.teacherBonusPaid||0)+teacherUsed);
- left=num(left-teacherUsed);
- // Después se descuentan bonos de referidos que aún están en la cartera libre.
- const bonus=Math.min(left,referralAvailable());
- account.cash=num(account.cash-bonus);
- account.referralPaid=num(account.referralPaid+bonus);
- left=num(left-bonus);
- // El resto se descuenta exclusivamente de rendimientos simulados no retirados.
- for(const p of account.positions){
-  if(left<=0)break;
-  const used=Math.min(left,positionProfit(p));
-  p.paidProfit=num((p.paidProfit||0)+used);
-  left=num(left-used);
- }
- // Nunca se toca el principal, ni el saldo libre procedente de antiguas acreditaciones.
- return left<=.001;
-}
-
+// V8.8 · No debitar las ganancias únicamente en localStorage.
+// El descuento confirmado se deriva siempre de las solicitudes aprobadas en Firebase.
 function onWithdrawalRequests(rows){
  withdrawalRequests=rows;
+ if(!earningsSynced()){render();return;}
  let changed=false;
  for(const r of [...rows].sort((a,b)=>(timestampMs(a.decisionAt)||0)-(timestampMs(b.decisionAt)||0))){
   if(!['approved','rejected'].includes(r.status)||account.reviewedWithdrawalIds[r.id])continue;
   const when=timestampMs(r.decisionAt)||Date.now();
   if(r.status==='approved'){
    const amount=num(r.amount);
-   if(!Number.isFinite(amount)||amount<MIN_WITHDRAW_DEMO||!consumeApprovedWithdrawal(amount)){
-    $('#syncStatus').textContent='Retiro aprobado: saldo local insuficiente para descontarlo. Revisa la sesión.';
-    continue;
-   }
+   if(!Number.isFinite(amount)||amount<MIN_WITHDRAW_DEMO)continue;
    account.reviewedWithdrawalIds[r.id]='approved';
-   // La decisión no reinicia el contador natural del plan.
    account.pendingWithdrawalRequestId='';
+   // El balance ya está descontado por approvedWithdrawalTotal() en Firebase.
    tx('Retiro ficticio aprobado por el profesor',-amount,'Aprobado','withdraw');
    record('withdraw_approved',`Retiro virtual aprobado por ${amount.toFixed(2)} USDT`,'movimientos');
   }else{
@@ -530,6 +564,7 @@ function onWithdrawalRequests(rows){
 function withdrawal(){
  record('withdraw_open','Consultó retiro ficticio de ganancias','movimientos');
  const w=withdrawalStatus();
+ if(!earningsSynced()){modal('Sincronizando ganancias','<p>Estamos comprobando en Firebase tus retiros aprobados y los ajustes del profesor. Vuelve a intentar cuando termine la conexión.</p>');return;}
  if(hasPendingWithdrawal()){
   modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro ficticio pendiente. El profesor recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
  }
@@ -671,8 +706,10 @@ const exit=document.createElement('button');exit.className='btn btn-soft';exit.t
 $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
 async function attachStudentListeners(){
  unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();unsubscribePlanRequests();unsubscribeTeacherSettings();
- unsubscribeTeacherSettings=watchStudentTeacherSettings(session,data=>{
+ teacherSettingsReady=false;withdrawalHistoryReady=false;
+ unsubscribeTeacherSettings=watchStudentTeacherSettings(session,(data,serverConfirmed)=>{
   testSettings={extraDays:Math.min(365,Math.max(0,Math.floor(Number(data.extraDays)||0))),bonus:Math.min(100000,Math.max(0,num(data.bonus)))};
+  teacherSettingsReady=serverConfirmed;
   onWithdrawalRequests(withdrawalRequests);void syncEarningsSummary(true);
  },e=>{$('#syncStatus').textContent='No se pudieron leer los ajustes del profesor: '+e.message;});
  unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='No se pudo leer el escenario';});
@@ -681,7 +718,7 @@ async function attachStudentListeners(){
   catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
   unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box)box.textContent='No se pudieron consultar las solicitudes: '+e.message;});
   unsubscribePlanRequests=watchVirtualPlanRequests(session,onPlanActivationRequests,e=>{console.error('Error leyendo activaciones',e);const box=$('#planActivationBox');if(box)box.textContent='No se pudieron consultar activaciones: '+e.message;});
-  unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,onWithdrawalRequests,e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
+  unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,(rows,serverConfirmed)=>{withdrawalHistoryReady=serverConfirmed;onWithdrawalRequests(rows);void syncEarningsSummary(true);},e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
   unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{$('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;});
   await flushContributions();
  }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre alumnos.';}

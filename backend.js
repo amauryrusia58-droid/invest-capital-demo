@@ -193,7 +193,7 @@ export function watchVirtualWithdrawalRequests(session,onChange,onError){
  if(session.mode!=='cloud')return ()=>{};
  const {db,Store,uid}=session;
  const q=Store.query(Store.collection(db,'virtualWithdrawalRequests'),Store.where('studentUid','==',uid));
- return Store.onSnapshot(q,snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+ return Store.onSnapshot(q,{includeMetadataChanges:true},snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()})),!snap.metadata.fromCache),onError);
 }
 export function watchAdminVirtualWithdrawalRequests(f,onChange,onError){
  const {db,Store}=f;
@@ -277,7 +277,8 @@ export function watchStudentTeacherSettings(session,onChange,onError){
  if(session.mode!=='cloud')return ()=>{};
  return session.Store.onSnapshot(
   session.Store.doc(session.db,'studentTestOverrides',session.uid),
-  snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0}),onError);
+  {includeMetadataChanges:true},
+  snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0},!snap.metadata.fromCache),onError);
 }
 export function watchAdminTeacherSettings(f,studentUid,onChange,onError){
  if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Identificador de alumno inválido.');
