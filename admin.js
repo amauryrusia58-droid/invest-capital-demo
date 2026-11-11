@@ -43,7 +43,7 @@ function studentName(uid){return sessions.find(s=>s.id===uid)?.alias||'Alumno '+
 function showSelectedProfile(){
  const s=sessions.find(x=>x.id===selectedId);if(!s)return;
  const invitedBy=linksMap[selectedId];
- $('#studentProfile').textContent=[s.group?'Grupo: '+s.group:'',s.email?'Correo (declarado): '+s.email:'',invitedBy?'Vinculado a: '+studentName(invitedBy):''].filter(Boolean).join(' · ')||'Sin datos adicionales';
+ $('#studentProfile').textContent=[s.group?'Grupo anterior: '+s.group:'',s.email?'Correo o teléfono (declarado): '+s.email:'',invitedBy?'Vinculado a: '+studentName(invitedBy):''].filter(Boolean).join(' · ')||'Sin datos adicionales';
 }
 function renderLinks(){
  const ids=Object.keys(linksMap);

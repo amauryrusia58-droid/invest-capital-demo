@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital — experiencia de análisis financiero en un entorno académico controlado."><title>Invest Capital · Gestión patrimonial</title><link rel="stylesheet" href="styles.css"></head>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital — experiencia de análisis financiero en un entorno académico controlado."><title>Invest Capital · Gestión patrimonial</title><link rel="stylesheet" href="styles.css?v=39"></head>
 <body>
 <header class="site-header"><a class="brand" href="index.html" aria-label="Invest Capital inicio"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><nav class="top-nav"><a href="#plataforma">Plataforma</a><a href="#estrategia">Estrategia</a><a href="#soluciones">Soluciones</a></nav><div class="header-actions"><button class="btn btn-primary btn-header-register" id="openRegister">Registrarse</button><button class="btn btn-ghost" id="openApp">Acceder <span aria-hidden="true">↗</span></button></div></header>
 <main>
@@ -16,29 +16,25 @@
     <p>Introduce tus datos para acceder al panel de Invest Capital.</p>
     <div class="registration-fields">
       <div class="registration-field full">
-        <label class="field-label" for="studentName">Nombre o identificador del alumno <span aria-hidden="true">*</span></label>
-        <input id="studentName" name="studentName" class="text-input" required minlength="2" maxlength="60" placeholder="Ej. Ana Pérez / Alumno 12" autocomplete="name">
+        <label class="field-label" for="studentName">Nombre y apellidos <span aria-hidden="true">*</span></label>
+        <input id="studentName" name="studentName" class="text-input" required minlength="3" maxlength="60" placeholder="Ej. Ana Pérez" autocomplete="name">
       </div>
       <div class="registration-field">
-        <label class="field-label" for="studentEmail">Correo electrónico <span class="field-optional">(opcional)</span></label>
-        <input id="studentEmail" name="studentEmail" class="text-input" type="email" maxlength="120" placeholder="correo@ejemplo.com" autocomplete="email">
+        <label class="field-label" for="studentContact">Correo electrónico o número de teléfono <span class="field-optional">(opcional)</span></label>
+        <input id="studentContact" name="studentContact" class="text-input" type="text" maxlength="120" placeholder="correo@ejemplo.com o +53 5…" autocomplete="off">
       </div>
       <div class="registration-field">
-        <label class="field-label" for="studentGroup">Grupo o clase <span class="field-optional">(opcional)</span></label>
-        <input id="studentGroup" name="studentGroup" class="text-input" maxlength="40" placeholder="Ej. Grupo A" autocomplete="off">
-      </div>
-      <div class="registration-field full">
-        <label class="field-label" for="studentReferral">Código de compañero <span class="field-optional">(opcional · solamente para ejercicios del aula)</span></label>
+        <label class="field-label" for="studentReferral">Código de referido <span class="field-optional">(opcional)</span></label>
         <input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-…" autocomplete="off" spellcheck="false">
-        <p class="tiny">Si te proporcionaron un código del aula, introdúcelo aquí para vincular tu sesión con la de otro participante. No es un enlace de inversión.</p>
+        <p class="tiny">Si alguien te invitó al ejercicio, escribe aquí su código. Si no, deja el campo vacío.</p>
       </div>
     </div>
     <div class="registration-consent">
       <input type="checkbox" id="academicConsent" required>
-      <label for="academicConsent">Entiendo que participo en una <b>actividad académica simulada</b>, sin depósitos ni dinero real. Mi nombre o identificador, el código de compañero que indique, los datos opcionales que facilite y mis interacciones podrán ser registrados para seguimiento del docente, una vez habilitada la conexión. La persona que me haya referido podrá visualizar un identificador pseudónimo y las bonificaciones virtuales del ejercicio, no mi correo ni otros datos de contacto. Para notificar el alta, el nombre o identificador, el grupo y el correo opcional se enviarán al docente mediante FormSubmit, un servicio externo de formularios.</label>
+      <label for="academicConsent">Acepto participar en una <b>actividad académica simulada</b>, sin transferencias ni dinero real. El docente podrá consultar mi nombre, el contacto opcional que facilite, mi código de referido y las acciones realizadas en la plataforma. Para enviar un aviso de registro, el nombre y el contacto opcional se comunicarán al servicio externo FormSubmit.</label>
     </div>
     <div class="dialog-actions"><button type="button" id="cancelBtn" class="btn btn-soft">Cancelar</button><button type="submit" id="acceptBtn" class="btn btn-primary">Crear mi cuenta <span aria-hidden="true">↗</span></button></div>
     <p class="form-error" id="consentError" aria-live="polite"></p>
   </form>
 </div>
-<script src="landing.js" type="module"></script></body></html>
+<script src="landing.js?v=39" type="module"></script></body></html>

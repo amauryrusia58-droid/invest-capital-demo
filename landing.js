@@ -2,8 +2,7 @@
 const modal=document.getElementById('consent');
 const form=document.getElementById('registrationForm');
 const nameInput=document.getElementById('studentName');
-const emailInput=document.getElementById('studentEmail');
-const groupInput=document.getElementById('studentGroup');
+const contactInput=document.getElementById('studentContact');
 const referralInput=document.getElementById('studentReferral');
 const consentInput=document.getElementById('academicConsent');
 const error=document.getElementById('consentError');
@@ -25,15 +24,22 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.add('h
 form.addEventListener('submit',async e=>{
   e.preventDefault();error.textContent='';
   const name=nameInput.value.trim().replace(/\s+/g,' ');
-  const email=emailInput.value.trim().toLowerCase();
-  const group=groupInput.value.trim();
+  const rawContact=contactInput.value.trim();
+  const contact=rawContact.includes('@')?rawContact.toLowerCase():rawContact;
   const referralCode=referralInput.value.trim();
-  if(name.length<2||name.length>60){error.textContent='Escribe tu nombre o identificador (entre 2 y 60 caracteres).';nameInput.focus();return;}
-  if(email && (email.length>120||!emailInput.checkValidity())){error.textContent='Revisa el correo electrónico o deja el campo vacío.';emailInput.focus();return;}
-  if(group.length>40){error.textContent='El nombre del grupo debe tener 40 caracteres como máximo.';groupInput.focus();return;}
-  if(referralCode && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referralCode)){error.textContent='El código de compañero no tiene un formato válido.';referralInput.focus();return;}
+  if(name.length<3||name.length>60||name.split(' ').length<2){error.textContent='Introduce tu nombre y al menos un apellido (máximo 60 caracteres).';nameInput.focus();return;}
+  const emailValid=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact);
+  const phoneValid=/^\+?[0-9 ()-]+$/.test(contact) && contact.replace(/\D/g,'').length>=7 && contact.replace(/\D/g,'').length<=15;
+  if(contact && (contact.length>120 || (!emailValid && !phoneValid))){
+    error.textContent='Introduce un correo electrónico válido o un teléfono con 7 a 15 dígitos; también puedes dejarlo vacío.';
+    contactInput.focus();return;
+  }
+  if(referralCode && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referralCode)){error.textContent='El código de referido no tiene un formato válido (debe comenzar por IC-).';referralInput.focus();return;}
   if(!consentInput.checked){error.textContent='Debes aceptar las condiciones académicas para continuar.';consentInput.focus();return;}
-  const profile={name,email,group,referralCode};
+  // Compatibilidad con Firestore V3.8: el campo interno `email` almacena
+  // opcionalmente email O teléfono, y `group` queda vacío. Esto conserva
+  // las reglas ya publicadas y no modifica registros de alumnos anteriores.
+  const profile={name,email:contact,group:'',referralCode};
   // Si el dispositivo ya se utilizó, iniciar otra cuenta anónima para evitar
   // asignar actividades del nuevo alumno al anterior.
   if(hasSession()){
@@ -66,8 +72,8 @@ form.addEventListener('submit',async e=>{
         body:JSON.stringify({
           _subject:'Invest Capital — Nuevo registro de alumno',
           _template:'table',
-          name,grupo:group||'Sin grupo',email:email||'No facilitado',
-          mensaje:'Un alumno se registró en Invest Capital (actividad académica).'
+          nombre_y_apellidos:name,contacto:contact||'No facilitado',codigo_referido:referralCode||'No facilitado',
+          mensaje:'Alta de participante de Invest Capital (actividad académica).'
         }),signal:ctrl.signal
       });
       const result=await resp.json();
