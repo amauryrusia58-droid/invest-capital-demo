@@ -224,3 +224,23 @@ a:hover{color:#f0d89d}
 #refCode{font-size:clamp(12px,1.45vw,18px);word-break:break-all;letter-spacing:.04em;max-width:100%;}
 #refLinkStatus{max-width:380px;overflow-wrap:anywhere;margin-top:11px;color:#e4c788}
 #linksCount{font-size:12px;color:#e6c58a}
+
+/* V4.0 acceso separado, conservando el estilo morado y dorado */
+.auth-dialog{width:min(100%,670px);max-height:calc(100vh - 36px);overflow-y:auto}
+.auth-dialog.login-dialog{width:min(100%,475px)}
+.auth-dialog .registration-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 15px}
+.auth-dialog .registration-field.full{grid-column:1/-1}
+.auth-dialog .registration-fields .tiny{margin:7px 0 0}
+.auth-dialog .text-input{width:100%;min-width:0;min-height:44px}
+.auth-dialog .field-label{margin:17px 0 8px}
+.auth-dialog .registration-consent{margin-top:17px}
+.auth-dialog .registration-consent label{line-height:1.55}
+.auth-dialog .switch-auth{margin-top:20px;text-align:center;border-top:1px solid #533964;padding-top:14px}
+.auth-dialog .auth-link{border:0;background:transparent;color:#e6c58c;text-decoration:underline;text-underline-offset:3px;font-weight:700;padding:4px;cursor:pointer;font-size:inherit}
+.auth-dialog .auth-link:hover{color:#fff}
+.auth-dialog .login-help{text-align:right;margin-top:9px}
+.auth-dialog .legacy-upgrade{margin:14px 0;background:#302044;border:1px solid #6d4a90;padding:12px 15px;border-radius:10px;font-size:12px;line-height:1.5}
+.auth-dialog .legacy-upgrade label{display:flex;gap:9px;align-items:flex-start;cursor:pointer}
+.auth-dialog .legacy-upgrade input{margin-top:3px;accent-color:#b17bf2}
+.auth-dialog .form-error{min-height:20px}
+@media(max-width:540px){.auth-dialog{padding:19px}.auth-dialog .registration-fields{grid-template-columns:1fr}.auth-dialog .registration-field.full{grid-column:auto}.auth-dialog .dialog-actions{flex-wrap:wrap}.auth-dialog .dialog-actions button{flex:1}}

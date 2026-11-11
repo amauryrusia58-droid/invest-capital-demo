@@ -24,8 +24,8 @@ export async function studentStart(profile){
  const f=await getFirebase();if(!f)return {mode:'local',uid:'local'};
  const {auth,db,Auth,Store}=f;
  let user=await authUser(auth,Auth);
- if(!user) user=(await Auth.signInAnonymously(auth)).user;
- if(!user.isAnonymous) throw new Error('Ya existe una sesión con Google en este navegador. Usa una ventana privada para la experiencia del alumno.');
+ if(!user) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión desde la portada.');
+ if(!user.isAnonymous && !user.providerData.some(p=>p.providerId==='password')) throw new Error('Debes entrar con tu cuenta de alumno, no con Google.');
  const ref=Store.doc(db,'sessions',user.uid);
  const snap=await Store.getDoc(ref);
  const data={view:'resumen',lastAction:'Acceso al panel',lastSeen:Store.serverTimestamp()};

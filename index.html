@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital — experiencia de análisis financiero en un entorno académico controlado."><title>Invest Capital · Gestión patrimonial</title><link rel="stylesheet" href="styles.css?v=39"></head>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital — experiencia de análisis financiero en un entorno académico controlado."><title>Invest Capital · Gestión patrimonial</title><link rel="stylesheet" href="styles.css?v=40"></head>
 <body>
 <header class="site-header"><a class="brand" href="index.html" aria-label="Invest Capital inicio"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><nav class="top-nav"><a href="#plataforma">Plataforma</a><a href="#estrategia">Estrategia</a><a href="#soluciones">Soluciones</a></nav><div class="header-actions"><button class="btn btn-primary btn-header-register" id="openRegister">Registrarse</button><button class="btn btn-ghost" id="openApp">Acceder <span aria-hidden="true">↗</span></button></div></header>
 <main>
@@ -9,32 +9,38 @@
 <section id="estrategia" class="section outer narrow-split"><div><p class="eyebrow">ESTRATEGIA</p><h2>Analiza cada dato.<br><span>Comprende cada decisión.</span></h2><p>Los números solo son el principio. El verdadero análisis está en comprender su origen, sus riesgos y su sostenibilidad.</p></div><div class="strategy-list"><div><strong>01</strong><div><b>Información</b><p>Revisa la documentación disponible y los resultados.</p></div></div><div><strong>02</strong><div><b>Seguimiento</b><p>Observa cambios en condiciones, estados y actividad.</p></div></div><div><strong>03</strong><div><b>Criterio propio</b><p>Evalúa por ti mismo antes de tomar cualquier decisión.</p></div></div></div></section>
 <section id="soluciones" class="bottom-cta outer"><div><p class="eyebrow">INVEST CAPITAL</p><h2>Descubre la experiencia.</h2><p>Explora el panel y sus herramientas desde una misma interfaz.</p></div><button class="btn btn-primary btn-large" id="bottomBtn">Crear cuenta ↗</button></section>
 </main><footer class="site-footer outer"><span>© 2026 Invest Capital</span><span>Proyecto académico · Indicadores de referencia · Sin operaciones reales</span></footer>
+<!-- Dos pantallas separadas. Las contraseñas se gestionan ÚNICAMENTE con Firebase Authentication. -->
 <div id="consent" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
-  <form class="dialog register-dialog" id="registrationForm" novalidate>
+  <form class="dialog register-dialog auth-dialog" id="registrationForm" novalidate>
     <p class="dialog-kicker">INVEST CAPITAL · REGISTRO</p>
     <h2 id="consentTitle">Crear cuenta</h2>
-    <p>Introduce tus datos para acceder al panel de Invest Capital.</p>
+    <p>Crea tus credenciales para acceder al panel de Invest Capital.</p>
     <div class="registration-fields">
-      <div class="registration-field full">
-        <label class="field-label" for="studentName">Nombre y apellidos <span aria-hidden="true">*</span></label>
-        <input id="studentName" name="studentName" class="text-input" required minlength="3" maxlength="60" placeholder="Ej. Ana Pérez" autocomplete="name">
-      </div>
-      <div class="registration-field">
-        <label class="field-label" for="studentContact">Correo electrónico o número de teléfono <span class="field-optional">(opcional)</span></label>
-        <input id="studentContact" name="studentContact" class="text-input" type="text" maxlength="120" placeholder="correo@ejemplo.com o +53 5…" autocomplete="off">
-      </div>
-      <div class="registration-field">
-        <label class="field-label" for="studentReferral">Código de referido <span class="field-optional">(opcional)</span></label>
-        <input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-…" autocomplete="off" spellcheck="false">
-        <p class="tiny">Si alguien te invitó al ejercicio, escribe aquí su código. Si no, deja el campo vacío.</p>
-      </div>
+      <div class="registration-field full"><label class="field-label" for="studentName">Nombre y apellidos *</label><input id="studentName" name="studentName" class="text-input" autocomplete="name" required maxlength="60" placeholder="Ej. Ana Pérez"></div>
+      <div class="registration-field full"><label class="field-label" for="studentEmail">Correo electrónico *</label><input id="studentEmail" name="studentEmail" class="text-input" autocomplete="email" type="email" required maxlength="120" placeholder="correo@ejemplo.com"></div>
+      <div class="registration-field"><label class="field-label" for="studentPassword">Crear contraseña *</label><input id="studentPassword" name="studentPassword" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="Mínimo 8 caracteres"></div>
+      <div class="registration-field"><label class="field-label" for="studentPasswordConfirm">Confirmar contraseña *</label><input id="studentPasswordConfirm" name="studentPasswordConfirm" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="Repite la contraseña"></div>
+      <div class="registration-field full"><label class="field-label" for="studentReferral">Código de referido <span class="field-optional">(opcional)</span></label><input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-…" autocomplete="off" spellcheck="false"><p class="tiny">Introduce el código de tu compañero si recibiste una invitación del aula.</p></div>
     </div>
-    <div class="registration-consent">
-      <input type="checkbox" id="academicConsent" required>
-      <label for="academicConsent">Acepto participar en una <b>actividad académica simulada</b>, sin transferencias ni dinero real. El docente podrá consultar mi nombre, el contacto opcional que facilite, mi código de referido y las acciones realizadas en la plataforma. Para enviar un aviso de registro, el nombre y el contacto opcional se comunicarán al servicio externo FormSubmit.</label>
-    </div>
-    <div class="dialog-actions"><button type="button" id="cancelBtn" class="btn btn-soft">Cancelar</button><button type="submit" id="acceptBtn" class="btn btn-primary">Crear mi cuenta <span aria-hidden="true">↗</span></button></div>
+    <div class="legacy-upgrade hidden" id="legacyUpgradeRow"><label><input type="checkbox" id="legacyUpgrade"> Ya tengo una cuenta de práctica en este navegador: conservar mis actividades y mi código de referido al crear contraseña.</label></div>
+    <div class="registration-consent"><input type="checkbox" id="academicConsent" required><label for="academicConsent">Acepto participar en un <strong>ejercicio académico de inversión simulada</strong>, sin depósitos ni dinero reales. El profesor podrá ver mis datos de registro, mi actividad y vínculos de compañeros. Mi nombre y correo se enviarán al servicio externo FormSubmit para avisar del alta; mi contraseña nunca se enviará a ese servicio.</label></div>
+    <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Cancelar</button><button type="submit" id="acceptBtn" class="btn btn-primary">Crear cuenta</button></div>
     <p class="form-error" id="consentError" aria-live="polite"></p>
+    <p class="switch-auth">¿Ya tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesión</button></p>
   </form>
 </div>
-<script src="landing.js?v=39" type="module"></script></body></html>
+<div id="loginOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <form class="dialog auth-dialog login-dialog" id="loginForm" novalidate>
+    <p class="dialog-kicker">INVEST CAPITAL · ACCESO</p>
+    <h2 id="loginTitle">Iniciar sesión</h2>
+    <p>Entra con el correo y la contraseña de tu cuenta.</p>
+    <label class="field-label" for="loginEmail">Correo electrónico</label><input class="text-input" id="loginEmail" name="email" type="email" autocomplete="email" required placeholder="correo@ejemplo.com">
+    <label class="field-label" for="loginPassword">Contraseña</label><input class="text-input" id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña">
+    <div class="login-help"><button type="button" id="resetPassword" class="auth-link">Olvidé mi contraseña</button></div>
+    <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelLogin">Cancelar</button><button class="btn btn-primary" id="submitLogin" type="submit">Entrar a mi cuenta</button></div>
+    <p class="form-error" id="loginError" role="status" aria-live="polite"></p>
+    <p class="switch-auth">¿No tienes una cuenta? <button type="button" class="auth-link" id="goRegister">Registrarse</button></p>
+    <p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
+  </form>
+</div>
+<script src="landing.js?v=40" type="module"></script></body></html>

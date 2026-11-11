@@ -1,90 +1,134 @@
-// Registro de aula: funciona localmente; se sincroniza solo si se habilita Firebase.
-const modal=document.getElementById('consent');
-const form=document.getElementById('registrationForm');
-const nameInput=document.getElementById('studentName');
-const contactInput=document.getElementById('studentContact');
-const referralInput=document.getElementById('studentReferral');
-const consentInput=document.getElementById('academicConsent');
-const error=document.getElementById('consentError');
-function hasSession(){return localStorage.getItem('ic_v3_consent')==='yes' && !!localStorage.getItem('ic_v3_alias');}
-function openRegister(){
-  error.textContent='';
-  modal.classList.remove('hidden');
-  nameInput.focus();
+// Invest Capital V4.0: registro y acceso separados, con Firebase Authentication.
+// No se almacena ninguna contraseña en localStorage, Firestore ni formularios de correo.
+import {getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js';
+const $=id=>document.getElementById(id);
+const registerOverlay=$('consent'),loginOverlay=$('loginOverlay');
+const reg=$('registrationForm'),login=$('loginForm');
+const regError=$('consentError'),loginError=$('loginError');
+const nameInput=$('studentName'),emailInput=$('studentEmail'),passwordInput=$('studentPassword'),confirmInput=$('studentPasswordConfirm'),referralInput=$('studentReferral');
+const legacyRow=$('legacyUpgradeRow'),legacyCheckbox=$('legacyUpgrade');
+const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+let busy=false;
+function hideAll(){registerOverlay.classList.add('hidden');loginOverlay.classList.add('hidden');}
+function isLegacy(){return localStorage.getItem('ic_v3_consent')==='yes' && !!localStorage.getItem('ic_v3_alias');}
+async function showRegister(){
+ hideAll();regError.textContent='';legacyCheckbox.checked=false;legacyRow.classList.add('hidden');registerOverlay.classList.remove('hidden');nameInput.focus();
+ // Solo ofrecemos conservar una cuenta cuando la cuenta anónima está abierta aquí.
+ if(!firebaseEnabled)return;
+ try{const f=await getFirebase();await f.auth.authStateReady();const u=f.auth.currentUser;
+   if(u?.isAnonymous && isLegacy()){
+     legacyRow.classList.remove('hidden');nameInput.value=localStorage.getItem('ic_v3_alias')||'';
+     try{const p=JSON.parse(localStorage.getItem('ic_v3_profile')||'{}');
+       if(p.email && emailRe.test(p.email))emailInput.value=p.email;
+       if(p.referralCode)referralInput.value=p.referralCode;
+     }catch{}
+   }
+ }catch(e){console.warn('No se pudo consultar cuenta de práctica',e);}
 }
-function access(){
-  if(hasSession()){window.location.href='app.html';return;}
-  openRegister();
+function showLogin(){hideAll();loginError.textContent='';loginOverlay.classList.remove('hidden');$('loginEmail').focus();}
+for(const id of ['openRegister','startBtn','bottomBtn'])$(id).addEventListener('click',showRegister);
+$('openApp').addEventListener('click',showLogin);
+$('goLogin').addEventListener('click',showLogin);$('goRegister').addEventListener('click',showRegister);
+$('cancelBtn').addEventListener('click',hideAll);$('cancelLogin').addEventListener('click',hideAll);
+for(const overlay of [registerOverlay,loginOverlay])overlay.addEventListener('click',e=>{if(e.target===overlay)hideAll();});
+window.addEventListener('keydown',e=>{if(e.key==='Escape')hideAll();});
+function errText(e){
+ const c=String(e?.code||'');
+ if(c==='auth/email-already-in-use')return 'Ese correo ya está registrado. Utiliza «Iniciar sesión» o recupera tu contraseña.';
+ if(c==='auth/weak-password')return 'La contraseña no cumple los requisitos de seguridad. Utiliza una más larga.';
+ if(c==='auth/invalid-email')return 'Revisa el correo electrónico.';
+ if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password'].includes(c))return 'Correo o contraseña incorrectos.';
+ if(c==='auth/too-many-requests')return 'Demasiados intentos. Intenta de nuevo más tarde.';
+ if(c==='auth/network-request-failed')return 'No hay conexión con Firebase. Comprueba Internet.';
+ if(c==='auth/operation-not-allowed')return 'Falta habilitar el método «Correo electrónico/contraseña» en Firebase Authentication.';
+ if(c==='auth/credential-already-in-use')return 'Estas credenciales ya pertenecen a otra cuenta. Entra con ellas sin crear otra.';
+ return String(e?.message||'No se pudo completar la operación.').slice(0,200);
 }
-for(const id of ['openRegister','startBtn','bottomBtn'])document.getElementById(id).addEventListener('click',openRegister);
-document.getElementById('openApp').addEventListener('click',access);
-document.getElementById('cancelBtn').addEventListener('click',()=>modal.classList.add('hidden'));
-modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.add('hidden');});
-window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.add('hidden');});
-form.addEventListener('submit',async e=>{
-  e.preventDefault();error.textContent='';
-  const name=nameInput.value.trim().replace(/\s+/g,' ');
-  const rawContact=contactInput.value.trim();
-  const contact=rawContact.includes('@')?rawContact.toLowerCase():rawContact;
-  const referralCode=referralInput.value.trim();
-  if(name.length<3||name.length>60||name.split(' ').length<2){error.textContent='Introduce tu nombre y al menos un apellido (máximo 60 caracteres).';nameInput.focus();return;}
-  const emailValid=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact);
-  const phoneValid=/^\+?[0-9 ()-]+$/.test(contact) && contact.replace(/\D/g,'').length>=7 && contact.replace(/\D/g,'').length<=15;
-  if(contact && (contact.length>120 || (!emailValid && !phoneValid))){
-    error.textContent='Introduce un correo electrónico válido o un teléfono con 7 a 15 dígitos; también puedes dejarlo vacío.';
-    contactInput.focus();return;
+async function notifyRegistration(name,email,referral){
+ const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),6000);
+ try{
+  const r=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Invest Capital — Nuevo registro de alumno',_template:'table',nombre_y_apellidos:name,contacto:email,codigo_referido:referral||'Sin código',mensaje:'Alta académica; la contraseña no fue recopilada por este formulario.'}),signal:ctrl.signal});
+  const j=await r.json();localStorage.setItem('ic_v34_mail_status',r.ok&&(j.success===true||j.success==='true')?'aceptado por FormSubmit':'no confirmado');
+ }catch{localStorage.setItem('ic_v34_mail_status','no confirmado');}
+ finally{clearTimeout(timer);}
+}
+function setStudentLocals(name,email,referral,uid){
+ const profile={name,email,group:'',referralCode:referral||''};
+ localStorage.setItem('ic_v3_profile',JSON.stringify(profile));
+ localStorage.setItem('ic_v3_alias',name);
+ localStorage.setItem('ic_v3_consent','yes');
+ localStorage.setItem('ic_v3_auth_uid',uid);
+}
+function oldLedgerKey(name,group=''){return 'ic_v34_'+encodeURIComponent((name+'|'+group).toLowerCase());}
+reg.addEventListener('submit',async e=>{
+ e.preventDefault();if(busy)return;regError.textContent='';
+ const name=nameInput.value.trim().replace(/\s+/g,' '),email=emailInput.value.trim().toLowerCase(),password=passwordInput.value,confirm=confirmInput.value,referral=referralInput.value.trim();
+ if(name.length<3||name.length>60||name.split(' ').length<2){regError.textContent='Introduce nombre y apellidos.';return;}
+ if(!emailRe.test(email)||email.length>120){regError.textContent='Necesitamos un correo válido para el acceso con contraseña.';return;}
+ if(password.length<8){regError.textContent='La contraseña debe tener al menos 8 caracteres.';return;}
+ if(password!==confirm){regError.textContent='Las dos contraseñas no coinciden.';return;}
+ if(referral && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referral)){regError.textContent='El código debe comenzar por IC- y ser el código completo de Firebase.';return;}
+ if(!$('academicConsent').checked){regError.textContent='Acepta las condiciones académicas para crear tu cuenta.';return;}
+ if(!firebaseEnabled){regError.textContent='Primero debes configurar Firebase; el registro con contraseña no funciona sin conexión.';return;}
+ busy=true;const btn=$('acceptBtn');btn.disabled=true;btn.textContent='Creando cuenta…';
+ try{
+  const f=await getFirebase();await f.auth.authStateReady();
+  const current=f.auth.currentUser;const upgrade=legacyCheckbox.checked;
+  let user,actualName=name,actualReferral=referral;
+  if(upgrade){
+   if(!current?.isAnonymous||!isLegacy())throw new Error('Para conservar tu cuenta, ábrela primero en este mismo navegador.');
+   const oldName=localStorage.getItem('ic_v3_alias');
+   if(name!==oldName)throw new Error('Para conservar la cuenta, mantén el mismo nombre de la sesión anterior.');
+   const oldProfile=JSON.parse(localStorage.getItem('ic_v3_profile')||'{}');
+   if(referral && oldProfile.referralCode && referral!==oldProfile.referralCode)throw new Error('No puedes cambiar el referido de una cuenta existente.');
+   actualReferral=String(oldProfile.referralCode||referral||'');
+   const credential=f.Auth.EmailAuthProvider.credential(email,password);
+   const linked=await f.Auth.linkWithCredential(current,credential);
+   user=linked.user;
+   // Conserva el UID y la cartera virtual local que pertenecían a esa cuenta.
+   const oldKey=oldLedgerKey(oldName,String(oldProfile.group||''));
+   const newKey='ic_v34_uid_'+user.uid;
+   const raw=localStorage.getItem(oldKey);
+   if(raw&&!localStorage.getItem(newKey))localStorage.setItem(newKey,raw);
+  }else{
+   if(current&&!current.isAnonymous)throw new Error('Hay una sesión iniciada. Ciérrala antes de crear otra cuenta o utiliza una ventana privada.');
+   if(current?.isAnonymous)await f.Auth.signOut(f.auth);
+   const created=await f.Auth.createUserWithEmailAndPassword(f.auth,email,password);
+   user=created.user;
   }
-  if(referralCode && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referralCode)){error.textContent='El código de referido no tiene un formato válido (debe comenzar por IC-).';referralInput.focus();return;}
-  if(!consentInput.checked){error.textContent='Debes aceptar las condiciones académicas para continuar.';consentInput.focus();return;}
-  // Compatibilidad con Firestore V3.8: el campo interno `email` almacena
-  // opcionalmente email O teléfono, y `group` queda vacío. Esto conserva
-  // las reglas ya publicadas y no modifica registros de alumnos anteriores.
-  const profile={name,email:contact,group:'',referralCode};
-  // Si el dispositivo ya se utilizó, iniciar otra cuenta anónima para evitar
-  // asignar actividades del nuevo alumno al anterior.
-  if(hasSession()){
-    try{
-      const {firebaseEnabled}=await import('./firebase-config.js');
-      if(firebaseEnabled){
-        const {getFirebase}=await import('./backend.js');
-        const f=await getFirebase();
-        const current=await new Promise((resolve,reject)=>{
-          let stop=()=>{};
-          stop=f.Auth.onAuthStateChanged(f.auth,u=>{stop();resolve(u);},reject);
-        });
-        if(current && !current.isAnonymous){error.textContent='Hay una sesión de Google abierta. Para registrar un alumno usa una ventana privada.';return;}
-        if(current)await f.Auth.signOut(f.auth);
-      }
-    }catch(err){error.textContent='No se pudo iniciar una cuenta nueva: '+err.message;return;}
-  }
-  // Notificación independiente del registro en Firestore. No se promete entrega:
-  // FormSubmit exige activar previamente la dirección receptora.
-  const submitBtn=document.getElementById('acceptBtn');
-  submitBtn.disabled=true;
-  submitBtn.textContent='Procesando registro…';
-  let emailStatus='no confirmado';
-  try{
-    const ctrl=new AbortController();
-    const timeout=setTimeout(()=>ctrl.abort(),7000);
-    try{
-      const resp=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{
-        method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify({
-          _subject:'Invest Capital — Nuevo registro de alumno',
-          _template:'table',
-          nombre_y_apellidos:name,contacto:contact||'No facilitado',codigo_referido:referralCode||'No facilitado',
-          mensaje:'Alta de participante de Invest Capital (actividad académica).'
-        }),signal:ctrl.signal
-      });
-      const result=await resp.json();
-      emailStatus=resp.ok && (result.success===true || result.success==='true')?'aceptado por FormSubmit':'no confirmado';
-    }finally{clearTimeout(timeout);}
-  }catch(err){console.warn('Aviso de registro pendiente',err);}
-  localStorage.setItem('ic_v34_mail_status',emailStatus);
-  localStorage.removeItem('ic_v3_ledger');
-  localStorage.setItem('ic_v3_profile',JSON.stringify(profile));
-  localStorage.setItem('ic_v3_alias',name);
-  localStorage.setItem('ic_v3_consent','yes');
-  // No se envían datos ni se crea la sesión en la nube antes del consentimiento.
+  await f.Auth.updateProfile(user,{displayName:actualName});
+  setStudentLocals(actualName,email,actualReferral,user.uid);
+  // Solo el nombre/correo del registro: jamás se transmiten contraseñas.
+  await notifyRegistration(actualName,email,actualReferral);
   location.href='app.html';
+ }catch(e){regError.textContent=errText(e);}
+ finally{busy=false;btn.disabled=false;btn.textContent='Crear cuenta';}
 });
+login.addEventListener('submit',async e=>{
+ e.preventDefault();if(busy)return;loginError.textContent='';
+ const email=$('loginEmail').value.trim().toLowerCase(),password=$('loginPassword').value;
+ if(!emailRe.test(email)||!password){loginError.textContent='Introduce tu correo y contraseña.';return;}
+ if(!firebaseEnabled){loginError.textContent='Firebase aún no está configurado.';return;}
+ busy=true;const btn=$('submitLogin');btn.disabled=true;btn.textContent='Verificando…';
+ try{
+  const f=await getFirebase();
+  const cred=await f.Auth.signInWithEmailAndPassword(f.auth,email,password);
+  if(cred.user.email?.toLowerCase()===ADMIN_EMAIL){await f.Auth.signOut(f.auth);throw new Error('El administrador accede desde su consola privada con Google.');}
+  const snap=await f.Store.getDoc(f.Store.doc(f.db,'sessions',cred.user.uid));
+  const oldData=snap.exists()?snap.data():{};
+  const name=String(oldData.alias||cred.user.displayName||'').trim();
+  if(!name)throw new Error('No se encontró un perfil de alumno para esta cuenta. Contacta al profesor.');
+  // El referido ya está asociado a su UID en Firestore, no vuelve a elegirse al entrar.
+  setStudentLocals(name,email,'',cred.user.uid);
+  location.href='app.html';
+ }catch(e){loginError.textContent=errText(e);}
+ finally{busy=false;btn.disabled=false;btn.textContent='Entrar a mi cuenta';}
+});
+$('resetPassword').addEventListener('click',async()=>{
+ loginError.textContent='';const email=$('loginEmail').value.trim().toLowerCase();
+ if(!emailRe.test(email)){loginError.textContent='Escribe primero tu correo para solicitar la recuperación.';return;}
+ try{if(!firebaseEnabled)throw new Error('Firebase no configurado.');const f=await getFirebase();await f.Auth.sendPasswordResetEmail(f.auth,email);
+   loginError.textContent='Si el correo corresponde a una cuenta, recibirás instrucciones para restablecer tu contraseña.';
+ }catch(e){loginError.textContent=errText(e);}
+});
+if(new URLSearchParams(location.search).get('login')==='1')showLogin();
