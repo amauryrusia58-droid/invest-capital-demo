@@ -1,7 +1,7 @@
 import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL} from './backend.js';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
-let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},stage=0;
+let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},linksMap={},stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'—';};
 function setError(s){$('#loginError').textContent=s;}
@@ -11,10 +11,11 @@ function teacherReady(f){
 }
 function watch(){
  const {db,Store}=firebase;
- offSessions();offScenario();
+ offSessions();offScenario();offLinks();
+ offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();if(selectedId)showSelectedProfile();},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
    sessions=snap.docs.map(d=>({id:d.id,...d.data()}));
-   $('#connectionBadge').textContent='Sincronizado';refreshStudents();
+   $('#connectionBadge').textContent='Sincronizado';refreshStudents();renderLinks();
  },err=>{$('#connectionBadge').textContent='Error de lectura';console.error(err);});
  offScenario=Store.onSnapshot(Store.doc(db,'control','global'),snap=>{
    stage=snap.exists()?Number(snap.data().stage)||0:0;
@@ -37,9 +38,30 @@ function refreshStudents(){
  });
  if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#studentProfile').textContent='';$('#withdrawCount').textContent='0';}
 }
+
+function studentName(uid){return sessions.find(s=>s.id===uid)?.alias||'Alumno '+String(uid).slice(0,6);}
+function showSelectedProfile(){
+ const s=sessions.find(x=>x.id===selectedId);if(!s)return;
+ const invitedBy=linksMap[selectedId];
+ $('#studentProfile').textContent=[s.group?'Grupo: '+s.group:'',s.email?'Correo (declarado): '+s.email:'',invitedBy?'Vinculado a: '+studentName(invitedBy):''].filter(Boolean).join(' · ')||'Sin datos adicionales';
+}
+function renderLinks(){
+ const ids=Object.keys(linksMap);
+ $('#linksCount').textContent=ids.length+' vínculos';
+ const tbody=$('#linksRows');tbody.replaceChildren();
+ if(!ids.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Todavía no hay alumnos vinculados.';tr.append(td);tbody.append(tr);return;}
+ for(const id of ids.slice(0,150)){
+  const chain=[];let parent=linksMap[id];const seen=new Set([id]);
+  while(parent && !seen.has(parent) && chain.length<3){chain.push(parent);seen.add(parent);parent=linksMap[parent];}
+  const tr=document.createElement('tr');
+  for(const v of [id,...[0,1,2].map(i=>chain[i])]){const td=document.createElement('td');td.textContent=v?studentName(v):'—';tr.append(td);}
+  tbody.append(tr);
+ }
+}
+
 function select(uid){
  selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';
- const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;$('#studentProfile').textContent=[s?.group?'Grupo: '+s.group:'',s?.email?'Correo (declarado): '+s.email:''].filter(Boolean).join(' · ')||'Sin datos adicionales';
+ const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;showSelectedProfile();
  refreshStudents();$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
  $('#exportCsv').disabled=true;
  const {db,Store}=firebase;
@@ -71,9 +93,9 @@ $('#loginAdmin').addEventListener('click',async()=>{
  try{teacherReady(await adminLogin());}catch(e){setError('Acceso no autorizado o error de inicio de sesión: '+e.message);}
  finally{b.disabled=false;b.textContent='Acceder con Google';}
 });
-$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
+$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
 (async()=>{
  if(!firebaseEnabled){setError('El seguimiento remoto todavía no está activado. Configura Firebase siguiendo INSTRUCCIONES.md.');return;}
  try{const f=await adminCurrent();if(f)teacherReady(f);}catch(e){setError('No se pudo comprobar la sesión: '+e.message);}
 })();
-window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();});
+window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();});

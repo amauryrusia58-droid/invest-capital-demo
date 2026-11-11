@@ -4,6 +4,7 @@ const form=document.getElementById('registrationForm');
 const nameInput=document.getElementById('studentName');
 const emailInput=document.getElementById('studentEmail');
 const groupInput=document.getElementById('studentGroup');
+const referralInput=document.getElementById('studentReferral');
 const consentInput=document.getElementById('academicConsent');
 const error=document.getElementById('consentError');
 function hasSession(){return localStorage.getItem('ic_v3_consent')==='yes' && !!localStorage.getItem('ic_v3_alias');}
@@ -26,11 +27,13 @@ form.addEventListener('submit',async e=>{
   const name=nameInput.value.trim().replace(/\s+/g,' ');
   const email=emailInput.value.trim().toLowerCase();
   const group=groupInput.value.trim();
+  const referralCode=referralInput.value.trim();
   if(name.length<2||name.length>60){error.textContent='Escribe tu nombre o identificador (entre 2 y 60 caracteres).';nameInput.focus();return;}
   if(email && (email.length>120||!emailInput.checkValidity())){error.textContent='Revisa el correo electrónico o deja el campo vacío.';emailInput.focus();return;}
   if(group.length>40){error.textContent='El nombre del grupo debe tener 40 caracteres como máximo.';groupInput.focus();return;}
+  if(referralCode && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referralCode)){error.textContent='El código de compañero no tiene un formato válido.';referralInput.focus();return;}
   if(!consentInput.checked){error.textContent='Debes aceptar las condiciones académicas para continuar.';consentInput.focus();return;}
-  const profile={name,email,group};
+  const profile={name,email,group,referralCode};
   // Si el dispositivo ya se utilizó, iniciar otra cuenta anónima para evitar
   // asignar actividades del nuevo alumno al anterior.
   if(hasSession()){

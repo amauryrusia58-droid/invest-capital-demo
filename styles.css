@@ -218,3 +218,9 @@ a:hover{color:#f0d89d}
 .referral-tiers>div{background:linear-gradient(145deg,#32203e,#181020);padding:16px 10px;border:1px solid #77528c;border-radius:13px;text-align:center}
 .referral-tiers span,.referral-tiers small{display:block;color:#bcabce;font-size:11px}.referral-tiers strong{display:block;color:#f1cf83;font-size:29px;margin:7px 0}
 @media(max-width:540px){.referral-tiers{gap:6px}.referral-tiers>div{padding:14px 5px}.referral-tiers strong{font-size:24px}.referral-stat-grid .stat strong{font-size:19px}}
+
+/* V3.8 · registro y consulta de redes de alumnos en el aula */
+.registration-field .tiny{display:block;margin:7px 0 0;line-height:1.5}
+#refCode{font-size:clamp(12px,1.45vw,18px);word-break:break-all;letter-spacing:.04em;max-width:100%;}
+#refLinkStatus{max-width:380px;overflow-wrap:anywhere;margin-top:11px;color:#e4c788}
+#linksCount{font-size:12px;color:#e6c58a}

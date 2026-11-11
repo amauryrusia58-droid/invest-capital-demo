@@ -1,8 +1,8 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase} from './backend.js';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards} from './backend.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
-try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||'')};}catch{}
+try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||''),referralCode:String(p.referralCode||'')};}catch{}
 if(localStorage.getItem('ic_v3_consent')!=='yes'||!alias)location.replace('index.html');
 const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
 const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20}};
@@ -31,14 +31,16 @@ function positionProfit(pos){return Math.max(0,num(projected(pos.amount,pos.plan
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
-let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[]};
+let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{}};
 try{
   const raw=JSON.parse(localStorage.getItem(STORE)||'null');
   if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
-    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[]};
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{}};
   }
 }catch{}
-let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},onConfirm=null;
+let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},onConfirm=null;
+const pendingContributions=[];
+const referralRates={1:.15,2:.05,3:.03};
 const pending=[], overlay=$('#actionModal'), modalTitle=$('#modalTitle'), modalContent=$('#modalContent'),confirmBtn=$('#confirmModal');
 function save(){localStorage.setItem(STORE,JSON.stringify(account));}
 function record(type,label,which=view){if(!firebaseEnabled)return;pending.push({type,label,view:which});void flush();}
@@ -81,7 +83,7 @@ function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
 function deposit(){record('deposit_open','Abrió el formulario de aporte USDT BEP20');modal('Depósito de USDT · BEP20',`
  <div class="wallet-card"><span class="wallet-network">Activo: <strong>USDT</strong> &nbsp; · &nbsp; Red: <strong>BNB Smart Chain (BEP20)</strong></span><small>Referencia de cartera</small><div class="wallet-reference">IC-DEMO-BEP20-001</div><small>Identificador de aula no válido para recibir criptomonedas.</small></div>
  <label class="field-label" for="amountValue">Importe del aporte (USDT)</label><input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="100" inputmode="decimal">
- <p id="modalError" class="form-error" hidden></p><p class="tiny">Este formulario no procesa transferencias ni verifica operaciones en blockchain.</p>`,()=>{const n=num($('#amountValue').value);if(!Number.isFinite(n)||n<1||n>100000||!Number.isFinite(Number($('#amountValue').value))){err('Introduce una cantidad entre 1 y 100.000 USDT.');return;}account.cash=num(account.cash+n);if(!lockAnchor())account.withdrawalAnchor=Date.now();tx('Aporte USDT · BEP20',n,'Registrado','deposit');record('deposit_confirmed',`Registró aporte virtual de ${n.toFixed(2)} USDT por BEP20`);modal('Aporte registrado',`<p>Se registró en tu cuenta un aporte de <strong>${money(n)}</strong>.</p><div class="modal-note">No se ha efectuado una transferencia blockchain. Puedes asignar este saldo a un plan desde la sección «Planes».</div>`,()=>{close();setView('planes');},'Elegir un plan');},'Registrar aporte');}
+ <p id="modalError" class="form-error" hidden></p><p class="tiny">Este formulario no procesa transferencias ni verifica operaciones en blockchain.</p>`,()=>{const n=num($('#amountValue').value);if(!Number.isFinite(n)||n<1||n>100000||!Number.isFinite(Number($('#amountValue').value))){err('Introduce una cantidad entre 1 y 100.000 USDT.');return;}account.cash=num(account.cash+n);if(!lockAnchor())account.withdrawalAnchor=Date.now();tx('Aporte USDT · BEP20',n,'Registrado','deposit');pendingContributions.push({amount:n,reference:account.ledger[0].ref});void flushContributions();record('deposit_confirmed',`Registró aporte virtual de ${n.toFixed(2)} USDT por BEP20`);modal('Aporte registrado',`<p>Se registró en tu cuenta un aporte de <strong>${money(n)}</strong>.</p><div class="modal-note">No se ha efectuado una transferencia blockchain. Puedes asignar este saldo a un plan desde la sección «Planes».</div>`,()=>{close();setView('planes');},'Elegir un plan');},'Registrar aporte');}
 function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
 function withdrawal(){
  record('withdraw_open','Consultó el retiro mensual');
@@ -103,9 +105,63 @@ function withdrawal(){
   modal('Solicitud registrada',`<p>Se registró una solicitud virtual por <strong>${money(n)}</strong>.</p><p>Estado: <strong>${stage===2?'En validación':'En proceso'}</strong>. La próxima ventana será dentro de 30 días.</p><div class="modal-note">No se ha realizado ninguna transferencia.</div>`);
  },'Solicitar retiro');
 }
+// Una aportación realizada en el aula notifica a las cuentas antecesoras (hasta 3 niveles).
+// La comisión se calcula desde ese movimiento, no desde formularios manuales.
+let contributionsBusy=false;
+async function flushContributions(){
+ if(contributionsBusy||!sessionReady||session.mode!=='cloud')return;
+ contributionsBusy=true;
+ try{
+  while(pendingContributions.length){
+    const p=pendingContributions[0];
+    await recordClassroomContribution(session,p.amount,p.reference);
+    pendingContributions.shift();
+  }
+ }catch(e){
+  $('#refLinkStatus').textContent='Contribución pendiente de sincronizar: '+e.message;
+  console.warn('No se pudo sincronizar el aporte en la red de aula',e);
+ }finally{contributionsBusy=false;}
+}
+async function applyClassroomCode(code){
+ const current=await getClassroomLink(session);
+ if(current){
+   if(code && classroomCode(current)!==code)throw new Error('Tu cuenta ya tiene un compañero asociado.');
+   $('#refLinkStatus').textContent='Vinculado al código '+classroomCode(current);
+   return;
+ }
+ if(!code){$('#refLinkStatus').textContent='Tu cuenta todavía no está vinculada a otro alumno.';return;}
+ await linkClassroomMember(session,code);
+ $('#refLinkStatus').textContent='Vínculo confirmado con '+code;
+ record('referral_link','Se vinculó a la cuenta de un compañero: '+code,'referidos');
+}
+function onClassroomRewards(rows){
+ let changed=false;
+ for(const item of rows){
+  const level=item.ancestors?.indexOf(session.uid)+1;
+  if(!referralRates[level]||!(item.amount>=1&&item.amount<=100000)||account.referralCreditedIds[item.id])continue;
+  const commission=num(item.amount*referralRates[level]);
+  account.referralCreditedIds[item.id]=true;
+  account.cash=num(account.cash+commission);
+  account.referrals.unshift({alias:String(item.sourceTag||'Alumno del aula'),level,amount:num(item.amount),commission,createdAt:Date.now(),eventId:item.id});
+  account.referrals=account.referrals.slice(0,100);
+  tx('Bonificación virtual de red · nivel '+level,commission,'Registrada','referral');
+  record('referral_credit',`Bonificación virtual automática de ${commission.toFixed(2)} USDT en nivel ${level}`,'referidos');
+  changed=true;
+ }
+ if(changed){save();render();}
+}
 // Red hipotética: se introducen aportaciones inventadas por nivel, nunca invitaciones ni fondos reales.
-const referralRates={1:.15,2:.05,3:.03};
-function referralActivity(){record('referral_open','Consultó operaciones de asociados','referidos');modal('Nueva operación de asociados',`<p>Introduce un caso de la red para calcular la bonificación aplicable.</p><label class="field-label" for="refAliasInput">Identificador del asociado</label><input class="plain-input" id="refAliasInput" maxlength="40" placeholder="Ej. Asociado A"><label class="field-label" for="refLevelInput">Nivel de la red</label><select class="plain-input" id="refLevelInput"><option value="1">Nivel 1 · 15 %</option><option value="2">Nivel 2 · 5 %</option><option value="3">Nivel 3 · 3 %</option></select><label class="field-label" for="refAmountInput">Aportación registrada del asociado (USDT)</label><input class="plain-input" id="refAmountInput" type="number" min="1" max="100000" value="100" step="0.01"><p id="modalError" class="form-error" hidden></p>`,()=>{
+function referralActivity(){
+ if(session.mode==='cloud'){
+   record('referral_open','Abrió vínculo de compañero','referidos');
+   modal('Vincular compañero',`<p>Introduce el código IC- que te dio otro alumno durante la actividad del aula. Solo puedes elegirlo una vez.</p><label class="field-label" for="classroomRefInput">Código de compañero</label><input class="plain-input" id="classroomRefInput" spellcheck="false" maxlength="72" placeholder="IC-…"><p id="modalError" class="form-error" hidden></p>`,async()=>{
+     const code=$('#classroomRefInput').value.trim();confirmBtn.disabled=true;
+     try{await applyClassroomCode(code);modal('Asociación registrada','<p>El vínculo del aula quedó guardado en Firebase.</p>');}
+     catch(e){err('No se pudo asociar: '+e.message);confirmBtn.disabled=false;}
+   },'Confirmar vínculo');
+   return;
+ }
+ record('referral_open' ,'Consultó operaciones de asociados','referidos');modal('Nueva operación de asociados',`<p>Introduce un caso de la red para calcular la bonificación aplicable.</p><label class="field-label" for="refAliasInput">Identificador del asociado</label><input class="plain-input" id="refAliasInput" maxlength="40" placeholder="Ej. Asociado A"><label class="field-label" for="refLevelInput">Nivel de la red</label><select class="plain-input" id="refLevelInput"><option value="1">Nivel 1 · 15 %</option><option value="2">Nivel 2 · 5 %</option><option value="3">Nivel 3 · 3 %</option></select><label class="field-label" for="refAmountInput">Aportación registrada del asociado (USDT)</label><input class="plain-input" id="refAmountInput" type="number" min="1" max="100000" value="100" step="0.01"><p id="modalError" class="form-error" hidden></p>`,()=>{
  const name=$('#refAliasInput').value.trim(),level=Number($('#refLevelInput').value),raw=Number($('#refAmountInput').value),amount=num(raw);
  if(name.length<2||name.length>40){err('Introduce un identificador de entre 2 y 40 caracteres.');return;}
  if(!referralRates[level]||!Number.isFinite(raw)||amount<1||amount>100000){err('Selecciona un nivel y una aportación válida de 1 a 100.000 USDT.');return;}
@@ -136,15 +192,32 @@ updateCalculator();
 $$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{$$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));record('chart','Consultó gráfica '+b.dataset.period);}));
 $$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
 $$('[data-document]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.document;record('document','Consultó '+name,'documentos');modal(name,`<p>${esc(docs[name]||'Documento no disponible.')}</p>`);}));
-$('#actionDeposit').addEventListener('click',deposit);$('#startDeposit').addEventListener('click',deposit);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
+$('#sideInvest').addEventListener('click',deposit);$('#actionDeposit').addEventListener('click',deposit);$('#startDeposit').addEventListener('click',deposit);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
 $('#newReferralActivity').addEventListener('click',referralActivity);
 $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó identificador del programa','referidos');try{await navigator.clipboard.writeText($('#refCode').textContent.trim());modal('Identificador de asociado','Copiado al portapapeles.');}catch{modal('Identificador de asociado',esc($('#refCode').textContent));}});
 $('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser?.isAnonymous)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');location.replace('index.html');});$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;$('#refCode').textContent='IC-'+Array.from(alias).reduce((sum,c)=>sum+c.charCodeAt(0)*7,4280).toString().slice(-6);render();
-(async()=>{try{session=await studentStart(profile);sessionReady=true;$('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';record('entry','Entró al panel');await flush();unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sin conexión';});}catch(e){console.error(e);$('#syncStatus').textContent='Modo local';}})();
+$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();
+(async()=>{
+ try{
+  session=await studentStart(profile);sessionReady=true;
+  $('#syncStatus').textContent=session.mode==='cloud'?'Actividad conectada':'Modo local';
+  $('#refCode').textContent=session.mode==='cloud'?classroomCode(session.uid):'IC-AULA-LOCAL';
+  record('entry','Entró al panel');await flush();
+  unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sin conexión';});
+  if(session.mode==='cloud'){
+    try{await applyClassroomCode(profile.referralCode||'');}
+    catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
+    unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{
+      console.warn('Error al consultar bonificaciones',e);
+      $('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;
+    });
+    await flushContributions();
+  }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre alumnos.';}
+ }catch(e){console.error(e);$('#syncStatus').textContent='Sin conexión a Firebase';$('#refLinkStatus').textContent='Conexión de red no disponible.';}
+})();
 window.addEventListener('focus',render);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
 window.setInterval(render,60000);
-window.addEventListener('pagehide',()=>unsubscribe());
+window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();});

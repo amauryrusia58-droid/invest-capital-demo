@@ -27,10 +27,15 @@
         <label class="field-label" for="studentGroup">Grupo o clase <span class="field-optional">(opcional)</span></label>
         <input id="studentGroup" name="studentGroup" class="text-input" maxlength="40" placeholder="Ej. Grupo A" autocomplete="off">
       </div>
+      <div class="registration-field full">
+        <label class="field-label" for="studentReferral">Código de compañero <span class="field-optional">(opcional · solamente para ejercicios del aula)</span></label>
+        <input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-…" autocomplete="off" spellcheck="false">
+        <p class="tiny">Si te proporcionaron un código del aula, introdúcelo aquí para vincular tu sesión con la de otro participante. No es un enlace de inversión.</p>
+      </div>
     </div>
     <div class="registration-consent">
       <input type="checkbox" id="academicConsent" required>
-      <label for="academicConsent">Entiendo que participo en una <b>actividad académica simulada</b>, sin depósitos ni dinero real. Mi nombre o identificador, los datos opcionales que facilite y mis interacciones podrán ser registrados para seguimiento del docente, una vez habilitada la conexión. Para notificar el alta, el nombre o identificador, el grupo y el correo opcional se enviarán al docente mediante FormSubmit, un servicio externo de formularios.</label>
+      <label for="academicConsent">Entiendo que participo en una <b>actividad académica simulada</b>, sin depósitos ni dinero real. Mi nombre o identificador, el código de compañero que indique, los datos opcionales que facilite y mis interacciones podrán ser registrados para seguimiento del docente, una vez habilitada la conexión. La persona que me haya referido podrá visualizar un identificador pseudónimo y las bonificaciones virtuales del ejercicio, no mi correo ni otros datos de contacto. Para notificar el alta, el nombre o identificador, el grupo y el correo opcional se enviarán al docente mediante FormSubmit, un servicio externo de formularios.</label>
     </div>
     <div class="dialog-actions"><button type="button" id="cancelBtn" class="btn btn-soft">Cancelar</button><button type="submit" id="acceptBtn" class="btn btn-primary">Crear mi cuenta <span aria-hidden="true">↗</span></button></div>
     <p class="form-error" id="consentError" aria-live="polite"></p>
