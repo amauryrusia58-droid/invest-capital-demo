@@ -250,3 +250,22 @@ export async function reviewVirtualPlanRequest(f,requestId,decision){
   tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
  });
 }
+
+// V8.5 · Snapshot informativo del simulador, declarado por el navegador del alumno.
+// No es saldo auditado ni autoriza pagos o transferencias.
+export async function saveVirtualEarningsSummary(session,amounts){
+ if(session.mode!=='cloud')return;
+ const {db,Store,uid}=session;
+ const fields=['grossPlanYield','unpaidPlanYield','referralEarned','referralAvailable','availableToRequest','daysRemaining'];
+ const doc={currency:'USDT-DEMO',updatedAt:Store.serverTimestamp()};
+ for(const key of fields){
+  const value=Number(amounts[key]);
+  if(!Number.isFinite(value)||value<0||value>1000000)throw new Error('Resumen de práctica no válido.');
+  doc[key]=key==='daysRemaining'?Math.round(value):Math.round(value*100)/100;
+ }
+ await Store.setDoc(Store.doc(db,'virtualEarningsSummaries',uid),doc);
+}
+export function watchAdminVirtualEarningsSummaries(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.collection(db,'virtualEarningsSummaries'),snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}

@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests} from './backend.js?v=84';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary} from './backend.js?v=85';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -68,11 +68,11 @@ function positionProfit(pos){return Math.max(0,num(projected(pos.amount,pos.plan
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
-let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},activatedPlanRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:""};
+let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},activatedPlanRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:"",referralPaid:0};
 try{
   const raw=JSON.parse(localStorage.getItem(STORE)||'null');
   if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
-    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},activatedPlanRequestIds:raw.activatedPlanRequestIds&&typeof raw.activatedPlanRequestIds==='object'&&!Array.isArray(raw.activatedPlanRequestIds)?raw.activatedPlanRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},activatedPlanRequestIds:raw.activatedPlanRequestIds&&typeof raw.activatedPlanRequestIds==='object'&&!Array.isArray(raw.activatedPlanRequestIds)?raw.activatedPlanRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",referralPaid:Math.max(0,num(raw.referralPaid||0)),contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
   }
 }catch{}
 let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},unsubscribeWithdrawals=()=>{},unsubscribePlanRequests=()=>{},onConfirm=null;
@@ -109,23 +109,43 @@ function err(text){const e=$('#modalError');if(e){e.textContent=text;e.hidden=fa
 function tx(name,amount,status,kind){const seq=++account.seq;account.ledger.unshift({name,amount:num(amount),status,kind,ref:'IC-'+String(Date.now()).slice(-6)+String(seq).padStart(2,'0'),date:new Date().toLocaleDateString('es-ES')});account.ledger=account.ledger.slice(0,100);save();render();}
 function principal(){return num(account.positions.reduce((s,p)=>s+remainingPrincipal(p),0));}
 function gain(){return num(account.positions.reduce((s,p)=>s+positionProfit(p),0));}
+// Rendimiento bruto acumulado y saldo pendiente son métricas diferentes.
+function grossYield(){return num(account.positions.reduce((s,p)=>s+projected(p.amount,p.plan,elapsedDays(legacyStart(p)),p.rate).profit,0));}
 function total(){return num(account.cash+principal()+gain());}
-// V6 · Calendario de espera basado en la fecha de la primera aprobación y las últimas decisiones.
-// Tras una decisión de retiro (aprobado o rechazado) se inicia un nuevo plazo de 30 días.
+function referralEarned(){return num(account.referrals.reduce((s,r)=>s+num(r.commission),0));}
+function referralAvailable(){return Math.max(0,num(Math.min(account.cash,Math.max(0,referralEarned()-account.referralPaid))));}
+// El capital del plan NO es ganancia ni está disponible para este tipo de retiro.
+function withdrawable(){return num(gain()+referralAvailable());}
 function lockAnchor(){if(account.withdrawalAnchor>0)return account.withdrawalAnchor;const starts=account.positions.map(legacyStart).filter(Number.isFinite);return starts.length?Math.min(...starts):0;}
 function hasPendingWithdrawal(){return Boolean(account.pendingWithdrawalRequestId)||withdrawalRequests.some(x=>x.status==='pending');}
 function withdrawalStatus(){
  const anchor=lockAnchor();
- if(!anchor)return {days:30,open:false,reason:'La primera aprobación de saldo virtual inicia el calendario de 30 días.'};
+ if(!anchor)return {days:30,open:false,reason:'El ciclo de 30 días comenzará al activarse un plan. Los retiros anticipados de bonificaciones pueden solicitarse antes.'};
  const remaining=Math.max(0,30-calendarElapsed(anchor));
- return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para solicitar un retiro ficticio.`:'Ya puedes solicitar un retiro ficticio sujeto a aprobación.'};
+ return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para completar el ciclo. Puedes solicitar antes tus ganancias ficticias disponibles, sujetas a aprobación.`:'Ciclo completado. Los retiros ficticios siguen sujetos a aprobación.'};
 }
-function eligibleProfit(p){return elapsedDays(legacyStart(p))>=30?positionProfit(p):0;}
-function withdrawable(){return num(account.cash+account.positions.reduce((s,p)=>s+eligibleProfit(p)+(planMatured(p)?remainingPrincipal(p):0),0));}
 function renderWithdrawalStatus(){
  const w=withdrawalStatus();
  for(const id of ['actionWithdraw','withdrawInMovements'])$('#'+id).textContent='Retiro';
- $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?'Retiro ficticio pendiente de revisión del administrador.':w.reason;
+ $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?`Retiro ficticio pendiente de revisión. ${w.days} día(s) del ciclo restantes.`:w.reason;
+ $('#earningDays').textContent=String(w.days);
+}
+// Resumen informativo sincronizado con Firebase. Lo calcula el navegador:
+// no es un libro mayor verificado ni prueba la existencia de fondos.
+let lastEarningSync='',lastEarningSyncAt=0,earningSyncBusy=false;
+function earningSnapshot(){return {
+ grossPlanYield:grossYield(),unpaidPlanYield:gain(),referralEarned:referralEarned(),
+ referralAvailable:referralAvailable(),availableToRequest:withdrawable(),
+ daysRemaining:withdrawalStatus().days,currency:'USDT-DEMO'
+};}
+async function syncEarningsSummary(force=false){
+ if(!sessionReady||session.mode!=='cloud'||earningSyncBusy)return;
+ const data=earningSnapshot(),fingerprint=JSON.stringify(data),now=Date.now();
+ if(!force&&fingerprint===lastEarningSync&&now-lastEarningSyncAt<900000)return;
+ earningSyncBusy=true;
+ try{await saveVirtualEarningsSummary(session,data);lastEarningSync=fingerprint;lastEarningSyncAt=Date.now();}
+ catch(e){console.warn('No se sincronizó el resumen informativo',e);}
+ finally{earningSyncBusy=false;}
 }
 
 function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
@@ -224,7 +244,7 @@ function drawPortfolioChart(pos, invested, profit){
 }
 function render(){const invested=principal(),profit=gain(),value=total(),pos=account.positions.filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
-  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(profit);$('#availableVal').textContent=money(account.cash);$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=stage===3?'Retiros suspendidos':stage===2?'Retiros sujetos a validación':account.cash>0?'Saldo de práctica anterior · no activa planes':'Sin saldo libre';
+  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(grossYield());$('#availableVal').textContent=money(withdrawable());$('#earningYield').textContent=money(gain());$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>0?'Ganancias del plan + bonos ficticios · pendientes de aprobación':'Sin ganancias disponibles todavía';
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
   $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
@@ -236,6 +256,7 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
   $('#refRows').innerHTML=account.referrals.length?account.referrals.slice(0,8).map(r=>`<tr><td>${esc(r.alias)}</td><td>Nivel ${r.level}</td><td>${money(r.amount)}</td><td>+${money(r.commission)}</td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay operaciones de la red.</td></tr>';
   ledgerRows();
   renderWithdrawalRequests();
+  void syncEarningsSummary();
 }
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
 // V8.3 · Plan seleccionado → cartera ficticia → solicitud → aprobación → posición del plan.
@@ -444,12 +465,23 @@ function renderWithdrawalRequests(){
 }
 function consumeApprovedWithdrawal(amount){
  if(withdrawable()+.001<amount)return false;
- let left=amount;
- const useCash=Math.min(left,account.cash);account.cash=num(account.cash-useCash);left=num(left-useCash);
- for(const p of account.positions){if(left<=0)break;const use=Math.min(left,eligibleProfit(p));p.paidProfit=num((p.paidProfit||0)+use);left=num(left-use);}
- for(const p of account.positions){if(left<=0)break;if(!planMatured(p))continue;const use=Math.min(left,remainingPrincipal(p));p.principalPaid=num((p.principalPaid||0)+use);left=num(left-use);}
+ let left=num(amount);
+ // Primero se descuentan bonos de referidos que aún están en la cartera libre.
+ const bonus=Math.min(left,referralAvailable());
+ account.cash=num(account.cash-bonus);
+ account.referralPaid=num(account.referralPaid+bonus);
+ left=num(left-bonus);
+ // El resto se descuenta exclusivamente de rendimientos simulados no retirados.
+ for(const p of account.positions){
+  if(left<=0)break;
+  const used=Math.min(left,positionProfit(p));
+  p.paidProfit=num((p.paidProfit||0)+used);
+  left=num(left-used);
+ }
+ // Nunca se toca el principal, ni el saldo libre procedente de antiguas acreditaciones.
  return left<=.001;
 }
+
 function onWithdrawalRequests(rows){
  withdrawalRequests=rows;
  let changed=false;
@@ -463,13 +495,13 @@ function onWithdrawalRequests(rows){
     continue;
    }
    account.reviewedWithdrawalIds[r.id]='approved';
-   account.withdrawalAnchor=when;
+   // La decisión no reinicia el contador natural del plan.
    account.pendingWithdrawalRequestId='';
    tx('Retiro ficticio aprobado por el profesor',-amount,'Aprobado','withdraw');
    record('withdraw_approved',`Retiro virtual aprobado por ${amount.toFixed(2)} USDT`,'movimientos');
   }else{
    account.reviewedWithdrawalIds[r.id]='rejected';
-   account.withdrawalAnchor=when;
+   // Un rechazo no reinicia los días ya transcurridos.
    account.pendingWithdrawalRequestId='';
    tx('Retiro ficticio rechazado por el profesor',0,'Rechazado','withdraw');
    record('withdraw_rejected',`Retiro virtual rechazado de ${num(r.amount).toFixed(2)} USDT`,'movimientos');
@@ -484,28 +516,41 @@ function onWithdrawalRequests(rows){
  render();
 }
 function withdrawal(){
- record('withdraw_open','Consultó retiro ficticio','movimientos');
+ record('withdraw_open','Consultó retiro ficticio de ganancias','movimientos');
  const w=withdrawalStatus();
- if(!lockAnchor()){modal('Retiro · simulación',`<div class="notice">${esc(w.reason)}</div>`);return;}
- if(hasPendingWithdrawal()){modal('Pendiente de revisión','<div class="notice">Ya tienes una solicitud de retiro ficticio pendiente de decisión. Cuando el profesor responda aparecerá aquí el resultado.</div>');return;}
- if(stage===3){modal('Escenario: retiros suspendidos','<div class="notice negative">La simulación está en un escenario de retiros suspendidos.</div>');return;}
- if(!w.open){record('withdraw_locked',`Consultó calendario: faltan ${w.days} días`,'movimientos');modal('Retiro · calendario',`<div class="withdraw-count"><b>${w.days}</b><span>día${w.days===1?'':'s'} para solicitar</span></div><p>${esc(w.reason)}</p><p class="tiny">El conteo avanza por fechas del calendario, aunque no hayan pasado 24 horas completas. Los retiros son exclusivamente ficticios.</p>`);return;}
+ if(hasPendingWithdrawal()){
+  modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro ficticio pendiente. El profesor recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
+ }
+ if(stage===3){modal('Escenario suspendido','<div class="notice negative">La clase está en un escenario de retiros suspendidos.</div>');return;}
  const cap=withdrawable();
- if(cap<1){modal('Retiro disponible','<div class="notice">Ya cumpliste los 30 días, pero no hay saldo virtual elegible para solicitar. Los rendimientos requieren 30 días de posición y el principal queda sujeto al plazo del plan.</div>');return;}
- modal('Solicitar retiro ficticio',`<div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong> · No se realiza ningún pago.</div><p>Saldo virtual elegible: <strong>${money(cap)}</strong></p><label class="field-label" for="amountValue">Cantidad ficticia (USDT)</label><input id="amountValue" class="plain-input" type="number" step="0.01" min="1" max="${cap}" value="${Math.min(100,cap)}"><p id="modalError" class="form-error" hidden></p><p class="tiny">La solicitud quedará pendiente en el panel del profesor. No descontaremos el saldo virtual hasta que sea aprobada.</p>`,async()=>{
+ if(cap<1){
+  modal('Aún no tienes ganancias disponibles',`<p>Hoy no alcanzas el mínimo de 1 USDT-DEMO para solicitar un retiro.</p><p>Rendimiento sin retirar: <b>${money(gain())}</b> · Bonificaciones disponibles: <b>${money(referralAvailable())}</b>.</p><p class="tiny">El ciclo tiene ${w.days} día(s) restantes, pero no impide solicitar bonificaciones o ganancias en cuanto se acumulen.</p>`);return;
+ }
+ modal('Solicitar retiro anticipado · DEMO',`
+  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong>. No se transfiere dinero ni USDT real.</div>
+  <p>Rendimiento virtual no retirado: <b>${money(gain())}</b></p>
+  <p>Bonificaciones de referidos: <b>${money(referralAvailable())}</b></p>
+  <p>Ganancia disponible: <strong>${money(cap)} ficticios</strong></p>
+  <div class="notice">${w.days} día(s) del ciclo restantes. Puedes solicitar ahora un retiro ficticio anticipado. <b>El profesor decide si lo aprueba o rechaza.</b></div>
+  <label class="field-label" for="amountValue">Importe de ganancias ficticias (USDT-DEMO)</label>
+  <input id="amountValue" class="plain-input" type="number" step="0.01" min="1" max="${cap}" value="${Math.min(100,cap)}">
+  <p id="modalError" class="form-error" hidden></p>
+  <p class="tiny">Ni el capital asignado ni los antiguos créditos libres cuentan como ganancia retirable.</p>
+ `,async()=>{
   const raw=$('#amountValue').value,n=num(Number(raw));
-  if(!raw.trim()||!Number.isFinite(Number(raw))||n<1||n>withdrawable()){err('Introduce una cantidad ficticia entre 1 y el saldo elegible.');return;}
-  if(!withdrawalStatus().open||hasPendingWithdrawal()){err('La solicitud no está disponible en este momento.');return;}
-  if(!sessionReady||session.mode!=='cloud'){err('Sin conexión Firebase: no se ha creado ninguna solicitud.');return;}
+  if(!raw.trim()||!Number.isFinite(Number(raw))||n<1||n>withdrawable()){err('Indica una cantidad entre 1 USDT-DEMO y la ganancia disponible.');return;}
+  if(hasPendingWithdrawal()){err('Ya existe una solicitud de retiro pendiente.');return;}
   confirmBtn.disabled=true;
   try{
+   await ensureStudentFirebaseSession();
+   await syncEarningsSummary(true);
    const id=await requestVirtualWithdrawal(session,n,alias);
    account.pendingWithdrawalRequestId=id;save();
-   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT ficticios`,'movimientos');
+   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT ficticios con ${w.days} días pendientes`,'movimientos');
    render();
-   modal('Retiro pendiente',`<div class="notice"><strong>${money(n)} ficticios · Pendiente de revisión</strong></div><p>El profesor recibió la solicitud. Solo su aprobación descontará el importe del saldo virtual; si la rechaza verás «Rechazada» y se iniciará un nuevo plazo de 30 días.</p>`);
-  }catch(e){err('No se pudo enviar la solicitud: '+e.message);confirmBtn.disabled=false;}
- },'Enviar solicitud de retiro');
+   modal('Solicitud pendiente',`<div class="notice"><strong>${money(n)} USDT-DEMO · Pendiente de revisión</strong></div><p>El profesor recibió la solicitud aun faltando ${w.days} día(s) del ciclo. Al aprobarla, se descontará de las ganancias ficticias disponibles; si la rechaza, conservarás la cantidad y el contador seguirá avanzando.</p>`);
+  }catch(e){err('No se pudo enviar a Firebase: '+e.message);confirmBtn.disabled=false;}
+ },'Enviar solicitud al profesor');
 }
 // Una aportación realizada en el aula notifica a las cuentas antecesoras (hasta 3 niveles).
 // La comisión se calcula desde ese movimiento, no desde formularios manuales.
@@ -636,7 +681,7 @@ async function ensureStudentFirebaseSession(){
  if(sessionReady&&session.mode==='cloud'&&session.uid===user.uid)return session;
  session=await studentStart(profile);
  if(session.mode!=='cloud')throw new Error('No se pudo establecer la sesión de Firebase.');
- sessionReady=true;connectionFailure=null;
+ sessionReady=true;connectionFailure=null;void syncEarningsSummary(true);
  $('#syncStatus').textContent='Actividad conectada';$('#refCode').textContent=classroomCode(session.uid);
  await attachStudentListeners();await flush();
  return session;

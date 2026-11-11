@@ -1,7 +1,7 @@
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest} from './backend.js?v=84';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries} from './backend.js?v=85';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
-let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;
+let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},offEarningSummaries=()=>{},earningSummaries={},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
 const knownAmounts=['deposit_confirmed','plan_assign','withdraw_attempt','referral_credit'];
@@ -42,7 +42,9 @@ function renderStudentSummary(){
  for(const [type,label] of titles){const matching=events.filter(e=>e.type===type);const amounts=matching.map(eventAmount).filter(v=>v!==null&&Number.isFinite(v));const val=amounts.length?money(amounts.reduce((a,b)=>a+b,0)):'—';
  const item=addText('div','','admin-metric');item.append(addText('small',label),addText('strong',val),addText('span',`${matching.length} evento(s) registrado(s)`,'tiny'));metrics.append(item);}
  container.append(metrics);
- const note=addText('p','Saldo actual: no disponible en Firebase. Estas sumas proceden de los eventos visibles (máximo 200 por sesión), pueden ser parciales y NO equivalen al balance de la cuenta. Todos los importes son ficticios.','admin-summary-note');container.append(note);
+ const estimate=earningSummaries[selectedId];
+ if(estimate){const metrics2=addText('div','','admin-event-metrics');for(const [label,amount] of [['Rendimiento ficticio pendiente',estimate.unpaidPlanYield],['Bonos por referidos pendientes',estimate.referralAvailable],['Ganancia disponible · declarada',estimate.availableToRequest],['Días para el ciclo',estimate.daysRemaining]]){const el=addText('div','','admin-metric');el.append(addText('small',label),addText('strong',label==='Días para el ciclo'?String(amount):money(amount)));metrics2.append(el);}container.append(metrics2);container.append(addText('p','Resumen enviado desde el navegador del alumno; no es un saldo verificado en servidor ni prueba de pago. Actualizado: '+shortDate(estimate.updatedAt),'tiny'));}
+ const note=addText('p','Los importes de eventos pueden ser parciales; el resumen de ganancias, si aparece, es informativo y fue calculado por el navegador del alumno, NO un saldo auditado ni comprobación de fondos. Todo es ficticio.','admin-summary-note');container.append(note);
 }
 
 
@@ -130,7 +132,9 @@ function renderAdminWithdrawalRequests(){
  for(const r of recent){
   const row=addText('div','','admin-approval-row');const detail=addText('div','','admin-approval-detail');
   const name=sessions.find(s=>s.id===r.studentUid)?.alias||r.studentAlias||'Alumno';
-  detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}`,'tiny'));
+  const summary=earningSummaries[r.studentUid];
+  const info=summary?` · Ganancias declaradas: ${money(summary.availableToRequest)} · ${summary.daysRemaining} días del ciclo restantes`:' · Saldo informativo del alumno todavía no sincronizado';
+  detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}${info}`,'tiny'));
   const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
   row.append(detail,state);
   if(r.status==='pending')for(const [decision,caption,variant] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
@@ -156,10 +160,11 @@ function teacherReady(f){
 }
 function watch(){
  const {db,Store}=firebase;
- offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();
+ offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();
     offCreditRequests=watchAdminVirtualCreditRequests(firebase,rows=>{creditRequests=rows;renderAdminCreditRequests();},e=>{$('#approvalsMessage').textContent='Error de permisos o conexión al leer solicitudes: '+e.message;});
     offPlanRequests=watchAdminVirtualPlanRequests(firebase,rows=>{planRequests=rows;renderAdminPlanRequests();},e=>{$('#planApprovalsMessage').textContent='No se pudieron leer activaciones: '+e.message;});
  offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros ficticios: '+e.message;});
+ offEarningSummaries=watchAdminVirtualEarningsSummaries(firebase,rows=>{earningSummaries=Object.fromEntries(rows.map(r=>[r.id,r]));renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Resumen de ganancias sin sincronizar: '+e.message;});
  offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
    sessions=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -252,9 +257,9 @@ $('#loginAdmin').addEventListener('click',async()=>{
  try{teacherReady(await adminLogin());}catch(e){setError('Acceso no autorizado o error de inicio de sesión: '+e.message);}
  finally{b.disabled=false;b.textContent='Acceder con Google';}
 });
-$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
+$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
 (async()=>{
  if(!firebaseEnabled){setError('El seguimiento remoto todavía no está activado. Configura Firebase siguiendo INSTRUCCIONES.md.');return;}
  try{const f=await adminCurrent();if(f)teacherReady(f);}catch(e){setError('No se pudo comprobar la sesión: '+e.message);}
 })();
-window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();});
+window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();});
