@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests} from './backend.js';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests} from './backend.js?v=82';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -16,7 +16,15 @@ function showChosenPlanBanner(){
  const p=plans[planName];const lack=Math.max(0,num(p.min-account.cash));
  $('#selectedPlanTitle').textContent=planName+' · desde '+money(p.min)+' ficticios';
  $('#selectedPlanMessage').textContent=lack>0?`Primero solicita ${money(lack)} de capital virtual. El profesor debe aprobarlo antes de que puedas asignarlo a tu plan.`:'Ya tienes saldo virtual suficiente para asignar capital a este plan.';
- const btn=$('#selectedPlanAction');btn.textContent=lack>0?'Solicitar capital ficticio':'Asignar a este plan';
+ const btn=$('#selectedPlanAction');
+ const review=creditRequests.find(r=>r.status==='pending') || (justSubmittedCreditId?{id:justSubmittedCreditId,status:'pending'}:null);
+ if(review){
+  btn.textContent='Pendiente de revisión';btn.disabled=true;
+  $('#selectedPlanMessage').textContent=`Ya tienes una solicitud de capital virtual pendiente de la aprobación del profesor. No debes enviarla nuevamente para este plan.`;
+  btn.onclick=null;return;
+ }
+ btn.disabled=creditSubmissionInFlight;
+ btn.textContent=lack>0?'Solicitar capital ficticio':'Asignar a este plan';
  btn.onclick=()=>lack>0?deposit(lack):planSelect(planName);
 }
 const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
@@ -203,6 +211,10 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
 // Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
 function deposit(presetAmount=100){
+ if(creditSubmissionInFlight || justSubmittedCreditId || creditRequests.some(r=>r.status==='pending')){
+  modal('Solicitud pendiente','<div class="notice"><strong>Ya tienes una solicitud de crédito virtual pendiente.</strong></div><p>Espera la decisión del profesor; no necesitas enviar otra solicitud por el mismo plan.</p>');
+  return;
+ }
  const startAmount=(typeof presetAmount==='number' && Number.isFinite(presetAmount) && presetAmount>=1 && presetAmount<=100000)?presetAmount:100;
  record('deposit_open','Abrió la solicitud de crédito virtual de prueba');
  modal('Solicitar inversión simulada',`
@@ -215,15 +227,18 @@ function deposit(presetAmount=100){
   const raw=$('#amountValue').value,n=num(raw);
   if(!raw.trim()||!Number.isFinite(Number(raw))||n<1||n>100000){err('Introduce una cantidad ficticia entre 1 y 100.000.');return;}
   if(!sessionReady||session.mode!=='cloud'){err('No hay conexión con Firebase. No se ha creado ninguna solicitud ni acreditado saldo.');return;}
-  confirmBtn.disabled=true;
+  if(creditSubmissionInFlight||justSubmittedCreditId||creditRequests.some(r=>r.status==='pending')){err('Ya existe una solicitud pendiente de revisión.');return;}
+  creditSubmissionInFlight=true;confirmBtn.disabled=true;
   try{
-   await requestVirtualCredit(session,n,alias);
+   const requestId=await requestVirtualCredit(session,n,alias);
+   justSubmittedCreditId=requestId;
    record('credit_requested',`Solicitó revisión de ${n.toFixed(2)} USDT virtuales`);
    modal('Pendiente de revisión',`<div class="notice"><strong>${money(n)} ficticios · Pendiente de revisión</strong></div><p>Tu solicitud se ha enviado al panel del profesor. El saldo se acreditará únicamente si la aprueba.</p><p class="tiny">Consulta su estado en el resumen de cuenta. No se realiza ninguna transferencia.</p>`);
   }catch(e){err('No se pudo registrar la solicitud: '+e.message);confirmBtn.disabled=false;}
+  finally{creditSubmissionInFlight=false;showChosenPlanBanner();}
  },'Enviar solicitud');
 }
-let creditRequests=[],withdrawalRequests=[];
+let creditRequests=[],withdrawalRequests=[],creditSubmissionInFlight=false,justSubmittedCreditId='';
 function renderCreditRequests(){
  const box=$('#creditRequestBox');if(!box)return;
  box.replaceChildren();
@@ -239,9 +254,24 @@ function renderCreditRequests(){
   state.textContent=kind;state.className='tag '+(req.status==='pending'?'warn':req.status==='rejected'?'danger':'');
   line.append(amount,state);box.append(line);
  }
+ const approved=rows.filter(r=>r.status==='approved');
+ const approvedAmount=num(approved.reduce((sum,r)=>sum+num(r.amount),0));
+ const summary=document.createElement('p');summary.className='tiny';
+ summary.textContent=`Aprobaciones registradas en Firebase: ${approved.length} · Capital ficticio aprobado: ${money(approvedAmount)}. El saldo de la cuenta también puede incluir movimientos anteriores, asignaciones y bonificaciones simuladas.`;
+ box.append(summary);
+ if(approved.length>1){
+  const amounts=new Map();
+  for(const r of approved){const n=num(r.amount);amounts.set(n,(amounts.get(n)||0)+1);}
+  const repeated=[...amounts].filter(([n,c])=>n>=1&&c>1);
+  if(repeated.length){const warning=document.createElement('p');warning.className='notice';
+   warning.textContent='Hay varias aprobaciones por el mismo importe ('+repeated.map(([n,c])=>c+' × '+money(n)).join(', ')+'). Pide al profesor que compruebe si corresponden a solicitudes distintas o a un duplicado.';
+   box.append(warning);
+  }
+ }
 }
 function onCreditRequests(rows){
  creditRequests=rows;
+ if(justSubmittedCreditId && rows.some(r=>r.id===justSubmittedCreditId))justSubmittedCreditId='';
  let changed=false;
  // V6.1: al actualizar desde V5, las aprobaciones ya estaban acreditadas,
  // pero la fecha inicial del calendario aún no existía en los datos locales.
@@ -270,8 +300,9 @@ function onCreditRequests(rows){
    if(account.withdrawalAnchor!==firstApproval){account.withdrawalAnchor=firstApproval;changed=true;}
   }
  }
- if(changed){save();render();showChosenPlanBanner();void flushContributions();}
+ if(changed){save();render();void flushContributions();}
  renderCreditRequests();
+ showChosenPlanBanner();
 }
 function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');if(sessionStorage.getItem('ic_selected_plan')===plan){sessionStorage.removeItem('ic_selected_plan');showChosenPlanBanner();}modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
 function renderWithdrawalRequests(){

@@ -133,6 +133,13 @@ export async function requestVirtualCredit(session, amount, studentAlias){
  const n=Math.round(Number(amount)*100)/100;
  if(!Number.isFinite(n)||n<1||n>100000)throw new Error('Cantidad ficticia fuera de rango.');
  const {db,Store,uid}=session;
+ // Verificación adicional en servidor. Evita duplicados accidentales entre recargas,
+ // navegadores y solicitudes repetidas mientras hay una revisión pendiente.
+ const pendingQuery=Store.query(Store.collection(db,'virtualCreditRequests'),Store.where('studentUid','==',uid));
+ const current=await Store.getDocs(pendingQuery);
+ if(current.docs.some(d=>d.data()?.status==='pending')){
+  throw new Error('Ya tienes una solicitud de capital ficticio pendiente de aprobación. No la envíes otra vez.');
+ }
  const ref=await Store.addDoc(Store.collection(db,'virtualCreditRequests'),{
   studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
   amount:n,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
