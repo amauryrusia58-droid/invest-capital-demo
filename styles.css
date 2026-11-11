@@ -172,3 +172,39 @@ a:hover{color:#f0d89d}
 .wallet-network{font-size:12px;color:#e0d0eb}
 .asset-amount{text-align:right;margin-left:auto;font-weight:700}.asset-amount small{display:block;font-size:11px;margin-top:5px}
 .form-error{color:#ffc3c3;font-size:12px;margin-top:9px}
+
+/* V3.5 — calculadora de proyecciones e interés diario, diseño negro/morado/dorado */
+.calculator-intro{margin-bottom:22px}
+.calculator-intro .eyebrow{margin:0 0 9px;color:#e7c381}
+.calculator-intro .workspace-title{margin:0 0 8px}
+.calculator-layout{display:grid;grid-template-columns:minmax(280px,.82fr) minmax(340px,1.18fr);gap:18px;align-items:stretch}
+.calculator-inputs,.calculator-results{padding:28px}
+.calculator-inputs .field-label{margin:22px 0 8px}
+.calc-quickdays{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.calc-quickdays button{padding:9px 12px;background:#251832;color:#e3d6ea;border:1px solid #694985;border-radius:9px;font-size:12px;font-weight:700}
+.calc-quickdays button.active{background:#563278;color:#fff;border-color:#c0a0d9}
+.calculator-results{background:radial-gradient(ellipse at 80% 0%,#52326860,transparent 52%),linear-gradient(140deg,#30203e,#150f20 85%);border:1px solid #8864a3}
+.calculator-result-top{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:1.6px;color:#dbcaeb;font-weight:750}
+.calc-label{border:1px solid #9975b5;border-radius:30px;padding:6px 9px;color:#ead59e;font-size:10px;letter-spacing:1px}
+.calc-big{display:block;font-size:clamp(30px,4vw,47px);letter-spacing:-1.8px;font-weight:850;color:#fff;margin:17px 0 23px;font-variant-numeric:tabular-nums}
+.calc-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.calc-detail-grid>div{border:1px solid #614775;border-radius:12px;padding:13px;background:#1b1326}
+.calc-detail-grid small{color:#b9a7ca;font-size:11px;display:block;margin-bottom:8px}
+.calc-detail-grid strong{color:#e9c788;font-size:17px;font-variant-numeric:tabular-nums}
+.calc-figure{height:148px;margin-top:19px}
+.calc-figure svg{width:100%;height:100%}
+.calc-disclaimer{font-size:11px;line-height:1.65;color:#c5b2d2;margin:17px 0 0}
+.calc-cta{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px}
+.calc-cta p{margin:5px 0 0;font-size:12px}
+.calc-cta .btn{flex-shrink:0}
+@media(max-width:920px){.calculator-layout{grid-template-columns:1fr}}
+@media(max-width:580px){.calculator-inputs,.calculator-results{padding:21px}.calc-cta{flex-direction:column;align-items:stretch}.calc-cta .btn{width:100%}.calc-detail-grid strong{font-size:15px}}
+
+/* V3.6: cuatro niveles legibles en escritorio y pantallas pequeñas */
+.plans{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
+.plan-card{min-width:0;display:flex;flex-direction:column}
+.plan-card ul{flex:1}
+.plan-card .rate{font-size:clamp(25px,2.2vw,34px);white-space:nowrap}
+.plan-card .rate span{white-space:normal}
+@media(max-width:1250px){.plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.plans{grid-template-columns:1fr}}
