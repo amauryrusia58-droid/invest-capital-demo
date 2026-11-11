@@ -181,7 +181,7 @@ export async function reviewVirtualCreditRequest(f,requestId,decision){
 export async function requestVirtualWithdrawal(session, amount, studentAlias){
  if(session.mode!=='cloud')throw new Error('Necesitas conexión con Firebase para solicitar el retiro de práctica.');
  const n=Math.round(Number(amount)*100)/100;
- if(!Number.isFinite(n)||n<1||n>100000)throw new Error('Cantidad virtual fuera de rango.');
+ if(!Number.isFinite(n)||n<50||n>100000)throw new Error('El retiro mínimo es de 50 USDT ficticios.');
  const {db,Store,uid}=session;
  const ref=await Store.addDoc(Store.collection(db,'virtualWithdrawalRequests'),{
   studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
@@ -268,4 +268,29 @@ export async function saveVirtualEarningsSummary(session,amounts){
 export function watchAdminVirtualEarningsSummaries(f,onChange,onError){
  const {db,Store}=f;
  return Store.onSnapshot(Store.collection(db,'virtualEarningsSummaries'),snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+
+// V8.7 · Ajuste del profesor sobre una cuenta de alumno del aula.
+// Documento controlado por las reglas de Firestore: sólo profesor escribe;
+// el alumno autenticado sólo puede leer SU propio ejercicio.
+export function watchStudentTeacherSettings(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ return session.Store.onSnapshot(
+  session.Store.doc(session.db,'studentTestOverrides',session.uid),
+  snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0}),onError);
+}
+export function watchAdminTeacherSettings(f,studentUid,onChange,onError){
+ if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Identificador de alumno inválido.');
+ return f.Store.onSnapshot(f.Store.doc(f.db,'studentTestOverrides',studentUid),
+   snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0}),onError);
+}
+export async function setAdminTeacherSettings(f,studentUid,extraDays,bonus){
+ if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Selecciona un alumno válido.');
+ const d=Number(extraDays),b=Number(bonus);
+ if(!Number.isInteger(d)||d<0||d>365)throw new Error('Los días adelantados deben estar entre 0 y 365.');
+ if(!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6)throw new Error('Importe de prueba inválido (máximo 100.000, dos decimales).');
+ const {Store,db}=f;
+ await Store.setDoc(Store.doc(db,'studentTestOverrides',studentUid),{
+  extraDays:d,bonus:b,currency:'USDT-DEMO',updatedBy:ADMIN_EMAIL,updatedAt:Store.serverTimestamp()
+ });
 }

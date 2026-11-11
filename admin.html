@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Administración</title><link rel="stylesheet" href="styles.css?v=83"><style>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Administración</title><link rel="stylesheet" href="styles.css?v=87"><style>
 /* Laboratorio privado del profesor; cambios solo de vista previa local */
 #teacherLab {border:1px solid #8851b8; background:linear-gradient(125deg,#1f1438,#1a112c 62%,#291344);margin-bottom:18px}
 #teacherLab .lab-eyebrow {display:inline-block; color:#d7a9ff;font-weight:800;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
@@ -43,27 +43,20 @@
   <div class="pane" style="margin-bottom:18px" id="approvalSection"><div class="pane-head"><div><h2>Solicitudes antiguas de saldo virtual</h2><p class="muted" id="approvalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo simulación educativa</span></div><div class="admin-approvals" id="creditApprovalList" aria-live="polite"></div><p class="tiny" id="approvalsMessage" aria-live="polite">Aprobar acredita únicamente saldo virtual. No confirma depósitos ni transferencias reales.</p></div>
   <div class="pane" style="margin-bottom:18px" id="withdrawalApprovalSection"><div class="pane-head"><div><h2>Solicitudes de retiro ficticio</h2><p class="muted" id="withdrawalApprovalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo simulación educativa</span></div><div class="admin-approvals" id="withdrawalApprovalList" aria-live="polite"></div><p class="tiny" id="withdrawalApprovalsMessage" aria-live="polite">Aprobar o rechazar actualiza el estado del ejercicio; no se envía dinero.</p></div>
 
-  <section class="pane" id="teacherLab" aria-labelledby="labTitle">
-   <div class="lab-heading"><div><span class="lab-eyebrow">Solo para el profesor · Laboratorio de tiempo</span><h2 id="labTitle">Probar rendimientos y retiros sin esperar 30 días</h2><p class="lab-note">Avanza días del escenario ficticio, comprueba las ganancias y ensaya una aprobación o rechazo. Es una vista previa independiente.</p></div><span class="lab-flag">DEMO · NO SE GUARDA EN FIREBASE</span></div>
-   <div class="lab-fields">
-    <div><label for="labPlan">Plan de práctica</label><select id="labPlan"><option value="Essential">Essential · 100 USDT</option><option value="Advanced">Advanced · 300 USDT</option><option value="Prime">Prime · 500 USDT</option><option value="Magnate Supremo">Magnate Supremo · 1.000 USDT</option><option value="Platinum" selected>Platinum · 1.500 USDT</option><option value="Signature">Signature · 3.000 USDT</option></select><p class="lab-foot" id="labRate">Tasa semanal hipotética</p></div>
-    <div><label for="labReferral">Bonificaciones ficticias disponibles (USDT)</label><input id="labReferral" type="number" value="0" min="0" max="1000000" step="0.01"><p class="lab-foot">Solo para probar el retiro. No modifica los referidos de ningún alumno.</p></div>
-   </div>
-   <label for="labDays">Días transcurridos desde la activación: <span class="lab-day-value" id="labDaysValue">0</span></label>
-   <input id="labDays" type="range" min="0" max="30" step="1" value="0">
-   <div class="lab-days" id="labQuickDays"><button type="button" data-lab-days="0">Día 0</button><button type="button" data-lab-days="1">Día 1</button><button type="button" data-lab-days="7">Día 7</button><button type="button" data-lab-days="15">Día 15</button><button type="button" data-lab-days="29">Día 29</button><button type="button" data-lab-days="30">Día 30</button></div>
-   <div class="lab-stats">
-    <div class="lab-stat"><small>Capital asignado al plan (DEMO)</small><strong id="labCapital">—</strong></div>
-    <div class="lab-stat"><small>Rendimiento acumulado (DEMO)</small><strong id="labProfit">—</strong></div>
-    <div class="lab-stat"><small>Disponible para retirar (DEMO)</small><strong id="labAvailable">—</strong></div>
-    <div class="lab-stat"><small>Días restantes del ciclo</small><strong id="labRemaining">30</strong></div>
-   </div>
-   <svg class="lab-chart" viewBox="0 0 640 180" aria-labelledby="labChartTitle" role="img"><title id="labChartTitle">Rendimiento ficticio acumulado: trayectoria calculada hasta el día de prueba y proyección posterior</title><g stroke="#644878" stroke-width="1"><line x1="26" x2="610" y1="135" y2="135"/><line x1="26" x2="610" y1="72" y2="72"/></g><polyline id="labChartFuture" points="" fill="none" stroke="#9a72d0" stroke-width="3" stroke-dasharray="8 7"/><polyline id="labChartPast" points="" fill="none" stroke="#dfb2ff" stroke-width="4"/><circle id="labChartDot" r="6" fill="#f4d8ff" cx="26" cy="135"/><text x="26" y="164" fill="#d8c7e3" font-size="12">Día 0</text><text x="570" y="164" fill="#d8c7e3" font-size="12">Día 30</text></svg>
-   <p class="lab-foot">Línea continua: días recorridos en la prueba · Línea discontinua: proyección ficticia. Interés simple calculado con la tasa semanal del plan.</p>
-   <div class="lab-tools"><div><label for="labWithdrawAmount">Importe de retiro de prueba (USDT)</label><input id="labWithdrawAmount" type="number" min="1" step="0.01" value="1"></div><button type="button" id="labRequest" class="btn btn-primary">Solicitar retiro de prueba</button><button type="button" id="labReset" class="btn btn-soft">Reiniciar prueba</button></div>
-   <div id="labReview" class="lab-review hidden"><strong id="labPendingText">Solicitud pendiente</strong><button type="button" id="labApprove" class="btn btn-primary">Aprobar (prueba)</button><button type="button" id="labReject" class="btn btn-soft">Rechazar (prueba)</button></div>
-   <p class="lab-notice" id="labNotice" role="status" aria-live="polite">Día 0: no hay rendimiento suficiente para retirar al menos 1 USDT-DEMO.</p>
-   <p class="lab-foot">Este laboratorio no adelanta las fechas de las cuentas de alumnos, no crea solicitudes reales y no cambia saldos ni documentos de Firestore. Para probar el flujo real deberás usar una cuenta de alumno de práctica.</p>
+  <section class="pane" id="teacherLab" aria-labelledby="teacherLabTitle" style="margin-bottom:18px;border:1px solid #8851b8;background:linear-gradient(125deg,#1f1438,#1a112c 62%,#291344)">
+    <div class="pane-head"><div><span class="eyebrow">CONTROLES DOCENTES · CUENTAS DE PRUEBA</span><h2 id="teacherLabTitle">Modificar un alumno de práctica</h2><p class="muted">Los cambios se guardan en Firebase y aparecen al entrar con la cuenta elegida. No crean fondos ni transferencias reales.</p></div><span class="tag warn">Solo simulación</span></div>
+    <label class="field-label" for="teacherStudent">Alumno que vas a modificar</label>
+    <select id="teacherStudent" class="plain-input"><option value="">Cargando cuentas…</option></select>
+    <form id="teacherStudentForm" class="hidden" style="margin-top:14px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+       <label class="field-label">Días adicionales de prueba (0–365)<input id="teacherExtraDays" class="plain-input" type="number" min="0" max="365" step="1" value="0" required></label>
+       <label class="field-label">Ganancia ficticia EXTRA (USDT-DEMO)<input id="teacherBonus" class="plain-input" type="number" min="0" max="100000" step="0.01" value="0" required></label>
+      </div>
+      <p class="tiny">Ejemplo: 7 días y 100 USDT-DEMO. Se sumarán 7 días a los ya transcurridos y 100 de rendimiento de prueba a esta cuenta. Mínimo de retiro: 50 USDT-DEMO.</p>
+      <div class="inline-controls" style="margin-top:12px"><button type="submit" class="btn btn-primary" id="teacherSave">Guardar para este alumno</button><button type="button" class="btn btn-soft" id="teacherReset">Restablecer ajustes</button></div>
+    </form>
+    <p id="teacherSettingsStatus" class="tiny" role="status" aria-live="polite" style="margin-top:10px">Selecciona un alumno para comenzar.</p>
+    <p class="tiny">Ajuste de un escenario académico sobre una cuenta de prueba: no borra solicitudes de retiro antiguas y no constituye saldo verificado ni dinero real.</p>
   </section>
   <div class="admin-grids"><div class="pane"><div class="pane-head"><h2>Alumnos registrados</h2><button class="btn btn-soft" id="refreshAdmin">Actualizar</button></div>
    <p class="tiny">Sesiones identificadas por el nombre o identificador facilitado por cada participante. Se muestran hasta las últimas 200 sesiones.</p>
@@ -78,4 +71,4 @@
   <div class="pane" style="margin-top:18px"><div class="pane-head"><div><h2>Red de compañeros</h2><p class="muted">Relaciones entre sesiones; las bonificaciones mostradas son exclusivamente del ejercicio.</p></div><strong id="linksCount">0 vínculos</strong></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Alumno vinculado</th><th>Nivel 1</th><th>Nivel 2</th><th>Nivel 3</th></tr></thead><tbody id="linksRows"><tr><td colspan="4">Todavía no hay vínculos.</td></tr></tbody></table></div></div>
   <p class="tiny" style="margin-top:25px">Las métricas de eventos son simuladas; no representan dinero real. Los saldos del alumno se guardan localmente en su navegador y no se muestran aquí como balances verificados.</p><p class="tiny" style="margin-top:8px">Invest Capital · Panel del profesor. Los alumnos autorizan registrar su identificador, datos de contacto opcionales y acciones del ejercicio; no se capturan contraseñas, texto libre ni información de pago.</p>
  </section>
-</main><script type="module" src="admin.js?v=86"></script></body></html>
+</main><script type="module" src="admin.js?v=87"></script></body></html>

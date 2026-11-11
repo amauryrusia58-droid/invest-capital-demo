@@ -1,7 +1,7 @@
-import {initTeacherLab} from './teacher-lab.js?v=86';
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries} from './backend.js?v=85';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries,watchAdminTeacherSettings,setAdminTeacherSettings} from './backend.js?v=87';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
+let offTeacherSettings=()=>{},teacherSelectedUid='',teacherSettings={extraDays:0,bonus:0};
 let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},offEarningSummaries=()=>{},earningSummaries={},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
@@ -157,7 +157,7 @@ const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle
 function setError(s){$('#loginError').textContent=s;}
 function teacherReady(f){
  firebase=f;$('#adminGate').classList.add('hidden');$('#adminContent').classList.remove('hidden');$('#logoutAdmin').classList.remove('hidden');
- $('#adminIdentity').textContent=f.auth.currentUser.email;initTeacherLab();watch();
+ $('#adminIdentity').textContent=f.auth.currentUser.email;watch();
 }
 function watch(){
  const {db,Store}=firebase;
@@ -177,7 +177,51 @@ function watch(){
    $$('[data-stage]').forEach(b=>b.classList.toggle('btn-primary',+b.dataset.stage===stage));
  },err=>{$('#scenarioStatus').textContent='No se pudo leer el escenario: '+err.message;});
 }
+// V8.7 · Ajustar los días y ganancias de UNA cuenta de alumno en Firestore.
+function refreshTeacherStudents(){
+ const sel=$('#teacherStudent');if(!sel)return;
+ const previous=sel.value||teacherSelectedUid;
+ sel.replaceChildren(new Option('Selecciona un alumno de prueba',''));
+ for(const s of sessions){sel.add(new Option(`${s.alias||'Alumno'} · ${s.email||s.id.slice(0,10)}`,s.id));}
+ const next=sessions.some(s=>s.id===previous)?previous:'';
+ sel.value=next;
+ if(next!==teacherSelectedUid){teacherSelectedUid=next;loadTeacherStudent();}
+}
+function loadTeacherStudent(){
+ offTeacherSettings();offTeacherSettings=()=>{};
+ const uid=teacherSelectedUid;
+ const form=$('#teacherStudentForm'),status=$('#teacherSettingsStatus');
+ form.classList.toggle('hidden',!uid);
+ if(!uid){status.textContent='Elige una cuenta de prueba para cambiar sus días y ganancias ficticias.';return;}
+ status.textContent='Cargando ajustes de '+studentName(uid)+'…';
+ offTeacherSettings=watchAdminTeacherSettings(firebase,uid,data=>{
+  if(teacherSelectedUid!==uid)return;
+  teacherSettings={extraDays:Number(data.extraDays)||0,bonus:Number(data.bonus)||0};
+  $('#teacherExtraDays').value=String(teacherSettings.extraDays);
+  $('#teacherBonus').value=String(teacherSettings.bonus);
+  status.textContent=`Alumno: ${studentName(uid)} · ${teacherSettings.extraDays} día(s) adelantados y ${money(teacherSettings.bonus)} de ganancia añadida. El alumno recibirá los cambios por Firebase.`;
+ },e=>{status.textContent='Error leyendo ajustes: '+e.message;});
+}
+$('#teacherStudent').addEventListener('change',e=>{teacherSelectedUid=e.target.value;loadTeacherStudent();});
+$('#teacherStudentForm').addEventListener('submit',async e=>{
+ e.preventDefault();const uid=teacherSelectedUid,button=$('#teacherSave');
+ if(!uid)return;
+ const d=Number($('#teacherExtraDays').value), b=Number($('#teacherBonus').value);
+ if(!Number.isInteger(d)||d<0||d>365||!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6){$('#teacherSettingsStatus').textContent='Introduce días enteros entre 0 y 365 y ganancias entre 0 y 100.000 (dos decimales).';return;}
+ button.disabled=true;$('#teacherSettingsStatus').textContent='Guardando en Firebase para '+studentName(uid)+'…';
+ try{await setAdminTeacherSettings(firebase,uid,d,b);$('#teacherSettingsStatus').textContent='Ajustes de práctica guardados. Entra con la cuenta del alumno para verificarlo.';}
+ catch(err){$('#teacherSettingsStatus').textContent='No se pudo guardar: '+err.message;}
+ finally{button.disabled=false;}
+});
+$('#teacherReset').addEventListener('click',async()=>{
+ const uid=teacherSelectedUid;if(!uid)return;
+ if(!confirm('¿Restablecer días y ganancia extra de '+studentName(uid)+'? Los retiros anteriores seguirán en su historial.'))return;
+ $('#teacherExtraDays').value='0';$('#teacherBonus').value='0';
+ try{await setAdminTeacherSettings(firebase,uid,0,0);$('#teacherSettingsStatus').textContent='Ajustes de prueba restablecidos.';}
+ catch(e){$('#teacherSettingsStatus').textContent='No se pudo restablecer: '+e.message;}
+});
 function refreshStudents(){
+ refreshTeacherStudents();
  $('#sessionsCount').textContent=String(sessions.length);
  $('#activeCount').textContent=String(sessions.filter(x=>date(x.lastSeen)&&Date.now()-date(x.lastSeen).getTime()<300000).length);
  // El contador corresponde solo a los eventos cargados del alumno seleccionado.
@@ -216,6 +260,7 @@ function renderLinks(){
 }
 
 function select(uid){
+ if($('#teacherStudent')){$('#teacherStudent').value=uid;teacherSelectedUid=uid;loadTeacherStudent();}
  selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';$('#eventTypeFilter').value='all';
  const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;showSelectedProfile();
  refreshStudents();renderStudentSummary();$('#eventResults').textContent='Cargando eventos…';$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
@@ -258,9 +303,9 @@ $('#loginAdmin').addEventListener('click',async()=>{
  try{teacherReady(await adminLogin());}catch(e){setError('Acceso no autorizado o error de inicio de sesión: '+e.message);}
  finally{b.disabled=false;b.textContent='Acceder con Google';}
 });
-$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
+$('#logoutAdmin').addEventListener('click',async()=>{offTeacherSettings();offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
 (async()=>{
  if(!firebaseEnabled){setError('El seguimiento remoto todavía no está activado. Configura Firebase siguiendo INSTRUCCIONES.md.');return;}
  try{const f=await adminCurrent();if(f)teacherReady(f);}catch(e){setError('No se pudo comprobar la sesión: '+e.message);}
 })();
-window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();});
+window.addEventListener('pagehide',()=>{offTeacherSettings();offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();});
