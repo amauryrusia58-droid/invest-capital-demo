@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital: simulador educativo con seis planes de inversión ficticia, aprobaciones docentes y carteras virtuales. Sin dinero real."><title>Invest Capital · Seis planes de simulación financiera</title><link rel="stylesheet" href="styles.css?v=80"></head>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital: simulador educativo con seis planes de inversión ficticia, aprobaciones docentes y carteras virtuales. Sin dinero real."><title>Invest Capital · Seis planes de simulación financiera</title><link rel="stylesheet" href="styles.css?v=81"></head>
 <body>
 <header class="site-header"><a class="brand" href="index.html" aria-label="Invest Capital inicio"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><nav class="top-nav"><a href="#planes">Planes</a><a href="#plataforma">Plataforma</a><a href="#estrategia">Estrategia</a></nav><div class="header-actions"><button class="btn btn-primary btn-header-register" id="openRegister">Registrarse</button><button class="btn btn-ghost" id="openApp">Acceder <span aria-hidden="true">↗</span></button></div></header>
 <main>
@@ -117,6 +117,15 @@
     <p class="dialog-kicker">INVEST CAPITAL · REGISTRO</p>
     <h2 id="consentTitle">Crear cuenta</h2>
     <p>Crea tus credenciales para acceder al simulador de Invest Capital.</p><p id="selectedPlanReg" class="ic-selected-plan-hint hidden" role="status"></p>
+    <div class="ic-existing-session hidden" id="existingSessionNotice" role="status" aria-live="polite">
+      <strong>Este navegador conserva una sesión iniciada</strong>
+      <p>Cuenta activa: <span id="existingSessionEmail"></span>. Aunque no hayas abierto Invest Capital recientemente, Firebase puede mantener tu sesión anterior en este navegador.</p>
+      <p>Para crear otra cuenta, cierra primero esta sesión. No se borrará la cuenta anterior ni su historial de simulación.</p>
+      <div class="ic-existing-session-actions">
+        <button type="button" id="changeStudentAccount" class="btn btn-soft">Cerrar sesión y registrar otra cuenta</button>
+        <button type="button" id="continueCurrentAccount" class="auth-link hidden">Continuar con mi cuenta</button>
+      </div>
+    </div>
     <div class="registration-fields">
       <div class="registration-field full"><label class="field-label" for="studentName">Nombre y apellidos *</label><input id="studentName" name="studentName" class="text-input" autocomplete="name" required maxlength="60" placeholder="Ej. Ana Pérez"></div>
       <div class="registration-field full"><label class="field-label" for="studentEmail">Correo electrónico *</label><input id="studentEmail" name="studentEmail" class="text-input" autocomplete="email" type="email" required maxlength="120" placeholder="correo@ejemplo.com"></div>
@@ -145,4 +154,4 @@
     <p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
   </form>
 </div>
-<script src="landing.js?v=80" type="module"></script></body></html>
+<script src="landing.js?v=81" type="module"></script></body></html>

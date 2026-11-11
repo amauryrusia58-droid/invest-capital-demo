@@ -22,12 +22,24 @@ function planDestination(){return chosenPublicPlan?'app.html?plan='+encodeURICom
 function clearPlanSelection(){chosenPublicPlan='';sessionStorage.removeItem('ic_selected_plan');updatePlanHint();}
 
 function hideAll(){registerOverlay.classList.add('hidden');loginOverlay.classList.add('hidden');}
+// Firebase Auth conserva la sesión aunque se cierre la pestaña. No cerramos cuentas sin permiso.
+function displayExistingSession(user){
+ const existing=Boolean(user && !user.isAnonymous);
+ $('existingSessionNotice').classList.toggle('hidden',!existing);
+ $('existingSessionEmail').textContent=existing?(user.email||'cuenta activa') : '';
+ const sameAccount=existing && localStorage.getItem('ic_v3_auth_uid')===user.uid && !!localStorage.getItem('ic_v3_alias');
+ $('continueCurrentAccount').classList.toggle('hidden',!sameAccount);
+ if(!busy)$('acceptBtn').disabled=existing;
+ return existing;
+}
 function isLegacy(){return localStorage.getItem('ic_v3_consent')==='yes' && !!localStorage.getItem('ic_v3_alias');}
 async function showRegister(){
- updatePlanHint();hideAll();regError.textContent='';legacyCheckbox.checked=false;legacyRow.classList.add('hidden');registerOverlay.classList.remove('hidden');nameInput.focus();
+ updatePlanHint();hideAll();regError.textContent='';displayExistingSession(null);legacyCheckbox.checked=false;legacyRow.classList.add('hidden');registerOverlay.classList.remove('hidden');nameInput.focus();
  // Solo ofrecemos conservar una cuenta cuando la cuenta anónima está abierta aquí.
  if(!firebaseEnabled)return;
  try{const f=await getFirebase();await f.auth.authStateReady();const u=f.auth.currentUser;
+   if(registerOverlay.classList.contains('hidden'))return;
+   displayExistingSession(u);
    if(u?.isAnonymous && isLegacy()){
      legacyRow.classList.remove('hidden');nameInput.value=localStorage.getItem('ic_v3_alias')||'';
      try{const p=JSON.parse(localStorage.getItem('ic_v3_profile')||'{}');
@@ -43,6 +55,23 @@ for(const card of document.querySelectorAll('[data-public-plan]'))card.addEventL
 $('openApp').addEventListener('click',showLogin);
 $('goLogin').addEventListener('click',showLogin);$('goRegister').addEventListener('click',showRegister);
 $('cancelBtn').addEventListener('click',hideAll);$('cancelLogin').addEventListener('click',hideAll);
+$('continueCurrentAccount').addEventListener('click',()=>{location.href=planDestination();});
+$('changeStudentAccount').addEventListener('click',async()=>{
+ if(busy)return;
+ const button=$('changeStudentAccount');busy=true;button.disabled=true;button.textContent='Cerrando sesión…';regError.textContent='';
+ try{
+  const f=await getFirebase();if(!f)throw new Error('Firebase no está disponible.');
+  await f.auth.authStateReady();
+  if(f.auth.currentUser)await f.Auth.signOut(f.auth);
+  // Borra solo los datos de acceso del navegador, NO las carteras guardadas por UID.
+  for(const key of ['ic_v3_alias','ic_v3_profile','ic_v3_consent','ic_v3_auth_uid'])localStorage.removeItem(key);
+  reg.reset();legacyCheckbox.checked=false;legacyRow.classList.add('hidden');
+  displayExistingSession(null);
+  regError.textContent='Sesión anterior cerrada en este navegador. Ahora puedes crear otra cuenta; el plan elegido se conserva.';
+  nameInput.focus();
+ }catch(e){regError.textContent='No se pudo cerrar la sesión: '+errText(e);}
+ finally{busy=false;button.disabled=false;button.textContent='Cerrar sesión y registrar otra cuenta';$('acceptBtn').disabled=!$('existingSessionNotice').classList.contains('hidden');}
+});
 for(const overlay of [registerOverlay,loginOverlay])overlay.addEventListener('click',e=>{if(e.target===overlay)hideAll();});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')hideAll();});
 function errText(e){
@@ -104,7 +133,7 @@ reg.addEventListener('submit',async e=>{
    const raw=localStorage.getItem(oldKey);
    if(raw&&!localStorage.getItem(newKey))localStorage.setItem(newKey,raw);
   }else{
-   if(current&&!current.isAnonymous)throw new Error('Hay una sesión iniciada. Ciérrala antes de crear otra cuenta o utiliza una ventana privada.');
+   if(current&&!current.isAnonymous){displayExistingSession(current);throw new Error('Esta cuenta sigue iniciada. Pulsa «Cerrar sesión y registrar otra cuenta» antes de continuar.');}
    if(current?.isAnonymous)await f.Auth.signOut(f.auth);
    const created=await f.Auth.createUserWithEmailAndPassword(f.auth,email,password);
    user=created.user;
@@ -115,7 +144,7 @@ reg.addEventListener('submit',async e=>{
   await notifyRegistration(actualName,email,actualReferral);
   location.href=planDestination();
  }catch(e){regError.textContent=errText(e);}
- finally{busy=false;btn.disabled=false;btn.textContent='Crear cuenta';}
+ finally{busy=false;btn.textContent='Crear cuenta';btn.disabled=!$('existingSessionNotice').classList.contains('hidden');}
 });
 login.addEventListener('submit',async e=>{
  e.preventDefault();if(busy)return;loginError.textContent='';
