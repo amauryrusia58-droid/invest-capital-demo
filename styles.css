@@ -380,11 +380,13 @@ html{scroll-behavior:smooth}
 @media(max-width:700px){.ic-board-glow{inset:8% 0}}
 @media(max-width:700px){.ic-home-hero:before{inset:0 0 0 40%}}
 
-/* V8.1 · Aviso explícito de sesión anterior, sin cierres de sesión automáticos. */
-.ic-existing-session{margin:13px 0 19px;padding:16px 17px;border-radius:12px;border:1px solid #956abf;background:linear-gradient(125deg,#382548,#23172f);color:#f7ecff}
-.ic-existing-session strong{display:block;font-size:14px;line-height:1.5;color:#fff}
-.ic-existing-session p{margin:7px 0 0!important;font-size:12px!important;line-height:1.6;color:#d7c6e8!important;overflow-wrap:anywhere}
-.ic-existing-session-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px}
-.ic-existing-session-actions .btn{min-height:43px;text-align:center;white-space:normal}
-.ic-existing-session-actions .auth-link{font-size:12px}
-@media(max-width:520px){.ic-existing-session-actions .btn{width:100%}}
+/* V8.3 · Cartera de práctica; deliberadamente no contiene direcciones blockchain */
+.ic-demo-wallet{margin:14px 0 18px;padding:21px;border:1px solid #8c5fc9;border-radius:17px;background:radial-gradient(circle at 100% 0,rgba(136,72,221,.28),transparent 50%),linear-gradient(140deg,#2e1a45,#110b1c);box-shadow:0 14px 34px #0005;color:#f8efff}
+.ic-wallet-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:24px;color:#ead5ff;font-size:12px;font-weight:800;letter-spacing:.5px}
+.ic-wallet-head b{padding:5px 9px;background:#543579;border:1px solid #9c73d9;border-radius:30px;font-size:11px}
+.ic-demo-wallet>small{display:block;color:#c3afda;font-size:10px;letter-spacing:1.6px}
+.ic-demo-wallet>strong{display:block;margin:6px 0 20px;font-size:13px;letter-spacing:.4px;overflow-wrap:anywhere}
+.ic-wallet-amount{font-size:35px;font-weight:850;letter-spacing:-.8px;color:#fff}
+.ic-wallet-amount small{font-size:11px;color:#d0b1f5;letter-spacing:0}
+.ic-demo-wallet>p{color:#dec7f1!important;margin:9px 0 0!important;font-size:12px!important}
+@media(max-width:460px){.ic-wallet-amount{font-size:30px}.ic-demo-wallet{padding:17px}}

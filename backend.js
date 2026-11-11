@@ -204,3 +204,42 @@ export async function reviewVirtualWithdrawalRequest(f,requestId,decision){
   tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
  });
 }
+
+// V8.3 · Activación de PLAN con USDT DEMO. Nunca se envía dinero ni una transacción blockchain.
+const CLASSROOM_PLAN_AMOUNTS={Essential:100,Advanced:300,Prime:500,'Magnate Supremo':1000,Platinum:1500,Signature:3000};
+export async function requestVirtualPlanActivation(session,plan,studentAlias){
+ if(session.mode!=='cloud')throw new Error('Debes estar conectado a Firebase para este ejercicio.');
+ if(!Object.hasOwn(CLASSROOM_PLAN_AMOUNTS,plan))throw new Error('Plan de práctica no reconocido.');
+ const {db,Store,uid}=session;
+ const q=Store.query(Store.collection(db,'virtualPlanRequests'),Store.where('studentUid','==',uid));
+ const snap=await Store.getDocs(q);
+ if(snap.docs.some(d=>d.data()?.status==='pending'))throw new Error('Ya hay una activación pendiente de revisión.');
+ if(snap.docs.some(d=>d.data()?.status==='approved'&&d.data()?.plan===plan))throw new Error('Este plan ya tiene una activación aprobada. Revisa tu cartera.');
+ const ref=await Store.addDoc(Store.collection(db,'virtualPlanRequests'),{
+  studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
+  plan,amount:CLASSROOM_PLAN_AMOUNTS[plan],currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
+ });
+ return ref.id;
+}
+export function watchVirtualPlanRequests(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store,uid}=session;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualPlanRequests'),Store.where('studentUid','==',uid)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export function watchAdminVirtualPlanRequests(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualPlanRequests'),Store.orderBy('createdAt','desc'),Store.limit(200)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export async function reviewVirtualPlanRequest(f,requestId,decision){
+ if(!['approved','rejected'].includes(decision))throw new Error('Decisión no válida.');
+ if(!/^[A-Za-z0-9]{15,40}$/.test(String(requestId)))throw new Error('Identificador no válido.');
+ const {db,Store}=f,ref=Store.doc(db,'virtualPlanRequests',requestId);
+ await Store.runTransaction(db,async tx=>{
+  const snap=await tx.get(ref);
+  if(!snap.exists())throw new Error('No se encontró la solicitud.');
+  if(snap.data().status!=='pending')throw new Error('La solicitud ya fue revisada.');
+  tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
+ });
+}

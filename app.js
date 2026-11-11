@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests} from './backend.js?v=82';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests} from './backend.js?v=83';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -11,22 +11,19 @@ const publicPlan=plans[planQuery] ? planQuery : (plans[sessionStorage.getItem('i
 if(publicPlan)sessionStorage.setItem('ic_selected_plan',publicPlan);
 function showChosenPlanBanner(){
  const box=$('#selectedPlanBanner');if(!box)return;
- const planName=plans[sessionStorage.getItem('ic_selected_plan')]?sessionStorage.getItem('ic_selected_plan'):'';
- box.classList.toggle('hidden',!planName);if(!planName)return;
- const p=plans[planName];const lack=Math.max(0,num(p.min-account.cash));
- $('#selectedPlanTitle').textContent=planName+' · desde '+money(p.min)+' ficticios';
- $('#selectedPlanMessage').textContent=lack>0?`Primero solicita ${money(lack)} de capital virtual. El profesor debe aprobarlo antes de que puedas asignarlo a tu plan.`:'Ya tienes saldo virtual suficiente para asignar capital a este plan.';
- const btn=$('#selectedPlanAction');
- const review=creditRequests.find(r=>r.status==='pending') || (justSubmittedCreditId?{id:justSubmittedCreditId,status:'pending'}:null);
- if(review){
-  btn.textContent='Pendiente de revisión';btn.disabled=true;
-  $('#selectedPlanMessage').textContent=`Ya tienes una solicitud de capital virtual pendiente de la aprobación del profesor. No debes enviarla nuevamente para este plan.`;
-  btn.onclick=null;return;
- }
- btn.disabled=creditSubmissionInFlight;
- btn.textContent=lack>0?'Solicitar capital ficticio':'Asignar a este plan';
- btn.onclick=()=>lack>0?deposit(lack):planSelect(planName);
+ const name=plans[sessionStorage.getItem('ic_selected_plan')]?sessionStorage.getItem('ic_selected_plan'):'';
+ box.classList.toggle('hidden',!name);if(!name)return;
+ const p=plans[name],btn=$('#selectedPlanAction'),message=$('#selectedPlanMessage');
+ $('#selectedPlanTitle').textContent=`${name} · ${money(p.min)} en USDT ficticios`;
+ const active=account.positions.some(x=>x.plan===name&&remainingPrincipal(x)>0);
+ const pending=planActivationRequests.find(x=>x.plan===name&&x.status==='pending')||(planSubmitId?{plan:name,status:'pending'}:null);
+ const rejected=planActivationRequests.filter(x=>x.plan===name&&x.status==='rejected').length>0;
+ if(active){message.textContent='Este plan está activado en tu cartera de práctica. El importe está asignado únicamente a este plan.';btn.textContent='Plan activo';btn.disabled=true;btn.onclick=null;return;}
+ if(pending){message.textContent='Tu simulación de envío está pendiente de revisión. No se ha acreditado saldo libre ni activado otro plan.';btn.textContent='Pendiente de revisión';btn.disabled=true;btn.onclick=null;return;}
+ message.textContent=`Para activar este plan debes invertir ${money(p.min)} ficticios mediante la cartera de práctica USDT. No se envía dinero real.`+(rejected?' La última solicitud fue rechazada; puedes repetir el ejercicio.':'');
+ btn.textContent=rejected?'Volver a invertir':'Invertir para activar';btn.disabled=planSubmitBusy;btn.onclick=()=>openPlanWallet(name);
 }
+
 const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
 const STORE=storedAuthUid?'ic_v34_uid_'+storedAuthUid:'ic_v34_'+encodeURIComponent((alias+'|'+profile.group).toLowerCase());
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
@@ -58,14 +55,14 @@ function positionProfit(pos){return Math.max(0,num(projected(pos.amount,pos.plan
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
-let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:""};
+let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},activatedPlanRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:""};
 try{
   const raw=JSON.parse(localStorage.getItem(STORE)||'null');
   if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
-    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},activatedPlanRequestIds:raw.activatedPlanRequestIds&&typeof raw.activatedPlanRequestIds==='object'&&!Array.isArray(raw.activatedPlanRequestIds)?raw.activatedPlanRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
   }
 }catch{}
-let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},unsubscribeWithdrawals=()=>{},onConfirm=null;
+let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},unsubscribeWithdrawals=()=>{},unsubscribePlanRequests=()=>{},onConfirm=null;
 let chartProjectionDays=30; // 30D o 90D de proyección, diferenciada de la evolución ya calculada.
 const pendingContributions=account.contributionQueue;
 const referralRates={1:.15,2:.05,3:.03};
@@ -195,12 +192,12 @@ function drawPortfolioChart(pos, invested, profit){
 }
 function render(){const invested=principal(),profit=gain(),value=total(),pos=account.positions.filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
-  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(profit);$('#availableVal').textContent=money(account.cash);$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=stage===3?'Retiros suspendidos':stage===2?'Retiros sujetos a validación':account.cash>0?'Disponible para invertir':'Sin saldo libre';
+  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(profit);$('#availableVal').textContent=money(account.cash);$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=stage===3?'Retiros suspendidos':stage===2?'Retiros sujetos a validación':account.cash>0?'Saldo de práctica anterior · no activa planes':'Sin saldo libre';
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
   $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
   $('#positionRows').innerHTML=pos.length?pos.map(p=>`<tr><td>${esc(p.plan)}</td><td>${money(remainingPrincipal(p))}</td><td>${money(positionProfit(p))}</td><td>${Math.min(elapsedDays(legacyStart(p)),plans[p.plan].weeks*7)}</td><td>${esc(p.date)}</td><td><span class="tag">Activa</span></td></tr>`).join(''):'<tr><td colspan="6">Aún no tienes posiciones.</td></tr>';
-  $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · BEP20</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
+  $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · DEMO</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
   drawPortfolioChart(pos,invested,profit);
   $('#supportStatus').textContent=stage===3?'Servicio limitado: solicitudes de retiro suspendidas.':stage===2?'Volumen elevado de consultas; tiempos de respuesta ampliados.':'Los canales de atención están operativos.';
   $('#refCount').textContent=String(account.referrals.length);$('#refCommission').textContent=money(account.referrals.reduce((sum,r)=>sum+r.commission,0));
@@ -209,6 +206,90 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=acc
   renderWithdrawalRequests();
 }
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
+// V8.3 · Plan seleccionado → cartera ficticia → solicitud → aprobación → posición del plan.
+let planActivationRequests=[],planSubmitBusy=false,planSubmitId='';
+function choosePlan(plan){
+ if(!plans[plan])return;
+ sessionStorage.setItem('ic_selected_plan',plan);
+ setView('planes');showChosenPlanBanner();
+ document.getElementById('selectedPlanBanner')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function openPlanWallet(plan){
+ const cfg=plans[plan];if(!cfg)return;
+ if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){
+  modal('Pendiente de revisión','<div class="notice">Ya tienes una activación de plan pendiente. Espera la decisión del profesor.</div>');return;
+ }
+ if(planActivationRequests.some(r=>r.status==='approved'&&r.plan===plan)){
+  modal('Plan ya aprobado','<p>El profesor ya aprobó este plan de práctica. Comprueba su activación en tu cartera.</p>');return;
+ }
+ record('plan_view',`Seleccionó el plan ${plan} para practicar su activación`,'planes');
+ modal('Cartera USDT ficticia · '+plan,`
+  <div class="ic-demo-wallet" role="group" aria-label="Cartera de simulación sin transacciones reales">
+   <div class="ic-wallet-head"><span>◈ INVEST CAPITAL</span><b>USDT · DEMO</b></div>
+   <small>CUENTA DE DESTINO DEL EJERCICIO</small>
+   <strong>CAR-PRÁCTICA-INVEST-CAPITAL</strong>
+   <div class="ic-wallet-amount">${money(cfg.min)} <small>ficticios</small></div>
+   <p>Plan a activar: <b>${esc(plan)}</b></p>
+  </div>
+  <p>Para activar <strong>${esc(plan)}</strong>, simula el envío de <strong>${money(cfg.min)} USDT</strong> a esta cartera de práctica.</p>
+  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA.</strong> Esta cartera es únicamente un dibujo del ejercicio; no contiene dirección blockchain ni acepta depósitos. No envíes USDT auténticos.</div>
+  <p id="modalError" class="form-error" hidden></p>
+ `,async()=>{
+  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya existe una solicitud pendiente.');return;}
+  if(!sessionReady||session.mode!=='cloud'){err('Se necesita conexión con Firebase para enviar la solicitud de práctica.');return;}
+  planSubmitBusy=true;confirmBtn.disabled=true;
+  try{
+   planSubmitId=await requestVirtualPlanActivation(session,plan,alias);
+   record('plan_requested',`Solicitó activar ${plan} con ${cfg.min.toFixed(2)} USDT DEMO`,'planes');
+   modal('Plan pendiente de revisión',`<div class="notice"><b>${esc(plan)} · ${money(cfg.min)} ficticios</b></div><p>El profesor recibió tu simulación de envío. El plan no estará activo hasta que lo apruebe.</p><p class="tiny">No se ha acreditado saldo libre ni transferido ninguna criptomoneda.</p>`);
+  }catch(e){err('No se pudo registrar: '+e.message);confirmBtn.disabled=false;}
+  finally{planSubmitBusy=false;showChosenPlanBanner();}
+ },`Simular envío de ${money(cfg.min)}`);
+}
+function renderPlanActivationRequests(){
+ const box=$('#planActivationBox');if(!box)return;box.replaceChildren();
+ const h=document.createElement('h2');h.textContent='Activaciones de planes';box.append(h);
+ const tip=document.createElement('p');tip.className='tiny';tip.textContent='Solicitudes de cartera ficticia (USDT DEMO). Solo una aprobación docente activa el plan elegido.';box.append(tip);
+ if(!planActivationRequests.length){const p=document.createElement('p');p.className='muted';p.textContent='Aún no has solicitado activar ningún plan.';box.append(p);return;}
+ const sorted=[...planActivationRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+ for(const r of sorted.slice(0,8)){
+  const line=document.createElement('div');line.className='credit-request-row';
+  const label=document.createElement('strong');label.textContent=`${r.plan} · ${money(r.amount)} DEMO`;
+  const state=document.createElement('span');state.className='tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
+  state.textContent=r.status==='approved'?'Aprobada · plan activado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
+  line.append(label,state);box.append(line);
+ }
+}
+function onPlanActivationRequests(rows){
+ planActivationRequests=rows;
+ if(planSubmitId&&rows.some(r=>r.id===planSubmitId))planSubmitId='';
+ let changed=false;
+ for(const r of rows){
+  if(r.status!=='approved'||account.activatedPlanRequestIds[r.id])continue;
+  const plan=plans[r.plan],amount=num(r.amount);
+  if(!plan||amount!==plan.min)continue;
+  // Cada ID aprobado se aplica una vez. El importe se convierte directamente en
+  // posición del plan indicado y NUNCA pasa por account.cash.
+  account.activatedPlanRequestIds[r.id]=true;
+  const started=timestampMs(r.decisionAt)||timestampMs(r.createdAt)||Date.now();
+  account.positions.push({plan:r.plan,amount,rate:plan.rate,date:new Date(started).toLocaleDateString('es-ES'),openedAt:started,paidProfit:0,principalPaid:0,activationRequestId:r.id});
+  // Mantiene las actividades del ejercicio de referidos, con el mismo ID único.
+  pendingContributions.push({amount,reference:r.id.slice(0,35)});
+  if(!lockAnchor())account.withdrawalAnchor=started;
+  tx('Activación ficticia de plan '+r.plan,amount,'Activa','invest');
+  record('plan_assign',`Activó ${r.plan} con ${amount.toFixed(2)} USDT DEMO tras aprobación`,'planes');
+  changed=true;
+ }
+ if(changed){save();render();void flushContributions();}
+ renderPlanActivationRequests();showChosenPlanBanner();
+}
+// Los controles generales de «Invertir» abren un plan, nunca un saldo genérico.
+function startPlanInvestment(){
+ const selected=sessionStorage.getItem('ic_selected_plan');
+ if(plans[selected]){openPlanWallet(selected);return;}
+ setView('planes');
+ modal('Selecciona un plan','<p>Elige primero un plan en la sección «Planes». Después se abrirá la cartera USDT ficticia de ese plan para simular su activación.</p>');
+}
 // Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
 function deposit(presetAmount=100){
  if(creditSubmissionInFlight || justSubmittedCreditId || creditRequests.some(r=>r.status==='pending')){
@@ -304,7 +385,9 @@ function onCreditRequests(rows){
  renderCreditRequests();
  showChosenPlanBanner();
 }
-function planSelect(plan){const p=plans[plan];if(!p)return;record('plan_view','Consultó plan '+plan,'planes');modal('Seleccionar plan · '+plan,`<p>Rendimiento semanal anunciado: <strong>${(p.rate*100).toLocaleString('es-ES')} %</strong>. Capital mínimo: <strong>${money(p.min)}</strong>.</p><p>Saldo disponible: <strong>${money(account.cash)}</strong></p><label for="amountValue" class="field-label">Capital que deseas asignar (USDT)</label><input id="amountValue" type="number" class="plain-input" min="${p.min}" max="${Math.max(p.min,account.cash)}" step="0.01" value="${Math.max(p.min,Math.min(account.cash,p.min))}"><p id="modalError" class="form-error" hidden></p>${account.cash<p.min?'<p class="modal-note">No tienes saldo suficiente. Primero debes registrar un aporte.</p>':''}`,()=>{const input=Number($('#amountValue').value),n=num(input);if(!Number.isFinite(input)||n<p.min||n>account.cash){err('Introduce un importe válido dentro de tu saldo disponible.');return;}account.cash=num(account.cash-n);account.positions.push({plan,amount:n,rate:p.rate,date:new Date().toLocaleDateString('es-ES'),openedAt:Date.now(),paidProfit:0,principalPaid:0});tx('Asignación a plan '+plan,-n,'Activa','invest');record('plan_assign',`Asignó ${n.toFixed(2)} USDT al plan ${plan}`,'planes');if(sessionStorage.getItem('ic_selected_plan')===plan){sessionStorage.removeItem('ic_selected_plan');showChosenPlanBanner();}modal('Posición abierta',`<p>Has asignado <strong>${money(n)}</strong> al plan ${esc(plan)}.</p><p>La operación ya aparece en tu cartera.</p>`,()=>{close();setView('resumen');},'Ver mi cartera');},'Asignar capital');}
+// No se activa un plan mediante saldo libre. Cada plan necesita su aprobación propia.
+function planSelect(plan){choosePlan(plan);openPlanWallet(plan);}
+
 function renderWithdrawalRequests(){
  const box=$('#withdrawRequestBox');if(!box)return;
  box.replaceChildren();
@@ -484,13 +567,13 @@ $$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.vie
 });
 $$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
 $$('[data-document]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.document;record('document','Consultó '+name,'documentos');modal(name,`<p>${esc(docs[name]||'Documento no disponible.')}</p>`);}));
-$('#sideInvest').addEventListener('click',deposit);$('#actionDeposit').addEventListener('click',deposit);$('#startDeposit').addEventListener('click',deposit);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
+$('#sideInvest').addEventListener('click',startPlanInvestment);$('#actionDeposit').addEventListener('click',startPlanInvestment);$('#startDeposit').addEventListener('click',startPlanInvestment);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
 $('#newReferralActivity').addEventListener('click',referralActivity);
 $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó identificador del programa','referidos');try{await navigator.clipboard.writeText($('#refCode').textContent.trim());modal('Identificador de asociado','Copiado al portapapeles.');}catch{modal('Identificador de asociado',esc($('#refCode').textContent));}});
 $('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();showChosenPlanBanner();
+$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
 (async()=>{
  try{
   session=await studentStart(profile);sessionReady=true;
@@ -499,8 +582,8 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
   record('entry','Entró al panel');await flush();
   if(planQuery && plans[planQuery]){
    setView('planes');showChosenPlanBanner();
-   if(account.cash>=plans[planQuery].min)planSelect(planQuery);
-   else deposit(Math.max(1,num(plans[planQuery].min-account.cash)));
+   // No abrir solicitudes automáticas ni acreditar capital al llegar del registro.
+   // El alumno decide pulsar «Invertir para activar» cuando vea el aviso.
    history.replaceState(null,'',location.pathname);
   }
   unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='Sin conexión';});
@@ -508,6 +591,7 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
     try{await applyClassroomCode(profile.referralCode||'');}
     catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
     unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box){box.textContent='No se pudieron consultar las solicitudes: '+e.message;}});
+    unsubscribePlanRequests=watchVirtualPlanRequests(session,onPlanActivationRequests,e=>{console.error('Error leyendo activaciones',e);const box=$('#planActivationBox');if(box)box.textContent='No se pudieron consultar activaciones: '+e.message;});
     unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,onWithdrawalRequests,e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
     unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{
       console.warn('Error al consultar bonificaciones',e);
@@ -520,4 +604,4 @@ $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';rend
 window.addEventListener('focus',render);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
 window.setInterval(render,60000);
-window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();});
+window.addEventListener('pagehide',()=>{unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();unsubscribePlanRequests();});

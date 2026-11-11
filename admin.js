@@ -1,7 +1,7 @@
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest} from './backend.js';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest} from './backend.js';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
-let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},linksMap={},creditRequests=[],withdrawalRequests=[],stage=0;
+let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
 const knownAmounts=['deposit_confirmed','plan_assign','withdraw_attempt','referral_credit'];
@@ -82,6 +82,39 @@ function renderAdminCreditRequests(){
  }
 }
 
+// V8.3 · Panel de aprobaciones de PLAN: aprobar activa el plan seleccionado,
+// no genera saldo libre. Todo se ejecuta exclusivamente con cantidades demo.
+function renderAdminPlanRequests(){
+ const list=$('#planApprovalList');if(!list)return;list.replaceChildren();
+ const pending=planRequests.filter(r=>r.status==='pending');
+ $('#pendingPlanApprovals').textContent=String(pending.length);
+ $('#planApprovalsSummary').textContent=pending.length?`${pending.length} activación(es) pendiente(s) · En vivo`:'No hay nuevas activaciones pendientes.';
+ const rows=[...planRequests].sort((a,b)=>{
+  if(a.status==='pending'&&b.status!=='pending')return -1;
+  if(b.status==='pending'&&a.status!=='pending')return 1;
+  return (date(b.createdAt)?.getTime()||0)-(date(a.createdAt)?.getTime()||0);
+ }).slice(0,40);
+ if(!rows.length){list.append(addText('p','Todavía no hay activaciones de planes ficticios.','muted'));return;}
+ for(const r of rows){
+  const row=addText('div','','admin-approval-row'),detail=addText('div','','admin-approval-detail');
+  const name=sessions.find(s=>s.id===r.studentUid)?.alias||r.studentAlias||'Alumno';
+  detail.append(addText('strong',name),addText('p',`Plan: ${r.plan} · ${money(r.amount)} DEMO · ${shortDate(r.createdAt)}`,'tiny'));
+  const state=addText('span',r.status==='approved'?'Aprobada · plan activado':r.status==='rejected'?'Rechazada':'Pendiente','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
+  row.append(detail,state);
+  if(r.status==='pending')for(const [decision,label,klass] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
+   const btn=addText('button',label,'btn '+klass);btn.type='button';
+   btn.addEventListener('click',async()=>{
+    if(!window.confirm(`¿${decision==='approved'?'Activar':'Rechazar'} el plan ${r.plan} (${money(r.amount)} DEMO) para ${name}? No se mueve dinero real.`))return;
+    row.querySelectorAll('button').forEach(x=>x.disabled=true);
+    $('#planApprovalsMessage').textContent='Guardando decisión…';
+    try{await reviewVirtualPlanRequest(firebase,r.id,decision);$('#planApprovalsMessage').textContent='Decisión guardada; el alumno verá la activación o el rechazo en su panel.';}
+    catch(e){$('#planApprovalsMessage').textContent='Error: '+e.message;row.querySelectorAll('button').forEach(x=>x.disabled=false);}
+   });row.append(btn);
+  }
+  list.append(row);
+ }
+}
+
 // V6 · Las solicitudes de retiro se reciben por Firestore y sólo el administrador puede decidir.
 function renderAdminWithdrawalRequests(){
  const list=$('#withdrawalApprovalList');list.replaceChildren();
@@ -123,8 +156,9 @@ function teacherReady(f){
 }
 function watch(){
  const {db,Store}=firebase;
- offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();
+ offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();
     offCreditRequests=watchAdminVirtualCreditRequests(firebase,rows=>{creditRequests=rows;renderAdminCreditRequests();},e=>{$('#approvalsMessage').textContent='Error de permisos o conexión al leer solicitudes: '+e.message;});
+    offPlanRequests=watchAdminVirtualPlanRequests(firebase,rows=>{planRequests=rows;renderAdminPlanRequests();},e=>{$('#planApprovalsMessage').textContent='No se pudieron leer activaciones: '+e.message;});
  offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros ficticios: '+e.message;});
  offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
@@ -218,9 +252,9 @@ $('#loginAdmin').addEventListener('click',async()=>{
  try{teacherReady(await adminLogin());}catch(e){setError('Acceso no autorizado o error de inicio de sesión: '+e.message);}
  finally{b.disabled=false;b.textContent='Acceder con Google';}
 });
-$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
+$('#logoutAdmin').addEventListener('click',async()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
 (async()=>{
  if(!firebaseEnabled){setError('El seguimiento remoto todavía no está activado. Configura Firebase siguiendo INSTRUCCIONES.md.');return;}
  try{const f=await adminCurrent();if(f)teacherReady(f);}catch(e){setError('No se pudo comprobar la sesión: '+e.message);}
 })();
-window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();});
+window.addEventListener('pagehide',()=>{offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();});
