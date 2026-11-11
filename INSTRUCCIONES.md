@@ -71,3 +71,15 @@ No se envían al servicio externo contraseñas, movimientos financieros ni datos
 - La calculadora y los planes tienen los mismos porcentajes. Las posiciones ya abiertas que almacenaban una tasa conservan su tasa original, mientras que los nuevos planes usan las tasas V3.6.
 - Tasas exageradas a propósito para el análisis crítico de esquemas Ponzi. Todos los saldos y rendimientos son hipotéticos y no respaldados por inversiones.
 - La cartera de depósito sigue siendo `IC-DEMO-BEP20-001`, que no es una dirección BEP20 válida. No se habilitan transferencias.
+
+
+## V3.7 — Retiro mensual y bonificaciones por referidos
+
+- La primera aportación virtual inicia un calendario de **30 días**. Se habilita una ventana de solicitud de **24 horas** cada 30 días (no por semana). La página muestra cuántos días faltan y se actualiza al volver a abrirla.
+- Para las ganancias de una posición se exige que hayan pasado al menos 30 días desde su apertura; el capital de una posición sigue bloqueado hasta el fin de las semanas del plan.
+- Durante la ventana se puede solicitar una sola vez: primero se consume saldo libre, después ganancias elegibles y finalmente capital de planes vencidos. Un retiro descontado no se puede repetir porque se guardan `paidProfit` y `principalPaid`.
+- Cuando el profesor active el escenario `Suspendido`, el botón sigue mostrando el bloqueo y no permite registrar solicitudes.
+- Programa de asociados: nivel 1 = 15 %, nivel 2 = 5 %, nivel 3 = 3 % del importe virtual registrado. El apartado **Referidos → Registrar operación** permite modelar casos para una red ficticia y acredita la bonificación **solo en el saldo de práctica**.
+- **Importante:** no se realizan invitaciones reales ni se cruzan automáticamente cuentas de alumnos de distintos dispositivos: esa capacidad requeriría una implementación servidor verificable, no solo GitHub Pages. El panel del profesor solo verá registros de actividad remota si Firebase se configura; no guarda automáticamente saldos financieros compartidos.
+- Sigue prohibido recibir fondos reales, introducir carteras válidas para transferencias o prometer pagos efectivos. El registro informa de la naturaleza educativa al entrar.
+- **Pruebas manuales sugeridas**: registra 100 USDT de práctica, asígnalos a Essential, pulsa Retirar (debe informar 30 días). En Referidos crea una operación de nivel 1 por 100 USDT (debe añadir 15 al saldo). Verifica otra de nivel 2 por 100 (5) y una de nivel 3 por 100 (3). Revisa la tabla y las cifras de la cuenta.
