@@ -380,13 +380,18 @@ html{scroll-behavior:smooth}
 @media(max-width:700px){.ic-board-glow{inset:8% 0}}
 @media(max-width:700px){.ic-home-hero:before{inset:0 0 0 40%}}
 
-/* V8.3 · Cartera de práctica; deliberadamente no contiene direcciones blockchain */
-.ic-demo-wallet{margin:14px 0 18px;padding:21px;border:1px solid #8c5fc9;border-radius:17px;background:radial-gradient(circle at 100% 0,rgba(136,72,221,.28),transparent 50%),linear-gradient(140deg,#2e1a45,#110b1c);box-shadow:0 14px 34px #0005;color:#f8efff}
-.ic-wallet-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:24px;color:#ead5ff;font-size:12px;font-weight:800;letter-spacing:.5px}
-.ic-wallet-head b{padding:5px 9px;background:#543579;border:1px solid #9c73d9;border-radius:30px;font-size:11px}
-.ic-demo-wallet>small{display:block;color:#c3afda;font-size:10px;letter-spacing:1.6px}
-.ic-demo-wallet>strong{display:block;margin:6px 0 20px;font-size:13px;letter-spacing:.4px;overflow-wrap:anywhere}
-.ic-wallet-amount{font-size:35px;font-weight:850;letter-spacing:-.8px;color:#fff}
-.ic-wallet-amount small{font-size:11px;color:#d0b1f5;letter-spacing:0}
-.ic-demo-wallet>p{color:#dec7f1!important;margin:9px 0 0!important;font-size:12px!important}
-@media(max-width:460px){.ic-wallet-amount{font-size:30px}.ic-demo-wallet{padding:17px}}
+
+/* V9.8: Tres banners animados independientes en la portada */
+.ic-market-visual{margin-top:clamp(10px,2vw,24px);margin-bottom:clamp(24px,4vw,54px);display:flex;flex-direction:column;gap:8px;}
+.ic-market-caption{display:flex;align-items:center;flex-wrap:wrap;gap:10px;color:#e7d5ff;font-size:11px;font-weight:800;letter-spacing:.13em;padding:7px 7px 4px;}
+.ic-market-caption-note{font-size:11px;font-weight:500;letter-spacing:0;color:#b7a9cf;margin-left:auto;}
+.ic-market-dot{width:7px;height:7px;border-radius:50%;background:#9c71f0;box-shadow:0 0 12px #ad82ff;flex:none;}
+.ic-mining-caption{margin-top:6px;}
+.ic-market-banner{overflow:hidden;border-radius:18px;border:1px solid rgba(165,115,241,.35);background:#100a20;box-shadow:0 10px 30px rgba(27,8,65,.25);}
+.ic-market-banner img{display:block;width:100%;height:auto;object-fit:cover;}
+.ic-candles-banner img{aspect-ratio:716/188;}
+.ic-mining-banner img{aspect-ratio:716/116;}
+.ic-crypto-strip{border-radius:12px; margin-top:4px;}
+.ic-crypto-strip img{aspect-ratio:716/51;}
+@media (max-width:650px){.ic-market-visual{gap:6px;margin-top:8px;margin-bottom:26px}.ic-market-caption{font-size:10px;line-height:1.5}.ic-market-caption-note{margin-left:0;width:100%;font-size:10px}.ic-market-banner{border-radius:12px}.ic-candles-banner img{min-height:130px;object-fit:cover}.ic-mining-banner img{min-height:92px;object-fit:cover}.ic-crypto-strip img{min-height:42px;object-fit:cover}}
+@media(prefers-reduced-motion:reduce){.ic-market-banner img{animation:none;}}
