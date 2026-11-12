@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=88';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=90';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -89,13 +89,22 @@ function syncTeacherPosition(){
 }
 const MIN_WITHDRAW_DEMO=50;
 let unsubscribeTeacherSettings=()=>{};
-let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},activatedPlanRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:"",referralPaid:0,teacherBonusPaid:0};
+let account={cash:0,positions:[],ledger:[],seq:0,withdrawalAnchor:0,lastWithdrawalCycle:-1,referrals:[],referralCreditedIds:{},approvedRequestIds:{},activatedPlanRequestIds:{},contributionQueue:[],reviewedWithdrawalIds:{},pendingWithdrawalRequestId:"",referralPaid:0,teacherBonusPaid:0,approvedWithdrawalReceipts:{},withdrawalLocalFloor:0};
 try{
   const raw=JSON.parse(localStorage.getItem(STORE)||'null');
   if(raw&&Number.isFinite(raw.cash)&&Array.isArray(raw.positions)&&Array.isArray(raw.ledger)){
-    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},activatedPlanRequestIds:raw.activatedPlanRequestIds&&typeof raw.activatedPlanRequestIds==='object'&&!Array.isArray(raw.activatedPlanRequestIds)?raw.activatedPlanRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",referralPaid:Math.max(0,num(raw.referralPaid||0)),teacherBonusPaid:Math.max(0,num(raw.teacherBonusPaid||0)),contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[]};
+    account={cash:Math.max(0,num(raw.cash)),positions:raw.positions.filter(p=>plans[p.plan]&&Number.isFinite(p.amount)&&p.amount>0).slice(0,60).map(p=>({...p,paidProfit:Math.max(0,num(p.paidProfit||0)),principalPaid:Math.min(p.amount,Math.max(0,num(p.principalPaid||0)))})),ledger:raw.ledger.filter(r=>typeof r.name==='string'&&Number.isFinite(r.amount)).slice(0,100),seq:Number(raw.seq)||0,withdrawalAnchor:Number(raw.withdrawalAnchor)||0,lastWithdrawalCycle:Number.isInteger(raw.lastWithdrawalCycle)?raw.lastWithdrawalCycle:-1,referrals:Array.isArray(raw.referrals)?raw.referrals.filter(r=>[1,2,3].includes(r.level)&&Number.isFinite(r.amount)&&Number.isFinite(r.commission)).slice(0,100):[],referralCreditedIds:raw.referralCreditedIds&&typeof raw.referralCreditedIds==='object'&&!Array.isArray(raw.referralCreditedIds)?raw.referralCreditedIds:{},approvedRequestIds:raw.approvedRequestIds&&typeof raw.approvedRequestIds==='object'&&!Array.isArray(raw.approvedRequestIds)?raw.approvedRequestIds:{},activatedPlanRequestIds:raw.activatedPlanRequestIds&&typeof raw.activatedPlanRequestIds==='object'&&!Array.isArray(raw.activatedPlanRequestIds)?raw.activatedPlanRequestIds:{},reviewedWithdrawalIds:raw.reviewedWithdrawalIds&&typeof raw.reviewedWithdrawalIds==='object'&&!Array.isArray(raw.reviewedWithdrawalIds)?raw.reviewedWithdrawalIds:{},pendingWithdrawalRequestId:typeof raw.pendingWithdrawalRequestId==='string'?raw.pendingWithdrawalRequestId:"",referralPaid:Math.max(0,num(raw.referralPaid||0)),teacherBonusPaid:Math.max(0,num(raw.teacherBonusPaid||0)),contributionQueue:Array.isArray(raw.contributionQueue)?raw.contributionQueue.filter(p=>Number.isFinite(p.amount)&&p.amount>=1&&typeof p.reference==='string').slice(0,100):[],approvedWithdrawalReceipts:raw.approvedWithdrawalReceipts&&typeof raw.approvedWithdrawalReceipts==='object'&&!Array.isArray(raw.approvedWithdrawalReceipts)?raw.approvedWithdrawalReceipts:{},withdrawalLocalFloor:Math.max(0,num(raw.withdrawalLocalFloor||0))};
   }
 }catch{}
+// Migración conservadora: la V8.9 guardó recibos de retiros aprobados
+// como movimientos negativos en este navegador. Protegerlos ante recargas
+// si un snapshot temporal de Firestore no contiene los documentos anteriores.
+const priorApprovedIds=Object.values(account.reviewedWithdrawalIds||{}).filter(v=>v==='approved').length;
+if(priorApprovedIds){
+ const historicalPaid=num((account.ledger||[]).filter(x=>x.kind==='withdraw'&&x.status==='Aprobado'&&Number(x.amount)<0)
+  .reduce((sum,x)=>sum-Math.min(0,Number(x.amount)||0),0));
+ account.withdrawalLocalFloor=Math.max(0,num(account.withdrawalLocalFloor||0),historicalPaid);
+}
 let view='resumen',stage=0,session={mode:'local'},sessionReady=false,sending=false,unsubscribe=()=>{},unsubscribeRewards=()=>{},unsubscribeCredits=()=>{},unsubscribeWithdrawals=()=>{},unsubscribePlanRequests=()=>{},onConfirm=null;
 let chartProjectionDays=30; // 30D o 90D de proyección, diferenciada de la evolución ya calculada.
 const pendingContributions=account.contributionQueue;
@@ -133,22 +142,44 @@ function principal(){return num(activePositions().reduce((s,p)=>s+remainingPrinc
 // Un retiro aprobado se descuenta SIEMPRE en el cálculo, nunca sólo de localStorage.
 // Si falta conectar con Firebase no se habilitan retiros nuevos ni se muestran
 // ganancias disponibles hasta conocer el historial completo.
-let withdrawalHistoryReady=false,teacherSettingsReady=false;
-function earningsSynced(){return withdrawalHistoryReady&&teacherSettingsReady;}
-function approvedWithdrawalTotal(upToDay=null){
- if(!earningsSynced())return 0;
- const seen=new Set();let total=0;
- for(const r of withdrawalRequests){
-  if(!r||r.status!=='approved'||!r.id||seen.has(r.id))continue;
-  if(upToDay!==null){
-   const time=timestampMs(r.decisionAt)||timestampMs(r.createdAt);
-   if(!time||calendarDay(time)>upToDay)continue;
-  }
-  const amount=Number(r.amount);
-  if(!Number.isFinite(amount)||amount<0||amount>100000)continue;
-  seen.add(r.id);total+=amount;
+let withdrawalHistoryReady=false,teacherSettingsReady=false,withdrawalAuditConflict=false;
+function earningsSynced(){return withdrawalHistoryReady&&teacherSettingsReady&&!withdrawalAuditConflict;}
+// Fuente principal: los documentos de retiros aprobados en Firestore.
+// Copia de seguridad: recibos confirmados y movimientos históricos de ESTE
+// usuario en su navegador. Nunca suma dos veces el mismo identificador.
+function withdrawalReceiptMap(){
+ const found=new Map();
+ for(const [id,receipt] of Object.entries(account.approvedWithdrawalReceipts||{})){
+  if(!/^[A-Za-z0-9_-]{10,128}$/.test(id))continue;
+  const amount=Number(receipt?.amount);
+  if(Number.isFinite(amount)&&amount>=MIN_WITHDRAW_DEMO&&amount<=100000)
+   found.set(id,{amount,when:Number(receipt?.when)||0,origin:'saved'});
  }
+ for(const r of withdrawalRequests){
+  if(!r||r.status!=='approved'||!r.id)continue;
+  const amount=Number(r.amount);
+  if(!Number.isFinite(amount)||amount<MIN_WITHDRAW_DEMO||amount>100000)continue;
+  found.set(r.id,{amount,when:timestampMs(r.decisionAt)||timestampMs(r.createdAt)||0,origin:'firebase'});
+ }
+ return found;
+}
+function approvedWithdrawalTotal(upToDay=null){
+ let total=0;
+ for(const r of withdrawalReceiptMap().values()){
+  if(upToDay!==null&&(!r.when||calendarDay(r.when)>upToDay))continue;
+  total+=r.amount;
+ }
+ // V8.9 guardaba algunos retiros sólo como movimientos, sin ID. El piso
+ // local se usa exclusivamente para el balance ACTUAL y no para la gráfica.
+ if(upToDay===null)return num(Math.max(total,Number(account.withdrawalLocalFloor)||0));
  return num(total);
+}
+function withdrawalAuditStatus(){
+ if(!withdrawalHistoryReady||!teacherSettingsReady)return 'Comprobando con Firebase el historial de retiros aprobados…';
+ if(withdrawalAuditConflict)return 'Revisión necesaria: hay retiros aprobados guardados en esta cuenta que no aparecen en la consulta actual de Firebase. Se bloquean nuevos retiros para evitar duplicados.';
+ const approved=withdrawalRequests.filter(r=>r.status==='approved');
+ const paid=approvedWithdrawalTotal();
+ return `Retiros aprobados descontados: ${approved.length} registrado(s) en Firebase · ${money(paid)} en total. Ganancias disponibles ahora: ${money(withdrawable())}.`;
 }
 function earningsLedger(upToDay=null){
  const paid=approvedWithdrawalTotal(upToDay);
@@ -323,7 +354,7 @@ function drawPortfolioChart(pos, invested, profit){
 }
 function render(){const invested=principal(),profit=gain(),value=total(),pos=activePositions().filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
-  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(grossYield());$('#availableVal').textContent=money(withdrawable());$('#earningYield').textContent=money(gain());$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';
+  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(grossYield());$('#availableVal').textContent=money(withdrawable());$('#earningYield').textContent=money(gain());$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
   $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
@@ -546,8 +577,27 @@ function renderWithdrawalRequests(){
 // El descuento confirmado se deriva siempre de las solicitudes aprobadas en Firebase.
 function onWithdrawalRequests(rows){
  withdrawalRequests=rows;
- if(!earningsSynced()){render();return;}
  let changed=false;
+ // La aprobación se conserva POR ID. Esto impide que una recarga borre el
+ // descuento si llega un snapshot incompleto o de una cuenta equivocada.
+ for(const r of rows){
+  if(r.status!=='approved'||!r.id)continue;
+  const amount=Number(r.amount);
+  if(!Number.isFinite(amount)||amount<MIN_WITHDRAW_DEMO||amount>100000)continue;
+  const when=timestampMs(r.decisionAt)||timestampMs(r.createdAt)||0;
+  const old=account.approvedWithdrawalReceipts[r.id];
+  if(!old||Number(old.amount)!==amount||(!Number(old.when)&&when)){
+   account.approvedWithdrawalReceipts[r.id]={amount,when};changed=true;
+  }
+ }
+ // Una vez recibido un snapshot confirmado por servidor, ningún retiro
+ // aprobado local puede desaparecer silenciosamente. Si falta un ID, no se
+ // permiten solicitudes nuevas hasta comprobar el UID y los datos en Firebase.
+ const remoteIds=new Set(rows.filter(r=>r.status==='approved').map(r=>r.id));
+ withdrawalAuditConflict=withdrawalHistoryReady&&
+  Object.keys(account.approvedWithdrawalReceipts||{}).some(id=>!remoteIds.has(id));
+ if(changed)save();
+ if(!earningsSynced()){render();return;}
  for(const r of [...rows].sort((a,b)=>(timestampMs(a.decisionAt)||0)-(timestampMs(b.decisionAt)||0))){
   if(!['approved','rejected'].includes(r.status)||account.reviewedWithdrawalIds[r.id])continue;
   const when=timestampMs(r.decisionAt)||Date.now();
@@ -578,7 +628,7 @@ function onWithdrawalRequests(rows){
 function withdrawal(){
  record('withdraw_open','Consultó retiro ficticio de ganancias','movimientos');
  const w=withdrawalStatus();
- if(!earningsSynced()){modal('Sincronizando ganancias','<p>Estamos comprobando en Firebase tus retiros aprobados y los ajustes del profesor. Vuelve a intentar cuando termine la conexión.</p>');return;}
+ if(!earningsSynced()){modal('Retiro no disponible',`<p>${esc(withdrawalAuditStatus())}</p><p>Para evitar un retiro ficticio duplicado, no se pueden crear solicitudes hasta completar la comprobación.</p>`);return;}
  if(hasPendingWithdrawal()){
   modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro ficticio pendiente. El profesor recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
  }
