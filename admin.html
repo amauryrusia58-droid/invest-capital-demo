@@ -32,7 +32,7 @@
 #teacherLab .lab-foot{margin-top:11px;font-size:.78rem;color:#dccae9}
 @media (max-width:780px){#teacherLab .lab-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#teacherLab .lab-fields{grid-template-columns:1fr}}
 
-/* V9.4 — verde únicamente para retiros ficticios aprobados; demás estados intactos. */
+/* V9.4 — verde únicamente para retiros de práctica aprobados; demás estados intactos. */
 .tag.ic-withdrawal-approved {
   display: inline-flex;
   align-items: center;
@@ -44,17 +44,30 @@
   padding: 5px 11px;
   box-shadow: 0 0 0 1px rgba(72,223,160,.12);
 }
+
+/* V9.6 — Activación de plan en azul; retiro aprobado permanece verde. */
+.tag.ic-plan-activated {
+  display: inline-flex;
+  align-items: center;
+  color: #e1efff !important;
+  background: #27457f !important;
+  border: 1px solid #79adff !important;
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 5px 11px;
+  box-shadow: 0 0 0 1px rgba(121,173,255,.13);
+}
 </style></head>
 <body><main class="admin-layout">
  <header class="admin-header"><div><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><p class="tiny">CONSOLA DE SEGUIMIENTO · ACCESO RESTRINGIDO</p></div><div class="inline-controls"><span id="adminIdentity" class="tiny">No conectado</span><button class="btn btn-soft hidden" id="logoutAdmin">Salir</button><a class="btn btn-soft" href="index.html">Ir a portada</a></div></header>
  <section id="adminGate" class="pane" style="max-width:630px;margin:45px auto"><div class="eyebrow">ADMINISTRACIÓN</div><h1>Acceso del docente</h1><p class="muted">Entra utilizando la cuenta de Google autorizada. Las acciones se muestran por alumno, sin contraseñas ni datos financieros.</p><button class="btn btn-primary btn-large" id="loginAdmin">Acceder con Google</button><p class="form-error" id="loginError" aria-live="polite"></p><p class="tiny">Si esta instalación todavía no tiene configurado Firebase, consulta el archivo INSTRUCCIONES.md.</p></section>
  <section id="adminContent" class="hidden">
   <div class="pane-head"><div><h1>Panel de seguimiento</h1><p class="muted">Actividad de la clase y control de situaciones financieras</p></div><span id="connectionBadge" class="tag">Conectando…</span></div>
-  <div class="admin-kpis"><div class="stat"><small>Sesiones registradas</small><strong id="sessionsCount">0</strong></div><div class="stat"><small>Actividad reciente (5 min)</small><strong id="activeCount">0</strong></div><div class="stat"><small>Solicitudes de retiro del alumno seleccionado</small><strong id="withdrawCount">0</strong></div><div class="stat"><small>Situación del escenario</small><strong id="scenarioLabel" style="font-size:18px">Normal</strong></div><div class="stat" style="display:none"><small>Solicitudes antiguas (archivo)</small><strong id="pendingApprovals">0</strong></div><div class="stat"><small>Inversiones para activar planes pendientes</small><strong id="pendingPlanApprovals">0</strong></div><div class="stat"><small>Retiros ficticios pendientes</small><strong id="pendingWithdrawals">0</strong></div></div>
+  <div class="admin-kpis"><div class="stat"><small>Sesiones registradas</small><strong id="sessionsCount">0</strong></div><div class="stat"><small>Actividad reciente (5 min)</small><strong id="activeCount">0</strong></div><div class="stat"><small>Solicitudes de retiro del alumno seleccionado</small><strong id="withdrawCount">0</strong></div><div class="stat"><small>Situación del escenario</small><strong id="scenarioLabel" style="font-size:18px">Normal</strong></div><div class="stat" style="display:none"><small>Solicitudes antiguas (archivo)</small><strong id="pendingApprovals">0</strong></div><div class="stat"><small>Inversiones para activar planes pendientes</small><strong id="pendingPlanApprovals">0</strong></div><div class="stat"><small>Retiros de práctica pendientes</small><strong id="pendingWithdrawals">0</strong></div></div>
   <div class="pane" style="margin-bottom:18px"><div class="pane-head"><div><h2>Control de escenario</h2><p class="muted">Elige la situación que verá toda la clase al actualizarse el panel.</p></div></div><div class="inline-controls" id="scenarioButtons"><button class="btn btn-soft" data-stage="0">01 · Operación habitual</button><button class="btn btn-soft" data-stage="1">02 · Rendimientos al alza</button><button class="btn btn-soft" data-stage="2">03 · Demoras en retiros</button><button class="btn btn-soft" data-stage="3">04 · Retiros suspendidos</button></div><p class="tiny" id="scenarioStatus" aria-live="polite"></p></div>
-  <div class="pane" style="margin-bottom:18px" id="planApprovalSection"><div class="pane-head"><div><h2>Solicitudes de inversión para activar planes · USDT ficticia</h2><p class="muted" id="planApprovalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo práctica · sin transacciones reales</span></div><div class="admin-approvals" id="planApprovalList" aria-live="polite"></div><p class="tiny" id="planApprovalsMessage">Seleccionar un plan no avisa al profesor. Aquí aparece una solicitud únicamente cuando el alumno confirma la inversión ficticia.</p></div>
+  <div class="pane" style="margin-bottom:18px" id="planApprovalSection"><div class="pane-head"><div><h2>Solicitudes de inversión para activar planes · USDT de práctica</h2><p class="muted" id="planApprovalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo práctica · sin transacciones reales</span></div><div class="admin-approvals" id="planApprovalList" aria-live="polite"></div><p class="tiny" id="planApprovalsMessage">Seleccionar un plan no avisa al profesor. Aquí aparece una solicitud únicamente cuando el alumno confirma la inversión de práctica.</p></div>
   <details class="pane" style="margin-bottom:18px" id="approvalSection"><summary>Archivo de solicitudes antiguas de saldo libre (ya no se usa para activar planes)</summary><div class="pane-head"><div><h2>Solicitudes antiguas de saldo virtual</h2><p class="muted" id="approvalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo simulación educativa</span></div><div class="admin-approvals" id="creditApprovalList" aria-live="polite"></div><p class="tiny" id="approvalsMessage" aria-live="polite">Apartado histórico: las activaciones nuevas se aprueban solamente en la sección superior. No confirma depósitos ni transferencias reales.</p></details>
-  <div class="pane" style="margin-bottom:18px" id="withdrawalApprovalSection"><div class="pane-head"><div><h2>Solicitudes de retiro ficticio</h2><p class="muted" id="withdrawalApprovalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo simulación educativa</span></div><div class="admin-approvals" id="withdrawalApprovalList" aria-live="polite"></div><p class="tiny" id="withdrawalApprovalsMessage" aria-live="polite">Aprobar o rechazar actualiza el estado del ejercicio; no se envía dinero.</p></div>
+  <div class="pane" style="margin-bottom:18px" id="withdrawalApprovalSection"><div class="pane-head"><div><h2>Solicitudes de retiro de práctica</h2><p class="muted" id="withdrawalApprovalsSummary">Esperando solicitudes…</p></div><span class="tag warn">Solo simulación educativa</span></div><div class="admin-approvals" id="withdrawalApprovalList" aria-live="polite"></div><p class="tiny" id="withdrawalApprovalsMessage" aria-live="polite">Aprobar o rechazar actualiza el estado del ejercicio; no se envía dinero.</p></div>
 
   <section class="pane" id="teacherLab" aria-labelledby="teacherLabTitle" style="margin-bottom:18px;border:1px solid #8851b8;background:linear-gradient(125deg,#1f1438,#1a112c 62%,#291344)">
     <div class="pane-head"><div><span class="eyebrow">CONTROLES DOCENTES · CUENTAS DE PRUEBA</span><h2 id="teacherLabTitle">Modificar un alumno de práctica</h2><p class="muted">Los cambios se guardan en Firebase y aparecen al entrar con la cuenta elegida. No crean fondos ni transferencias reales.</p></div><span class="tag warn">Solo simulación</span></div>
@@ -76,7 +89,7 @@
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
        <label class="field-label">Días adicionales de prueba (0–365)<input id="teacherExtraDays" class="plain-input" type="number" min="0" max="365" step="1" value="0" required></label>
-       <label class="field-label">Ganancia ficticia EXTRA (USDT-DEMO)<input id="teacherBonus" class="plain-input" type="number" min="0" max="100000" step="0.01" value="0" required></label>
+       <label class="field-label">Ganancia de práctica EXTRA (USDT-DEMO)<input id="teacherBonus" class="plain-input" type="number" min="0" max="100000" step="0.01" value="0" required></label>
       </div>
       <p class="tiny">Ejemplo: 7 días y 100 USDT-DEMO. Se sumarán 7 días al ciclo del plan elegido y 100 USDT a las ganancias de prueba; los retiros previamente aprobados continúan descontándose. Mínimo de retiro: 50 USDT-DEMO.</p>
       <div class="inline-controls" style="margin-top:12px"><button type="submit" class="btn btn-primary" id="teacherSave">Guardar para este alumno</button><button type="button" class="btn btn-soft" id="teacherReset">Restablecer ajustes</button></div>
@@ -97,4 +110,4 @@
   <div class="pane" style="margin-top:18px"><div class="pane-head"><div><h2>Red de compañeros</h2><p class="muted">Relaciones entre sesiones; las bonificaciones mostradas son exclusivamente del ejercicio.</p></div><strong id="linksCount">0 vínculos</strong></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Alumno vinculado</th><th>Nivel 1</th><th>Nivel 2</th><th>Nivel 3</th></tr></thead><tbody id="linksRows"><tr><td colspan="4">Todavía no hay vínculos.</td></tr></tbody></table></div></div>
   <p class="tiny" style="margin-top:25px">Las métricas de eventos son simuladas; no representan dinero real. Los saldos del alumno se guardan localmente en su navegador y no se muestran aquí como balances verificados.</p><p class="tiny" style="margin-top:8px">Invest Capital · Panel del profesor. Los alumnos autorizan registrar su identificador, datos de contacto opcionales y acciones del ejercicio; no se capturan contraseñas, texto libre ni información de pago.</p>
  </section>
-</main><script type="module" src="admin.js?v=93"></script></body></html>
+</main><script type="module" src="admin.js?v=95"></script></body></html>

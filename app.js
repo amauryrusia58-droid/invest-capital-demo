@@ -28,13 +28,14 @@ function showChosenPlanBanner(){
  const name=currentChosenPlan();
  box.classList.toggle('hidden',!name);if(!name)return;
  const p=plans[name],btn=$('#selectedPlanAction'),message=$('#selectedPlanMessage');
- $('#selectedPlanTitle').textContent=`${name} · ${money(p.min)} en USDT ficticios`;
+ $('#selectedPlanTitle').textContent=`${name} · ${money(p.min)} en USDT de práctica`;
  const active=activePositions().some(x=>x.plan===name&&remainingPrincipal(x)>0);
  const pending=planActivationRequests.find(x=>x.plan===name&&x.status==='pending')||(planSubmitId?{plan:name,status:'pending'}:null);
  const rejected=planActivationRequests.filter(x=>x.plan===name&&x.status==='rejected').length>0;
- if(active){message.textContent='Este plan está activado en tu cartera de práctica. El importe está asignado únicamente a este plan.';btn.textContent='Plan activo';btn.disabled=true;btn.onclick=null;return;}
+ btn.classList.toggle('ic-plan-active-button',active);
+ if(active){message.textContent='Este plan está activado en tu cartera de práctica. El importe está asignado únicamente a este plan.';btn.textContent='Plan activado';btn.disabled=true;btn.onclick=null;return;}
  if(pending){message.textContent='Tu simulación de envío está pendiente de revisión. No se ha acreditado saldo libre ni activado otro plan.';btn.textContent='Pendiente de revisión';btn.disabled=true;btn.onclick=null;return;}
- message.textContent=`Para activar este plan debes invertir ${money(p.min)} ficticios mediante la cartera de práctica USDT. No se envía dinero real.`+(rejected?' La última solicitud fue rechazada; puedes repetir el ejercicio.':'');
+ message.textContent=`Para activar este plan debes invertir ${money(p.min)} de práctica mediante la cartera de práctica USDT. No se envía dinero real.`+(rejected?' La última solicitud fue rechazada; puedes repetir el ejercicio.':'');
  btn.textContent=rejected?'Volver a invertir':'Invertir para activar';btn.disabled=planSubmitBusy;btn.onclick=()=>openPlanWallet(name);
 }
 
@@ -245,14 +246,14 @@ function withdrawalStatus(){
  const anchor=lockAnchor();
  if(!anchor)return {days:30,open:false,reason:'El ciclo de 30 días comenzará al activarse un plan. Los retiros anticipados de bonificaciones pueden solicitarse antes.'};
  const remaining=Math.max(0,30-elapsedDays(anchor));
- return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para completar el ciclo. Puedes solicitar antes tus ganancias ficticias disponibles, sujetas a aprobación.`:'Ciclo completado. Los retiros ficticios siguen sujetos a aprobación.'};
+ return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para completar el ciclo. Puedes solicitar antes tus ganancias de práctica disponibles, sujetas a aprobación.`:'Ciclo completado. Los retiros de práctica siguen sujetos a aprobación.'};
 }
 function renderWithdrawalStatus(){
  const w=withdrawalStatus();
  for(const id of ['actionWithdraw','withdrawInMovements'])$('#'+id).textContent='Retiro';
- $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?`Retiro ficticio pendiente de revisión. ${w.days} día(s) del ciclo restantes.`:w.reason;
+ $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?`Retiro de práctica pendiente de revisión. ${w.days} día(s) del ciclo restantes.`:w.reason;
  $('#earningDays').textContent=String(w.days);
- const detail=$('#teacherTestStatus');if(detail){detail.hidden=!(testSettings.plan||testSettings.extraDays||testSettings.bonus);detail.textContent=`ESCENARIO DOCENTE · Plan: ${testSettings.plan||'Sin asignación docente'} · ${testSettings.extraDays} día(s) adicionales · ${money(testSettings.bonus)} de ganancia ficticia. Retiros aprobados acumulados: ${money(approvedWithdrawalTotal())}. Solo simulación.`;}
+ const detail=$('#teacherTestStatus');if(detail){detail.hidden=!(testSettings.plan||testSettings.extraDays||testSettings.bonus);detail.textContent=`ESCENARIO DOCENTE · Plan: ${testSettings.plan||'Sin asignación docente'} · ${testSettings.extraDays} día(s) adicionales · ${money(testSettings.bonus)} de ganancia de práctica. Retiros aprobados acumulados: ${money(approvedWithdrawalTotal())}. Solo simulación.`;}
 }
 // Resumen informativo sincronizado con Firebase. Lo calcula el navegador:
 // no es un libro mayor verificado ni prueba la existencia de fondos.
@@ -272,7 +273,7 @@ async function syncEarningsSummary(force=false){
  finally{earningSyncBusy=false;}
 }
 
-function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';if(x.kind==='withdraw'&&/^aprobado$/i.test(x.status))tone='ic-withdrawal-approved';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${x.kind==='withdraw'&&/^aprobado$/i.test(x.status)?'ic-withdrawal-approved':/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
+function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';if(x.kind==='withdraw'&&/^aprobado$/i.test(x.status))tone='ic-withdrawal-approved';if(x.kind==='invest'&&/^activa$/i.test(x.status))tone='ic-plan-activated';const label=tone==='ic-plan-activated'?'Plan activado':x.status;return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(label)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${x.kind==='withdraw'&&/^aprobado$/i.test(x.status)?'ic-withdrawal-approved':x.kind==='invest'&&/^activa$/i.test(x.status)?'ic-plan-activated':/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.kind==='invest'&&/^activa$/i.test(x.status)?'Plan activado':x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
 // V7: evolución del simulador, no cotizaciones ni rentabilidad real.
 // La línea continua llega SOLO hasta hoy; el trazo discontinuo es una PROYECCIÓN hipotética.
 function drawPortfolioChart(pos, invested, profit){
@@ -364,7 +365,7 @@ function drawPortfolioChart(pos, invested, profit){
   return sum+(projected(p.amount,p.plan,d+1,p.rate).profit-projected(p.amount,p.plan,d,p.rate).profit);
  },0));
  caption.textContent=`Capital asignado: ${money(invested)} · rendimiento simulado hasta hoy: ${money(profit)} · día ${maxElapsed} desde la primera posición`;
- legend.textContent=`Línea continua: cálculo hasta hoy · Línea discontinua: proyección ficticia de ${chartProjectionDays} días · Próximo incremento estimado: ${money(dailyEstimated)} (mañana).`;
+ legend.textContent=`Línea continua: cálculo hasta hoy · Línea discontinua: proyección de práctica de ${chartProjectionDays} días · Próximo incremento estimado: ${money(dailyEstimated)} (mañana).`;
 }
 function render(){const invested=principal(),profit=gain(),value=total(),pos=activePositions().filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
@@ -372,7 +373,7 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=act
   // el valor calculado desde el navegador es provisional. Evitar el destello
   // de $5,100/$0 y su posterior sustitución sin explicación.
   const balancesConfirmed=teacherSettingsReady&&withdrawalHistoryReady;
-  $('#totalVal').textContent=balancesConfirmed?money(value):'Sincronizando…';$('#investedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):'Verificando…';$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):'Verificando…';$('#earningYield').textContent=balancesConfirmed?money(gain()):'Sincronizando…';$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
+  $('#totalVal').textContent=balancesConfirmed?money(value):'Sincronizando…';$('#investedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):'Verificando…';$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):'Verificando…';$('#earningYield').textContent=balancesConfirmed?money(gain()):'Sincronizando…';$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias de práctica disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
   $('#portfolioTotalVal').textContent=balancesConfirmed?money(invested+profit):'Sincronizando…';$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#portfolioGainVal').textContent=balancesConfirmed?money(profit):'Sincronizando…';
@@ -387,7 +388,7 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=act
   void syncEarningsSummary();
 }
 function setStage(x){stage=Math.min(3,Math.max(0,Number(x)||0));render();}
-// V8.3 · Plan seleccionado → cartera ficticia → solicitud → aprobación → posición del plan.
+// V8.3 · Plan seleccionado → cartera de práctica → solicitud → aprobación → posición del plan.
 let planActivationRequests=[],planSubmitBusy=false,planSubmitId='';
 function choosePlan(plan){
  if(!plans[plan])return;
@@ -405,14 +406,14 @@ function openPlanWallet(plan){
  }
  // Abrir la cartera no escribe solicitudes. La única petición ocurre al confirmar abajo.
  modal('Invertir para activar · '+plan,`
-  <p>Para activar el plan <strong>${esc(plan)}</strong>, introduce un importe de práctica de al menos <strong>${money(cfg.min)} USDT ficticios</strong>.</p>
+  <p>Para activar el plan <strong>${esc(plan)}</strong>, introduce un importe de práctica de al menos <strong>${money(cfg.min)} USDT de práctica</strong>.</p>
   <label class="field-label" for="planActivationAmount">Cantidad que deseas invertir (USDT de práctica)</label>
   <input class="plain-input" id="planActivationAmount" type="number" min="${cfg.min}" max="100000" step="0.01" value="${cfg.min}" inputmode="decimal" required>
   <div class="ic-demo-wallet" role="group" aria-label="Cartera USDT de práctica sin transacciones reales">
    <div class="ic-wallet-head"><span>◈ INVEST CAPITAL</span><b>USDT · DEMO</b></div>
-   <small>CARTERA FICTICIA PARA EL EJERCICIO</small>
+   <small>CARTERA DE PRÁCTICA PARA EL EJERCICIO</small>
    <strong>CAR-PRÁCTICA-INVEST-CAPITAL</strong>
-   <div class="ic-wallet-amount"><span id="walletPlanAmount">${money(cfg.min)}</span> <small>ficticios</small></div>
+   <div class="ic-wallet-amount"><span id="walletPlanAmount">${money(cfg.min)}</span> <small>de práctica</small></div>
    <p>Plan elegido: <b>${esc(plan)}</b></p>
   </div>
   <div class="modal-note"><strong>SOLO SIMULACIÓN.</strong> Esta cartera no posee dirección blockchain y no acepta depósitos reales. No envíes dinero ni criptomonedas.</div>
@@ -432,7 +433,7 @@ function openPlanWallet(plan){
    await ensureStudentFirebaseSession();
    planSubmitId=await requestVirtualPlanActivation(session,plan,alias,amount);
    record('plan_requested',`Solicitó invertir ${amount.toFixed(2)} USDT-DEMO para activar ${plan}`,'planes');
-   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT ficticios</b></div><p>El profesor ha recibido una única solicitud de activación. El plan no se activa hasta que la apruebe.</p><p class="tiny">No se genera saldo libre ni transferencia de criptomonedas.</p>`);
+   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT de práctica</b></div><p>El profesor ha recibido una única solicitud de activación. El plan no se activa hasta que la apruebe.</p><p class="tiny">No se genera saldo libre ni transferencia de criptomonedas.</p>`);
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
  },'Invertir y solicitar activación · DEMO');
@@ -447,14 +448,14 @@ function openPlanWallet(plan){
 function renderPlanActivationRequests(){
  const box=$('#planActivationBox');if(!box)return;box.replaceChildren();
  const h=document.createElement('h2');h.textContent='Activaciones de planes';box.append(h);
- const tip=document.createElement('p');tip.className='tiny';tip.textContent='Solicitudes de cartera ficticia (USDT DEMO). Solo una aprobación docente activa el plan elegido.';box.append(tip);
+ const tip=document.createElement('p');tip.className='tiny';tip.textContent='Solicitudes de cartera de práctica (USDT DEMO). Solo una aprobación docente activa el plan elegido.';box.append(tip);
  if(!planActivationRequests.length){const p=document.createElement('p');p.className='muted';p.textContent='Aún no has solicitado activar ningún plan.';box.append(p);return;}
  const sorted=[...planActivationRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  for(const r of sorted.slice(0,8)){
   const line=document.createElement('div');line.className='credit-request-row';
   const label=document.createElement('strong');label.textContent=`${r.plan} · ${money(r.amount)} DEMO`;
-  const state=document.createElement('span');state.className='tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
-  state.textContent=r.status==='approved'?'Aprobada · plan activado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
+  const state=document.createElement('span');state.className='tag '+(r.status==='approved'?'ic-plan-activated':r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
+  state.textContent=r.status==='approved'?'Plan activado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
   line.append(label,state);box.append(line);
  }
 }
@@ -474,7 +475,7 @@ function onPlanActivationRequests(rows){
   // Mantiene las actividades del ejercicio de referidos, con el mismo ID único.
   pendingContributions.push({amount,reference:r.id.slice(0,35)});
   if(!lockAnchor())account.withdrawalAnchor=started;
-  tx('Activación ficticia de plan '+r.plan,amount,'Activa','invest');
+  tx('Activación de práctica de plan '+r.plan,amount,'Activa','invest');
   record('plan_assign',`Activó ${r.plan} con ${amount.toFixed(2)} USDT DEMO tras aprobación`,'planes');
   changed=true;
  }
@@ -489,7 +490,7 @@ function startPlanInvestment(){
  if(plans[selected]&&!approved){openPlanWallet(selected);return;}
  const entries=Object.entries(plans).map(([name,p])=>
    `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)} DEMO</button>`).join('');
- modal('Seleccionar plan para la cartera ficticia',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud propia y la aprobación del profesor.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
+ modal('Seleccionar plan para la cartera de práctica',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud propia y la aprobación del profesor.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
  modalContent.querySelectorAll('[data-choose-wallet-plan]').forEach(b=>b.addEventListener('click',()=>{
   const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
  }));
@@ -503,7 +504,7 @@ function renderCreditRequests(){
  const rows=[...creditRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  const pending=rows.filter(r=>r.status==='pending');
  const heading=document.createElement('h2');heading.textContent=`Solicitudes de inversión virtual ${pending.length?'· '+pending.length+' pendiente(s)':''}`;box.append(heading);
- const note=document.createElement('p');note.className='tiny';note.textContent='Importes ficticios para el aula. Ninguna solicitud aumenta tu saldo antes de la aprobación del profesor.';box.append(note);
+ const note=document.createElement('p');note.className='tiny';note.textContent='Importes de práctica para el aula. Ninguna solicitud aumenta tu saldo antes de la aprobación del profesor.';box.append(note);
  if(!rows.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Todavía no has enviado solicitudes.';box.append(empty);return;}
  for(const req of rows.slice(0,8)){
   const line=document.createElement('div');line.className='credit-request-row';
@@ -515,7 +516,7 @@ function renderCreditRequests(){
  const approved=rows.filter(r=>r.status==='approved');
  const approvedAmount=num(approved.reduce((sum,r)=>sum+num(r.amount),0));
  const summary=document.createElement('p');summary.className='tiny';
- summary.textContent=`Aprobaciones registradas en Firebase: ${approved.length} · Capital ficticio aprobado: ${money(approvedAmount)}. El saldo de la cuenta también puede incluir movimientos anteriores, asignaciones y bonificaciones simuladas.`;
+ summary.textContent=`Aprobaciones registradas en Firebase: ${approved.length} · Capital de práctica aprobado: ${money(approvedAmount)}. El saldo de la cuenta también puede incluir movimientos anteriores, asignaciones y bonificaciones simuladas.`;
  box.append(summary);
  if(approved.length>1){
   const amounts=new Map();
@@ -545,7 +546,7 @@ function onCreditRequests(rows){
   if(!lockAnchor())account.withdrawalAnchor=timestampMs(req.decisionAt)||timestampMs(req.createdAt)||Date.now();
   pendingContributions.push({amount:n,reference:req.id.slice(0,35)});
   tx('Crédito virtual aprobado por el profesor',n,'Acreditado','deposit');
-  record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT ficticios tras aprobación docente`);
+  record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT de práctica tras aprobación docente`);
   changed=true;
  }
  if(needsCalendarMigration){
@@ -572,7 +573,7 @@ function renderWithdrawalRequests(){
  box.replaceChildren();
  const ordered=[...withdrawalRequests].sort((a,b)=>(timestampMs(b.createdAt)||0)-(timestampMs(a.createdAt)||0));
  const pending=ordered.filter(r=>r.status==='pending');
- const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro ficticio'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
+ const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro de práctica'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
  box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Simulación educativa: ninguna aprobación transfiere dinero ni criptomonedas.'}));
  if(!ordered.length){box.append(Object.assign(document.createElement('p'),{className:'muted',textContent:'Todavía no hay solicitudes de retiro.'}));return;}
  for(const r of ordered.slice(0,8)){
@@ -617,13 +618,13 @@ function onWithdrawalRequests(rows){
    account.reviewedWithdrawalIds[r.id]='approved';
    account.pendingWithdrawalRequestId='';
    // El balance ya está descontado por approvedWithdrawalTotal() en Firebase.
-   tx('Retiro ficticio aprobado por el profesor',-amount,'Aprobado','withdraw');
+   tx('Retiro de práctica aprobado por el profesor',-amount,'Aprobado','withdraw');
    record('withdraw_approved',`Retiro virtual aprobado por ${amount.toFixed(2)} USDT`,'movimientos');
   }else{
    account.reviewedWithdrawalIds[r.id]='rejected';
    // Un rechazo no reinicia los días ya transcurridos.
    account.pendingWithdrawalRequestId='';
-   tx('Retiro ficticio rechazado por el profesor',0,'Rechazado','withdraw');
+   tx('Retiro de práctica rechazado por el profesor',0,'Rechazado','withdraw');
    record('withdraw_rejected',`Retiro virtual rechazado de ${num(r.amount).toFixed(2)} USDT`,'movimientos');
   }
   changed=true;
@@ -636,11 +637,11 @@ function onWithdrawalRequests(rows){
  render();
 }
 function withdrawal(){
- record('withdraw_open','Consultó retiro ficticio de ganancias','movimientos');
+ record('withdraw_open','Consultó retiro de práctica de ganancias','movimientos');
  const w=withdrawalStatus();
- if(!earningsSynced()){modal('Retiro no disponible',`<p>${esc(withdrawalAuditStatus())}</p><p>Para evitar un retiro ficticio duplicado, no se pueden crear solicitudes hasta completar la comprobación.</p>`);return;}
+ if(!earningsSynced()){modal('Retiro no disponible',`<p>${esc(withdrawalAuditStatus())}</p><p>Para evitar un retiro de práctica duplicado, no se pueden crear solicitudes hasta completar la comprobación.</p>`);return;}
  if(hasPendingWithdrawal()){
-  modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro ficticio pendiente. El profesor recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
+  modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro de práctica pendiente. El profesor recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
  }
  if(stage===3){modal('Escenario suspendido','<div class="notice negative">La clase está en un escenario de retiros suspendidos.</div>');return;}
  const cap=withdrawable();
@@ -651,9 +652,9 @@ function withdrawal(){
   <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong>. No se transfiere dinero ni USDT real.</div>
   <p>Rendimiento virtual no retirado: <b>${money(gain())}</b></p>
   <p>Bonificaciones de referidos: <b>${money(referralAvailable())}</b></p>
-  <p>Ganancia disponible: <strong>${money(cap)} ficticios</strong></p>
-  <div class="notice">${w.days} día(s) del ciclo restantes. Puedes solicitar ahora un retiro ficticio anticipado. <b>El profesor decide si lo aprueba o rechaza.</b></div>
-  <label class="field-label" for="amountValue">Importe de ganancias ficticias (USDT-DEMO)</label>
+  <p>Ganancia disponible: <strong>${money(cap)} de práctica</strong></p>
+  <div class="notice">${w.days} día(s) del ciclo restantes. Puedes solicitar ahora un retiro de práctica anticipado. <b>El profesor decide si lo aprueba o rechaza.</b></div>
+  <label class="field-label" for="amountValue">Importe de ganancias de práctica (USDT-DEMO)</label>
   <input id="amountValue" class="plain-input" type="number" step="0.01" min="50" max="${cap}" value="${Math.max(50,Math.min(100,cap))}">
   <p id="modalError" class="form-error" hidden></p>
   <p class="tiny">Ni el capital asignado ni los antiguos créditos libres cuentan como ganancia retirable.</p>
@@ -667,9 +668,9 @@ function withdrawal(){
    await syncEarningsSummary(true);
    const id=await requestVirtualWithdrawal(session,n,alias);
    account.pendingWithdrawalRequestId=id;save();
-   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT ficticios con ${w.days} días pendientes`,'movimientos');
+   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT de práctica con ${w.days} días pendientes`,'movimientos');
    render();
-   modal('Solicitud pendiente',`<div class="notice"><strong>${money(n)} USDT-DEMO · Pendiente de revisión</strong></div><p>El profesor recibió la solicitud aun faltando ${w.days} día(s) del ciclo. Al aprobarla, se descontará de las ganancias ficticias disponibles; si la rechaza, conservarás la cantidad y el contador seguirá avanzando.</p>`);
+   modal('Solicitud pendiente',`<div class="notice"><strong>${money(n)} USDT-DEMO · Pendiente de revisión</strong></div><p>El profesor recibió la solicitud aun faltando ${w.days} día(s) del ciclo. Al aprobarla, se descontará de las ganancias de práctica disponibles; si la rechaza, conservarás la cantidad y el contador seguirá avanzando.</p>`);
   }catch(e){err('No se pudo enviar a Firebase: '+e.message);confirmBtn.disabled=false;}
  },'Enviar solicitud al profesor');
 }
@@ -766,7 +767,7 @@ $$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.vie
   chartProjectionDays=Number(b.dataset.projectionDays);
   $$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));
   render();
-  record('chart',`Consultó proyección ficticia de ${chartProjectionDays} días`);
+  record('chart',`Consultó proyección de práctica de ${chartProjectionDays} días`);
  });
 });
 $$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
@@ -808,7 +809,7 @@ async function ensureStudentFirebaseSession(){
  const user=f.auth.currentUser;
  if(!user)throw new Error('Tu sesión de alumno terminó. Inicia sesión desde la portada para continuar.');
  if(storedAuthUid&&user.uid!==storedAuthUid)throw new Error('Firebase tiene otra cuenta activa en esta pestaña. Vuelve a entrar como alumno desde la portada.');
- if(user.providerData?.some(p=>p.providerId==='google.com'))throw new Error('Esta pestaña tiene una cuenta de profesor. Entra con la cuenta de alumno para invertir de forma ficticia.');
+ if(user.providerData?.some(p=>p.providerId==='google.com'))throw new Error('Esta pestaña tiene una cuenta de profesor. Entra con la cuenta de alumno para invertir de forma de práctica.');
  if(sessionReady&&session.mode==='cloud'&&session.uid===user.uid)return session;
  session=await studentStart(profile);
  if(session.mode!=='cloud')throw new Error('No se pudo establecer la sesión de Firebase.');

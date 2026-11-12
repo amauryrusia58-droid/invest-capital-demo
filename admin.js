@@ -38,22 +38,22 @@ function renderStudentSummary(){
  const details=[['Nombre declarado',emptyDisplay(s.alias)],['Correo de contacto',emptyDisplay(s.email)],['Registro',shortDate(s.createdAt)],['Última actividad',shortDate(s.lastSeen)],['Vinculado a',linksMap[s.id]?studentName(linksMap[s.id]):'Sin vínculo'],['Referidos directos',String(l1)],['Segundo nivel',String(l2)],['Tercer nivel',String(l3)]];
  for(const [label,value] of details){const field=addText('div','','admin-profile-field');field.append(addText('small',label),addText('strong',value));wrapper.append(field);}
  container.append(wrapper);
- const titles=[['deposit_confirmed','Aportes ficticios registrados'],['plan_assign','Capital asignado (eventos)'],['withdraw_attempt','Retiros solicitados (eventos)'],['referral_credit','Bonos simulados registrados']];
+ const titles=[['deposit_confirmed','Aportes de práctica registrados'],['plan_assign','Capital asignado (eventos)'],['withdraw_attempt','Retiros solicitados (eventos)'],['referral_credit','Bonos simulados registrados']];
  const metrics=addText('div','','admin-event-metrics');
  for(const [type,label] of titles){const matching=events.filter(e=>e.type===type);const amounts=matching.map(eventAmount).filter(v=>v!==null&&Number.isFinite(v));const val=amounts.length?money(amounts.reduce((a,b)=>a+b,0)):'—';
  const item=addText('div','','admin-metric');item.append(addText('small',label),addText('strong',val),addText('span',`${matching.length} evento(s) registrado(s)`,'tiny'));metrics.append(item);}
  container.append(metrics);
  const approved=withdrawalRequests.filter(w=>w.studentUid===s.id&&w.status==='approved');
  const approvedTotal=approved.reduce((sum,w)=>sum+(Number(w.amount)||0),0);
- const withdrawInfo=addText('p',`Retiros ficticios aprobados en Firebase: ${approved.length} operación(es), ${money(approvedTotal)} en total. Este importe debe permanecer descontado tras recargar el panel del alumno.`, 'tiny');
+ const withdrawInfo=addText('p',`Retiros de práctica aprobados en Firebase: ${approved.length} operación(es), ${money(approvedTotal)} en total. Este importe debe permanecer descontado tras recargar el panel del alumno.`, 'tiny');
  container.append(withdrawInfo);
  const estimate=earningSummaries[selectedId];
- if(estimate){const metrics2=addText('div','','admin-event-metrics');for(const [label,amount] of [['Rendimiento ficticio pendiente',estimate.unpaidPlanYield],['Bonos por referidos pendientes',estimate.referralAvailable],['Ganancia disponible · declarada',estimate.availableToRequest],['Días para el ciclo',estimate.daysRemaining]]){const el=addText('div','','admin-metric');el.append(addText('small',label),addText('strong',label==='Días para el ciclo'?String(amount):money(amount)));metrics2.append(el);}container.append(metrics2);container.append(addText('p','Resumen enviado desde el navegador del alumno; no es un saldo verificado en servidor ni prueba de pago. Actualizado: '+shortDate(estimate.updatedAt),'tiny'));}
- const note=addText('p','Los importes de eventos pueden ser parciales; el resumen de ganancias, si aparece, es informativo y fue calculado por el navegador del alumno, NO un saldo auditado ni comprobación de fondos. Todo es ficticio.','admin-summary-note');container.append(note);
+ if(estimate){const metrics2=addText('div','','admin-event-metrics');for(const [label,amount] of [['Rendimiento de práctica pendiente',estimate.unpaidPlanYield],['Bonos por referidos pendientes',estimate.referralAvailable],['Ganancia disponible · declarada',estimate.availableToRequest],['Días para el ciclo',estimate.daysRemaining]]){const el=addText('div','','admin-metric');el.append(addText('small',label),addText('strong',label==='Días para el ciclo'?String(amount):money(amount)));metrics2.append(el);}container.append(metrics2);container.append(addText('p','Resumen enviado desde el navegador del alumno; no es un saldo verificado en servidor ni prueba de pago. Actualizado: '+shortDate(estimate.updatedAt),'tiny'));}
+ const note=addText('p','Los importes de eventos pueden ser parciales; el resumen de ganancias, si aparece, es informativo y fue calculado por el navegador del alumno, NO un saldo auditado ni comprobación de fondos. Todo es de práctica.','admin-summary-note');container.append(note);
 }
 
 
-// V5 · Bandeja de solicitudes de crédito exclusivamente ficticio, en tiempo real.
+// V5 · Bandeja de solicitudes de crédito exclusivamente de práctica, en tiempo real.
 function renderAdminCreditRequests(){
  const list=$('#creditApprovalList');list.replaceChildren();
  const pending=creditRequests.filter(x=>x.status==='pending');
@@ -69,7 +69,7 @@ function renderAdminCreditRequests(){
   const row=addText('div','','admin-approval-row');
   const detail=document.createElement('div');detail.className='admin-approval-detail';
   const uid=r.studentUid||'';const name=studentName(uid)||r.studentAlias||'Alumno';
-  detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}`,'tiny'));
+  detail.append(addText('strong',name),addText('p',`${money(r.amount)} de práctica · ${shortDate(r.createdAt)}`,'tiny'));
   const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
   row.append(detail,state);
   // Solo lectura: no pedir una segunda aprobación sobre créditos del flujo antiguo.
@@ -90,12 +90,12 @@ function renderAdminPlanRequests(){
   if(b.status==='pending'&&a.status!=='pending')return 1;
   return (date(b.createdAt)?.getTime()||0)-(date(a.createdAt)?.getTime()||0);
  }).slice(0,40);
- if(!rows.length){list.append(addText('p','Todavía no hay activaciones de planes ficticios.','muted'));return;}
+ if(!rows.length){list.append(addText('p','Todavía no hay activaciones de planes de práctica.','muted'));return;}
  for(const r of rows){
   const row=addText('div','','admin-approval-row'),detail=addText('div','','admin-approval-detail');
   const name=sessions.find(s=>s.id===r.studentUid)?.alias||r.studentAlias||'Alumno';
   detail.append(addText('strong',name),addText('p',`Plan: ${r.plan} · ${money(r.amount)} DEMO · ${shortDate(r.createdAt)}`,'tiny'));
-  const state=addText('span',r.status==='approved'?'Aprobada · plan activado':r.status==='rejected'?'Rechazada':'Pendiente','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
+  const state=addText('span',r.status==='approved'?'Plan activado':r.status==='rejected'?'Rechazada':'Pendiente','tag '+(r.status==='approved'?'ic-plan-activated':r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
   row.append(detail,state);
   if(r.status==='pending')for(const [decision,label,klass] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
    const btn=addText('button',label,'btn '+klass);btn.type='button';
@@ -116,7 +116,7 @@ function renderAdminWithdrawalRequests(){
  const list=$('#withdrawalApprovalList');list.replaceChildren();
  const pend=withdrawalRequests.filter(x=>x.status==='pending');
  $('#pendingWithdrawals').textContent=String(pend.length);
- $('#withdrawalApprovalsSummary').textContent=pend.length?`${pend.length} solicitud(es) de retiro pendiente(s) · En vivo`:'No hay retiros ficticios pendientes. Las solicitudes aparecerán aquí automáticamente.';
+ $('#withdrawalApprovalsSummary').textContent=pend.length?`${pend.length} solicitud(es) de retiro pendiente(s) · En vivo`:'No hay retiros de práctica pendientes. Las solicitudes aparecerán aquí automáticamente.';
  const recent=[...withdrawalRequests].sort((a,b)=>{
   if(a.status==='pending'&&b.status!=='pending')return -1;
   if(b.status==='pending'&&a.status!=='pending')return 1;
@@ -128,14 +128,14 @@ function renderAdminWithdrawalRequests(){
   const name=sessions.find(s=>s.id===r.studentUid)?.alias||r.studentAlias||'Alumno';
   const summary=earningSummaries[r.studentUid];
   const info=summary?` · Ganancias declaradas: ${money(summary.availableToRequest)} · ${summary.daysRemaining} días del ciclo restantes`:' · Saldo informativo del alumno todavía no sincronizado';
-  detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}${info}`,'tiny'));
+  detail.append(addText('strong',name),addText('p',`${money(r.amount)} de práctica · ${shortDate(r.createdAt)}${info}`,'tiny'));
   const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='approved'?'ic-withdrawal-approved':r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
   row.append(detail,state);
   if(r.status==='pending')for(const [decision,caption,variant] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
    const b=document.createElement('button');b.type='button';b.className='btn '+variant;b.textContent=caption;
    b.addEventListener('click',async()=>{
     const action=decision==='approved'?'aprobar':'rechazar';
-    if(!window.confirm(`¿Confirmas ${action} el retiro FICTICIO de ${money(r.amount)} para ${name}? No se transfiere dinero.`))return;
+    if(!window.confirm(`¿Confirmas ${action} el retiro DE PRÁCTICA de ${money(r.amount)} para ${name}? No se transfiere dinero.`))return;
     row.querySelectorAll('button').forEach(button=>button.disabled=true);
     $('#withdrawalApprovalsMessage').textContent='Guardando la decisión…';
     try{await reviewVirtualWithdrawalRequest(firebase,r.id,decision);$('#withdrawalApprovalsMessage').textContent='Decisión registrada. El alumno verá el nuevo estado al conectarse.';}
@@ -157,7 +157,7 @@ function watch(){
  offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();
     offCreditRequests=watchAdminVirtualCreditRequests(firebase,rows=>{creditRequests=rows;renderAdminCreditRequests();},e=>{$('#approvalsMessage').textContent='Error de permisos o conexión al leer solicitudes: '+e.message;});
     offPlanRequests=watchAdminVirtualPlanRequests(firebase,rows=>{planRequests=rows;renderAdminPlanRequests();},e=>{$('#planApprovalsMessage').textContent='No se pudieron leer activaciones: '+e.message;});
- offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros ficticios: '+e.message;});
+ offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros de práctica: '+e.message;});
  offEarningSummaries=watchAdminVirtualEarningsSummaries(firebase,rows=>{earningSummaries=Object.fromEntries(rows.map(r=>[r.id,r]));renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Resumen de ganancias sin sincronizar: '+e.message;});
  offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
@@ -185,7 +185,7 @@ function loadTeacherStudent(){
  const uid=teacherSelectedUid;
  const form=$('#teacherStudentForm'),status=$('#teacherSettingsStatus');
  form.classList.toggle('hidden',!uid);
- if(!uid){status.textContent='Elige una cuenta de prueba para cambiar sus días y ganancias ficticias.';return;}
+ if(!uid){status.textContent='Elige una cuenta de prueba para cambiar sus días y ganancias de práctica.';return;}
  status.textContent='Cargando ajustes de '+studentName(uid)+'…';
  offTeacherSettings=watchAdminTeacherSettings(firebase,uid,data=>{
   if(teacherSelectedUid!==uid)return;
@@ -292,7 +292,7 @@ $('#exportStudents').addEventListener('click',()=>{
 $('#exportCsv').addEventListener('click',()=>{
  const s=sessions.find(x=>x.id===selectedId);
  downloadCsv('invest-capital-actividad-'+(s?.alias||'alumno').replace(/[^a-z0-9-_]/gi,'_')+'.csv',
- ['Fecha','Seccion','Accion','Tipo','Importe ficticio USDT (si consta)'],filteredEvents().map(e=>[shortDate(e.createdAt),e.view,e.label,e.type,eventAmount(e)??'']));
+ ['Fecha','Seccion','Accion','Tipo','Importe de práctica USDT (si consta)'],filteredEvents().map(e=>[shortDate(e.createdAt),e.view,e.label,e.type,eventAmount(e)??'']));
 });
 $('#loginAdmin').addEventListener('click',async()=>{
  setError('');const b=$('#loginAdmin');b.disabled=true;b.textContent='Verificando cuenta…';
