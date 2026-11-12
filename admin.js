@@ -129,7 +129,7 @@ function renderAdminWithdrawalRequests(){
   const summary=earningSummaries[r.studentUid];
   const info=summary?` · Ganancias declaradas: ${money(summary.availableToRequest)} · ${summary.daysRemaining} días del ciclo restantes`:' · Saldo informativo del alumno todavía no sincronizado';
   detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}${info}`,'tiny'));
-  const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
+  const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='approved'?'ic-withdrawal-approved':r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
   row.append(detail,state);
   if(r.status==='pending')for(const [decision,caption,variant] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
    const b=document.createElement('button');b.type='button';b.className='btn '+variant;b.textContent=caption;

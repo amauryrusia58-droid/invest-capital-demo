@@ -31,6 +31,19 @@
 #teacherLab .lab-notice[data-tone=good]{background:#1c5148}
 #teacherLab .lab-foot{margin-top:11px;font-size:.78rem;color:#dccae9}
 @media (max-width:780px){#teacherLab .lab-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#teacherLab .lab-fields{grid-template-columns:1fr}}
+
+/* V9.4 — verde únicamente para retiros ficticios aprobados; demás estados intactos. */
+.tag.ic-withdrawal-approved {
+  display: inline-flex;
+  align-items: center;
+  color: #d7ffed !important;
+  background: #136444 !important;
+  border: 1px solid #48dfa0 !important;
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 5px 11px;
+  box-shadow: 0 0 0 1px rgba(72,223,160,.12);
+}
 </style></head>
 <body><main class="admin-layout">
  <header class="admin-header"><div><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><p class="tiny">CONSOLA DE SEGUIMIENTO · ACCESO RESTRINGIDO</p></div><div class="inline-controls"><span id="adminIdentity" class="tiny">No conectado</span><button class="btn btn-soft hidden" id="logoutAdmin">Salir</button><a class="btn btn-soft" href="index.html">Ir a portada</a></div></header>

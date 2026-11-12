@@ -13,6 +13,19 @@
 .ic-history-footnote{font-size:14px;line-height:1.55;color:#bda9cb;margin:18px 0 0}
 @media(max-width:1050px){.ic-history-grid{grid-template-columns:1fr}.ic-history-label{min-height:0}.ic-history-item{padding:18px}.ic-history-pane{padding:19px!important}}
 @media(max-width:460px){.ic-history-head p{font-size:15px}.ic-history-label{font-size:16px}.ic-history-number{font-size:30px}.ic-history-item p{font-size:15px}}
+
+/* V9.4 — verde únicamente para retiros ficticios aprobados; demás estados intactos. */
+.tag.ic-withdrawal-approved {
+  display: inline-flex;
+  align-items: center;
+  color: #d7ffed !important;
+  background: #136444 !important;
+  border: 1px solid #48dfa0 !important;
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 5px 11px;
+  box-shadow: 0 0 0 1px rgba(72,223,160,.12);
+}
 </style></head><body class="dash-body"><div class="dash-layout"><aside class="sidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
 <div id="selectedPlanBanner" class="ic-selected-plan-banner hidden" role="status" aria-live="polite">
   <div><small>PLAN ELEGIDO · SIMULACIÓN EDUCATIVA / USDT-DEMO</small><strong id="selectedPlanTitle"></strong><p id="selectedPlanMessage"></p></div>

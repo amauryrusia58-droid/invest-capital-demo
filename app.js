@@ -272,7 +272,7 @@ async function syncEarningsSummary(force=false){
  finally{earningSyncBusy=false;}
 }
 
-function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
+function ledgerRows(){const list=account.ledger;const tr=x=>{let tone=/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':/suspend|rechaz/i.test(x.status)?'danger':'';if(x.kind==='withdraw'&&/^aprobado$/i.test(x.status))tone='ic-withdrawal-approved';return `<tr><td>${esc(x.name)}</td><td>${esc(x.ref)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td>${esc(x.date)}</td><td><span class="tag ${tone}">${esc(x.status)}</span></td></tr>`;};$('#fullRows').innerHTML=list.length?list.map(tr).join(''):'<tr><td colspan="5">Todavía no hay movimientos.</td></tr>';$('#recentRows').innerHTML=list.length?list.slice(0,4).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.date)}</td><td>${x.amount>0?'+ ':''}${money(x.amount)}</td><td><span class="tag ${x.kind==='withdraw'&&/^aprobado$/i.test(x.status)?'ic-withdrawal-approved':/pendiente|revisión|validación|proceso/i.test(x.status)?'warn':''}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="4">Todavía no hay movimientos.</td></tr>';}
 // V7: evolución del simulador, no cotizaciones ni rentabilidad real.
 // La línea continua llega SOLO hasta hoy; el trazo discontinuo es una PROYECCIÓN hipotética.
 function drawPortfolioChart(pos, invested, profit){
@@ -578,7 +578,7 @@ function renderWithdrawalRequests(){
  for(const r of ordered.slice(0,8)){
   const row=document.createElement('div');row.className='credit-request-row';
   const amount=document.createElement('strong');amount.textContent=money(r.amount)+' · virtual';
-  const state=document.createElement('span');state.className='tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
+  const state=document.createElement('span');state.className='tag '+(r.status==='approved'?'ic-withdrawal-approved':r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
   state.textContent=r.status==='approved'?'Aprobada · saldo virtual descontado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
   row.append(amount,state);box.append(row);
  }
