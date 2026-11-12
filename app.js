@@ -775,7 +775,40 @@ $$('[data-document]').forEach(b=>b.addEventListener('click',()=>{const name=b.da
 $('#sideInvest').addEventListener('click',startPlanInvestment);$('#actionDeposit').addEventListener('click',startPlanInvestment);$('#startDeposit').addEventListener('click',startPlanInvestment);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
 $('#newReferralActivity').addEventListener('click',referralActivity);
 $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó identificador del programa','referidos');try{await navigator.clipboard.writeText($('#refCode').textContent.trim());modal('Identificador de asociado','Copiado al portapapeles.');}catch{modal('Identificador de asociado',esc($('#refCode').textContent));}});
-$('#sendSupport').addEventListener('click',()=>{const r=$('#supportSubject').value,m=$('#supportText').value.trim();if(m.length<5){modal('Falta información','Escribe una consulta de al menos 5 caracteres.');return;}record('support','Envió consulta: '+r,'soporte');$('#supportText').value='';tx('Consulta · '+r,0,'Recibida','support');modal('Consulta registrada','Tu solicitud de atención figura en el historial.');});
+// Soporte Telegram: solo se confirma al recibir una respuesta exitosa del servidor.
+// El token de BotFather NUNCA se expone al navegador ni a GitHub.
+const SUPPORT_WORKER_URL='https://investcapital-soporte.investcapital8310.workers.dev/support';
+let sendingSupport=false;
+$('#sendSupport').addEventListener('click',async()=>{
+ if(sendingSupport)return;
+ const subject=$('#supportSubject').value.trim();
+ const message=$('#supportText').value.trim();
+ if(subject.length<3||subject.length>100||message.length<10||message.length>1500){
+  modal('Falta información','Selecciona un motivo y escribe una consulta de al menos 10 caracteres.');return;
+ }
+ const btn=$('#sendSupport');sendingSupport=true;btn.disabled=true;btn.textContent='Enviando…';
+ try{
+  await ensureStudentFirebaseSession();
+  const firebase=await getFirebase();
+  const user=firebase?.auth?.currentUser;
+  if(!user)throw new Error('Debes iniciar sesión como alumno.');
+  const idToken=await user.getIdToken();
+  const response=await fetch(SUPPORT_WORKER_URL,{
+   method:'POST',
+   headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},
+   body:JSON.stringify({subject,message})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result.ok!==true)throw new Error(result.error||'No se pudo entregar la consulta al soporte.');
+  record('support','Envió consulta: '+subject,'soporte');
+  $('#supportText').value='';
+  tx('Consulta · '+subject,0,'Enviada','support');
+  modal('Consulta enviada','Tu mensaje fue enviado al soporte.');
+ }catch(error){
+  console.error('Error al enviar consulta a soporte',error);
+  modal('No se pudo enviar',esc(error?.message||'Revisa la conexión y vuelve a intentarlo.'));
+ }finally{sendingSupport=false;btn.disabled=false;btn.textContent='Enviar consulta';}
+});
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
 $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
