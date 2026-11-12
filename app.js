@@ -79,7 +79,19 @@ let teacherPosition=null;
 // Una asignación docente es una única posición de práctica controlada por Firebase.
 // No se escribe al cash local ni se repite al recargar. Las posiciones antiguas
 // siguen conservadas en el navegador, pero no se mezclan en esta prueba.
-function activePositions(){return teacherPosition?[teacherPosition]:account.positions;}
+// V9.2: una posición activada y aprobada después del escenario docente no
+// debe desaparecer cuando llega el snapshot de Firebase al recargar.
+// Una asignación docente MÁS RECIENTE sí puede sustituir la vista anterior;
+// nunca se suman ambas posiciones como si fueran depósitos distintos.
+function useTeacherPosition(){
+ if(!teacherPosition)return false;
+ const latestApproval=Math.max(0,...account.positions
+  .filter(p=>Boolean(p.activationRequestId))
+  .map(p=>Number(p.openedAt)||0));
+ const teacherStarted=Number(testSettings.planStartedAt)||0;
+ return !latestApproval || teacherStarted>latestApproval;
+}
+function activePositions(){return useTeacherPosition()?[teacherPosition]:account.positions;}
 function syncTeacherPosition(){
  const p=plans[testSettings.plan],started=Number(testSettings.planStartedAt);
  teacherPosition=p&&Number.isSafeInteger(started)&&started>0?{
@@ -215,12 +227,14 @@ function gain(){return num(basePlanGain()+teacherBonusAvailable());}
 // Rendimiento bruto histórico, sin restar retiros, para mostrar cuánto se generó.
 function grossYield(){return num(activePositions().reduce((s,p)=>s+projected(p.amount,p.plan,elapsedDays(legacyStart(p)),p.rate).profit,0)+testSettings.bonus);}
 function referralEarned(){return num(account.referrals.reduce((s,r)=>s+num(r.commission),0));}
+// Ganancia historica TOTAL: rendimiento bruto + bonos docentes + referidos. No suma depositos de capital.
+function historicalEarnedTotal(){return num(grossYield()+referralEarned());}
 function referralAvailable(){return earningsSynced()?earningsLedger().referralAvailable:0;}
 function withdrawable(){return earningsSynced()?num(gain()+referralAvailable()):0;}
 function total(){
- // En un escenario asignado por el profesor, el saldo histórico local no se
- // mezcla con el plan de práctica: evita que reaparezcan créditos de otras pruebas.
- if(teacherPosition)return num(principal()+gain()+referralAvailable());
+ // V9.2: conservar los créditos libres existentes incluso cuando el profesor
+ // selecciona un plan de prueba. El capital asignado se muestra por separado;
+ // no debe desaparecer al llegar la configuración de Firebase.
  const legacyReferralCash=Math.max(0,num(referralEarned()-(account.referralPaid||0)));
  const otherCash=Math.max(0,num(account.cash-legacyReferralCash));
  return num(otherCash+principal()+gain()+referralAvailable());
@@ -354,10 +368,14 @@ function drawPortfolioChart(pos, invested, profit){
 }
 function render(){const invested=principal(),profit=gain(),value=total(),pos=activePositions().filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderWithdrawalStatus();
-  $('#totalVal').textContent=money(value);$('#investedVal').textContent=money(invested);$('#gainVal').textContent=money(grossYield());$('#availableVal').textContent=money(withdrawable());$('#earningYield').textContent=money(gain());$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
+  // Antes de recibir los ajustes del profesor y las aprobaciones de Firebase,
+  // el valor calculado desde el navegador es provisional. Evitar el destello
+  // de $5,100/$0 y su posterior sustitución sin explicación.
+  const balancesConfirmed=teacherSettingsReady&&withdrawalHistoryReady;
+  $('#totalVal').textContent=balancesConfirmed?money(value):'Sincronizando…';$('#investedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):'Verificando…';$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):'Verificando…';$('#earningYield').textContent=balancesConfirmed?money(gain()):'Sincronizando…';$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias ficticias disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
-  $('#portfolioTotalVal').textContent=money(invested+profit);$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=money(invested);$('#portfolioGainVal').textContent=money(profit);
+  $('#portfolioTotalVal').textContent=balancesConfirmed?money(invested+profit):'Sincronizando…';$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#portfolioGainVal').textContent=balancesConfirmed?money(profit):'Sincronizando…';
   $('#positionRows').innerHTML=pos.length?pos.map(p=>`<tr><td>${esc(p.plan)}</td><td>${money(remainingPrincipal(p))}</td><td>${money(positionProfit(p))}</td><td>${Math.min(elapsedDays(legacyStart(p)),plans[p.plan].weeks*7)}</td><td>${esc(p.date)}</td><td><span class="tag">Activa</span></td></tr>`).join(''):'<tr><td colspan="6">Aún no tienes posiciones.</td></tr>';
   $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · DEMO</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
   drawPortfolioChart(pos,invested,profit);

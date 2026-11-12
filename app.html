@@ -1,11 +1,51 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Mi cuenta</title><link rel="stylesheet" href="styles.css?v=90"></head><body class="dash-body"><div class="dash-layout"><aside class="sidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Mi cuenta</title><link rel="stylesheet" href="styles.css?v=90"><style>
+/* V9.1: historial de ganancias, legible en computadoras y móviles. */
+.ic-history-pane{padding:26px!important;border-color:#79549c!important}
+.ic-history-head h2{font-size:clamp(24px,2.3vw,30px);margin:7px 0 10px;color:#faf4ff}
+.ic-history-eyebrow{color:#ccadf5;font-size:12px;letter-spacing:1.2px;font-weight:800}
+.ic-history-head p{font-size:16px;line-height:1.6;color:#d4c5e4;margin:0 0 22px;max-width:950px}
+.ic-history-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.ic-history-item{min-width:0;border:1px solid #695081;background:linear-gradient(145deg,#352044,#1b1328);border-radius:15px;padding:22px 20px}
+.ic-history-label{display:block;color:#ead8fa;font-size:17px;line-height:1.35;font-weight:750;min-height:46px}
+.ic-history-number{display:block;font-size:clamp(27px,2.5vw,36px);font-variant-numeric:tabular-nums;line-height:1.2;letter-spacing:-.5px;overflow-wrap:anywhere;margin:14px 0 12px;color:#fff}
+.ic-history-item p{font-size:15px;line-height:1.65;color:#d4c5e3;margin:0}
+.ic-history-available{border-color:#b285d7;background:linear-gradient(145deg,#3d2352,#241631)}
+.ic-history-footnote{font-size:14px;line-height:1.55;color:#bda9cb;margin:18px 0 0}
+@media(max-width:1050px){.ic-history-grid{grid-template-columns:1fr}.ic-history-label{min-height:0}.ic-history-item{padding:18px}.ic-history-pane{padding:19px!important}}
+@media(max-width:460px){.ic-history-head p{font-size:15px}.ic-history-label{font-size:16px}.ic-history-number{font-size:30px}.ic-history-item p{font-size:15px}}
+</style></head><body class="dash-body"><div class="dash-layout"><aside class="sidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
 <section class="workspace-section active" data-section="resumen">
  <div class="stat-grid">
   <div class="stat"><small>Saldo total de mi cuenta</small><strong id="totalVal">$0.00</strong><div class="delta" id="totalDelta">Sin movimientos registrados</div></div>
   <div class="stat"><small>Capital asignado</small><strong id="investedVal">$0.00</strong><div class="delta" id="activeCountVal">0 posiciones activas</div></div>
-  <div class="stat"><small>Rendimiento generado (histórico) · DEMO</small><strong id="gainVal">$0.00</strong><div class="delta">Total histórico, incluso si ya fue retirado</div></div>
+  <div class="stat"><small>Ganancias históricas · DEMO</small><strong id="gainVal">$0.00</strong><div class="delta">Rendimientos y bonos ficticios acumulados, sin descontar retiros</div></div>
   <div class="stat"><small>Ganancias disponibles para retiro · DEMO</small><strong id="availableVal">$0.00</strong><div class="delta" id="availabilityStatus">Ganancias simuladas + bonos por referidos; excluye capital</div></div>
  </div>
+ <section class="pane ic-history-pane" aria-labelledby="ic-history-title" style="margin-bottom:18px">
+   <div class="ic-history-head">
+     <span class="ic-history-eyebrow">RESUMEN DE PRÁCTICA · USDT-DEMO</span>
+     <h2 id="ic-history-title">Historial de ganancias</h2>
+     <p>Consulta cuánto se ha generado, cuánto se ha retirado con aprobación y cuánto queda disponible en esta cuenta de simulación.</p>
+   </div>
+   <div class="ic-history-grid">
+     <div class="ic-history-item">
+       <span class="ic-history-label">Total de ganancias generadas</span>
+       <strong class="ic-history-number" id="historyGeneratedVal">$0.00</strong>
+       <p>Incluye los rendimientos simulados, las bonificaciones por referidos y los ajustes de prueba. No disminuye al retirar.</p>
+     </div>
+     <div class="ic-history-item">
+       <span class="ic-history-label">Total de retiros aprobados</span>
+       <strong class="ic-history-number" id="historyWithdrawnVal">Verificando…</strong>
+       <p>Suma los retiros ficticios aprobados por el profesor y descontados del disponible.</p>
+     </div>
+     <div class="ic-history-item ic-history-available">
+       <span class="ic-history-label">Ganancias disponibles para retiro</span>
+       <strong class="ic-history-number" id="historyAvailableVal">Verificando…</strong>
+       <p>Importe que queda para solicitar. El retiro mínimo es 50 USDT ficticios y requiere aprobación.</p>
+     </div>
+   </div>
+   <p class="ic-history-footnote">Solo simulación educativa: ningún saldo o retiro representa fondos reales.</p>
+ </section>
  <div class="pane" style="margin-bottom:16px"><h2>Desglose de ganancias ficticias</h2><p class="muted">Se calculan desde la activación del plan y las referencias registradas. No representan fondos ni pagos reales.</p><div class="admin-event-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px"><div class="stat"><small>Rendimiento pendiente de retirar</small><strong id="earningYield">$0.00</strong></div><div class="stat"><small>Bonos por referidos disponibles</small><strong id="earningReferrals">$0.00</strong></div><div class="stat"><small>Días para el ciclo de 30 días</small><strong id="earningDays">30</strong></div></div><p class="tiny" id="teacherTestStatus" hidden style="color:#dfbaff;font-weight:700"></p><p class="tiny" id="earningDisclaimer">Puedes solicitar un retiro ficticio anticipado siempre que tengas al menos 50 USDT ficticios de ganancias disponibles; la decisión será del profesor.</p><p class="tiny" id="withdrawalAuditStatus" role="status" aria-live="polite">Verificando aprobaciones y descuentos en Firebase…</p></div>
  <div id="planActivationBox" class="pane credit-request-panel" aria-live="polite"><h2>Activaciones de planes</h2><p class="muted">Cargando solicitudes de práctica…</p></div>
  <div id="creditRequestBox" class="pane credit-request-panel" aria-live="polite"><h2>Solicitudes de inversión virtual</h2><p class="muted">Cargando estados de revisión…</p></div>
@@ -59,4 +99,4 @@
 <section class="workspace-section" data-section="soporte"><h2 class="workspace-title">Centro de atención</h2><div class="content-grid"><div class="pane"><h2>Crear consulta</h2><label class="field-label" for="supportSubject">Motivo</label><select id="supportSubject" class="plain-input"><option>Estado de retiro</option><option>Condiciones de un plan</option><option>Información de la empresa</option><option>Programa de asociados</option></select><label class="field-label" for="supportText">Detalle de consulta</label><input id="supportText" class="plain-input" maxlength="130" placeholder="Escribe una consulta breve, sin información personal"><div class="action-panel"><button id="sendSupport" class="btn btn-primary">Enviar consulta</button></div></div><div class="pane"><h2>Estado del servicio</h2><p class="muted" id="supportStatus">Los canales de atención están operativos.</p><p class="muted">Horario de respuesta indicado: dentro de los siguientes tres días hábiles.</p></div></div></section>
 <footer class="site-footer" style="margin-top:45px"><span>© Invest Capital · Área personal</span><span>Entorno académico · No permite fondos reales</span></footer></main></div>
 <div id="actionModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-kicker">INVEST CAPITAL</div><h2 id="modalTitle">Detalle de operación</h2><div id="modalContent" class="muted"></div><div class="dialog-actions"><button id="closeModal" class="btn btn-soft">Cerrar</button><button id="confirmModal" class="btn btn-primary hidden">Confirmar</button></div></div></div>
-<script type="module" src="app.js?v=90"></script></body></html>
+<script type="module" src="app.js?v=92"></script></body></html>
