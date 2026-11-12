@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Administración</title><link rel="stylesheet" href="styles.css?v=87"><style>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Administración</title><link rel="stylesheet" href="styles.css?v=89"><style>
 /* Laboratorio privado del profesor; cambios solo de vista previa local */
 #teacherLab {border:1px solid #8851b8; background:linear-gradient(125deg,#1f1438,#1a112c 62%,#291344);margin-bottom:18px}
 #teacherLab .lab-eyebrow {display:inline-block; color:#d7a9ff;font-weight:800;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
@@ -48,11 +48,24 @@
     <label class="field-label" for="teacherStudent">Alumno que vas a modificar</label>
     <select id="teacherStudent" class="plain-input"><option value="">Cargando cuentas…</option></select>
     <form id="teacherStudentForm" class="hidden" style="margin-top:14px">
+      <div style="margin-bottom:14px">
+       <label class="field-label" for="teacherPlan">Plan que verá este alumno</label>
+       <select id="teacherPlan" class="plain-input">
+        <option value="">Conservar planes aprobados del alumno (sin plan docente)</option>
+        <option value="Essential">Essential · 100 USDT de práctica</option>
+        <option value="Advanced">Advanced · 300 USDT de práctica</option>
+        <option value="Prime">Prime · 500 USDT de práctica</option>
+        <option value="Magnate Supremo">Magnate Supremo · 1.000 USDT de práctica</option>
+        <option value="Platinum">Platinum · 1.500 USDT de práctica</option>
+        <option value="Signature">Signature · 3.000 USDT de práctica</option>
+       </select>
+       <p class="tiny">Asignar un plan de prueba muestra una sola posición docente para el alumno sin acreditar saldo libre. Cambiar de plan inicia un ciclo nuevo; guardar el mismo plan conserva su fecha de inicio. Las operaciones históricas siguen registradas.</p>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
        <label class="field-label">Días adicionales de prueba (0–365)<input id="teacherExtraDays" class="plain-input" type="number" min="0" max="365" step="1" value="0" required></label>
        <label class="field-label">Ganancia ficticia EXTRA (USDT-DEMO)<input id="teacherBonus" class="plain-input" type="number" min="0" max="100000" step="0.01" value="0" required></label>
       </div>
-      <p class="tiny">Ejemplo: 7 días y 100 USDT-DEMO. Se sumarán 7 días a los ya transcurridos y 100 de rendimiento de prueba a esta cuenta. Mínimo de retiro: 50 USDT-DEMO.</p>
+      <p class="tiny">Ejemplo: 7 días y 100 USDT-DEMO. Se sumarán 7 días al ciclo del plan elegido y 100 USDT a las ganancias de prueba; los retiros previamente aprobados continúan descontándose. Mínimo de retiro: 50 USDT-DEMO.</p>
       <div class="inline-controls" style="margin-top:12px"><button type="submit" class="btn btn-primary" id="teacherSave">Guardar para este alumno</button><button type="button" class="btn btn-soft" id="teacherReset">Restablecer ajustes</button></div>
     </form>
     <p id="teacherSettingsStatus" class="tiny" role="status" aria-live="polite" style="margin-top:10px">Selecciona un alumno para comenzar.</p>
@@ -71,4 +84,4 @@
   <div class="pane" style="margin-top:18px"><div class="pane-head"><div><h2>Red de compañeros</h2><p class="muted">Relaciones entre sesiones; las bonificaciones mostradas son exclusivamente del ejercicio.</p></div><strong id="linksCount">0 vínculos</strong></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Alumno vinculado</th><th>Nivel 1</th><th>Nivel 2</th><th>Nivel 3</th></tr></thead><tbody id="linksRows"><tr><td colspan="4">Todavía no hay vínculos.</td></tr></tbody></table></div></div>
   <p class="tiny" style="margin-top:25px">Las métricas de eventos son simuladas; no representan dinero real. Los saldos del alumno se guardan localmente en su navegador y no se muestran aquí como balances verificados.</p><p class="tiny" style="margin-top:8px">Invest Capital · Panel del profesor. Los alumnos autorizan registrar su identificador, datos de contacto opcionales y acciones del ejercicio; no se capturan contraseñas, texto libre ni información de pago.</p>
  </section>
-</main><script type="module" src="admin.js?v=87"></script></body></html>
+</main><script type="module" src="admin.js?v=89"></script></body></html>

@@ -1,7 +1,7 @@
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries,watchAdminTeacherSettings,setAdminTeacherSettings} from './backend.js?v=87';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries,watchAdminTeacherSettings,setAdminTeacherSettings} from './backend.js?v=89';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
-let offTeacherSettings=()=>{},teacherSelectedUid='',teacherSettings={extraDays:0,bonus:0};
+let offTeacherSettings=()=>{},teacherSelectedUid='',teacherSettings={extraDays:0,bonus:0,plan:''};
 let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},offEarningSummaries=()=>{},earningSummaries={},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
@@ -43,6 +43,10 @@ function renderStudentSummary(){
  for(const [type,label] of titles){const matching=events.filter(e=>e.type===type);const amounts=matching.map(eventAmount).filter(v=>v!==null&&Number.isFinite(v));const val=amounts.length?money(amounts.reduce((a,b)=>a+b,0)):'—';
  const item=addText('div','','admin-metric');item.append(addText('small',label),addText('strong',val),addText('span',`${matching.length} evento(s) registrado(s)`,'tiny'));metrics.append(item);}
  container.append(metrics);
+ const approved=withdrawalRequests.filter(w=>w.studentUid===s.id&&w.status==='approved');
+ const approvedTotal=approved.reduce((sum,w)=>sum+(Number(w.amount)||0),0);
+ const withdrawInfo=addText('p',`Retiros ficticios aprobados en Firebase: ${approved.length} operación(es), ${money(approvedTotal)} en total. Este importe debe permanecer descontado tras recargar el panel del alumno.`, 'tiny');
+ container.append(withdrawInfo);
  const estimate=earningSummaries[selectedId];
  if(estimate){const metrics2=addText('div','','admin-event-metrics');for(const [label,amount] of [['Rendimiento ficticio pendiente',estimate.unpaidPlanYield],['Bonos por referidos pendientes',estimate.referralAvailable],['Ganancia disponible · declarada',estimate.availableToRequest],['Días para el ciclo',estimate.daysRemaining]]){const el=addText('div','','admin-metric');el.append(addText('small',label),addText('strong',label==='Días para el ciclo'?String(amount):money(amount)));metrics2.append(el);}container.append(metrics2);container.append(addText('p','Resumen enviado desde el navegador del alumno; no es un saldo verificado en servidor ni prueba de pago. Actualizado: '+shortDate(estimate.updatedAt),'tiny'));}
  const note=addText('p','Los importes de eventos pueden ser parciales; el resumen de ganancias, si aparece, es informativo y fue calculado por el navegador del alumno, NO un saldo auditado ni comprobación de fondos. Todo es ficticio.','admin-summary-note');container.append(note);
@@ -164,7 +168,7 @@ function watch(){
  offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();
     offCreditRequests=watchAdminVirtualCreditRequests(firebase,rows=>{creditRequests=rows;renderAdminCreditRequests();},e=>{$('#approvalsMessage').textContent='Error de permisos o conexión al leer solicitudes: '+e.message;});
     offPlanRequests=watchAdminVirtualPlanRequests(firebase,rows=>{planRequests=rows;renderAdminPlanRequests();},e=>{$('#planApprovalsMessage').textContent='No se pudieron leer activaciones: '+e.message;});
- offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros ficticios: '+e.message;});
+ offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros ficticios: '+e.message;});
  offEarningSummaries=watchAdminVirtualEarningsSummaries(firebase,rows=>{earningSummaries=Object.fromEntries(rows.map(r=>[r.id,r]));renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Resumen de ganancias sin sincronizar: '+e.message;});
  offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
  offSessions=Store.onSnapshot(Store.query(Store.collection(db,'sessions'),Store.orderBy('lastSeen','desc'),Store.limit(200)),snap=>{
@@ -196,28 +200,31 @@ function loadTeacherStudent(){
  status.textContent='Cargando ajustes de '+studentName(uid)+'…';
  offTeacherSettings=watchAdminTeacherSettings(firebase,uid,data=>{
   if(teacherSelectedUid!==uid)return;
-  teacherSettings={extraDays:Number(data.extraDays)||0,bonus:Number(data.bonus)||0};
+  teacherSettings={extraDays:Number(data.extraDays)||0,bonus:Number(data.bonus)||0,plan:String(data.plan||'')};
+  $('#teacherPlan').value=[...$('#teacherPlan').options].some(x=>x.value===teacherSettings.plan)?teacherSettings.plan:'';
   $('#teacherExtraDays').value=String(teacherSettings.extraDays);
   $('#teacherBonus').value=String(teacherSettings.bonus);
-  status.textContent=`Alumno: ${studentName(uid)} · ${teacherSettings.extraDays} día(s) adelantados y ${money(teacherSettings.bonus)} de ganancia añadida. El alumno recibirá los cambios por Firebase.`;
+  const approved=withdrawalRequests.filter(x=>x.studentUid===uid&&x.status==='approved');
+  const paid=approved.reduce((sum,x)=>sum+(Number(x.amount)||0),0);
+  status.textContent=`Alumno: ${studentName(uid)} · Plan docente: ${teacherSettings.plan||'Sin asignación docente'} · ${teacherSettings.extraDays} día(s) adelantados · ${money(teacherSettings.bonus)} de ganancia extra · ${money(paid)} retirados anteriormente en ${approved.length} aprobación(es).`;
  },e=>{status.textContent='Error leyendo ajustes: '+e.message;});
 }
 $('#teacherStudent').addEventListener('change',e=>{teacherSelectedUid=e.target.value;loadTeacherStudent();});
 $('#teacherStudentForm').addEventListener('submit',async e=>{
  e.preventDefault();const uid=teacherSelectedUid,button=$('#teacherSave');
  if(!uid)return;
- const d=Number($('#teacherExtraDays').value), b=Number($('#teacherBonus').value);
+ const d=Number($('#teacherExtraDays').value), b=Number($('#teacherBonus').value), chosen=$('#teacherPlan').value;
  if(!Number.isInteger(d)||d<0||d>365||!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6){$('#teacherSettingsStatus').textContent='Introduce días enteros entre 0 y 365 y ganancias entre 0 y 100.000 (dos decimales).';return;}
  button.disabled=true;$('#teacherSettingsStatus').textContent='Guardando en Firebase para '+studentName(uid)+'…';
- try{await setAdminTeacherSettings(firebase,uid,d,b);$('#teacherSettingsStatus').textContent='Ajustes de práctica guardados. Entra con la cuenta del alumno para verificarlo.';}
+ try{await setAdminTeacherSettings(firebase,uid,d,b,chosen);$('#teacherSettingsStatus').textContent='Ajustes de práctica guardados. Entra con la cuenta del alumno para verificarlo.';}
  catch(err){$('#teacherSettingsStatus').textContent='No se pudo guardar: '+err.message;}
  finally{button.disabled=false;}
 });
 $('#teacherReset').addEventListener('click',async()=>{
  const uid=teacherSelectedUid;if(!uid)return;
  if(!confirm('¿Restablecer días y ganancia extra de '+studentName(uid)+'? Los retiros anteriores seguirán en su historial.'))return;
- $('#teacherExtraDays').value='0';$('#teacherBonus').value='0';
- try{await setAdminTeacherSettings(firebase,uid,0,0);$('#teacherSettingsStatus').textContent='Ajustes de prueba restablecidos.';}
+ $('#teacherPlan').value='';$('#teacherExtraDays').value='0';$('#teacherBonus').value='0';
+ try{await setAdminTeacherSettings(firebase,uid,0,0,'');$('#teacherSettingsStatus').textContent='Ajustes de prueba restablecidos.';}
  catch(e){$('#teacherSettingsStatus').textContent='No se pudo restablecer: '+e.message;}
 });
 function refreshStudents(){

@@ -285,13 +285,19 @@ export function watchAdminTeacherSettings(f,studentUid,onChange,onError){
  return f.Store.onSnapshot(f.Store.doc(f.db,'studentTestOverrides',studentUid),
    snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0}),onError);
 }
-export async function setAdminTeacherSettings(f,studentUid,extraDays,bonus){
+export async function setAdminTeacherSettings(f,studentUid,extraDays,bonus,plan=''){
  if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Selecciona un alumno válido.');
  const d=Number(extraDays),b=Number(bonus);
  if(!Number.isInteger(d)||d<0||d>365)throw new Error('Los días adelantados deben estar entre 0 y 365.');
  if(!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6)throw new Error('Importe de prueba inválido (máximo 100.000, dos decimales).');
- const {Store,db}=f;
- await Store.setDoc(Store.doc(db,'studentTestOverrides',studentUid),{
-  extraDays:d,bonus:b,currency:'USDT-DEMO',updatedBy:ADMIN_EMAIL,updatedAt:Store.serverTimestamp()
+ const planNames=['','Essential','Advanced','Prime','Magnate Supremo','Platinum','Signature'];
+ if(!planNames.includes(plan))throw new Error('Selecciona un plan de práctica válido.');
+ const {Store,db}=f,ref=Store.doc(db,'studentTestOverrides',studentUid);
+ // Misma selección = conservar fecha original. Cambiar de plan inicia un ciclo nuevo.
+ const oldSnap=await Store.getDoc(ref),prior=oldSnap.exists()?oldSnap.data():{};
+ const started=plan?(prior.plan===plan && Number.isSafeInteger(prior.planStartedAt)&&prior.planStartedAt>0?prior.planStartedAt:Date.now()):0;
+ await Store.setDoc(ref,{
+  extraDays:d,bonus:b,plan,planStartedAt:started,
+  currency:'USDT-DEMO',updatedBy:ADMIN_EMAIL,updatedAt:Store.serverTimestamp()
  });
 }
