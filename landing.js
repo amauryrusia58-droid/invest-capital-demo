@@ -1,6 +1,6 @@
 // Invest Capital V4.0: registro y acceso separados, con Firebase Authentication.
 // No se almacena ninguna contraseña en localStorage, Firestore ni formularios de correo.
-import {getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js?v=84';
+import {getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js?v=93';
 const $=id=>document.getElementById(id);
 const registerOverlay=$('consent'),loginOverlay=$('loginOverlay');
 const reg=$('registrationForm'),login=$('loginForm');
@@ -15,7 +15,7 @@ function updatePlanHint(){
  for(const id of ['selectedPlanReg','selectedPlanLogin']){
   const el=$(id);if(!el)continue;
   el.classList.toggle('hidden',!chosenPublicPlan);
-  if(chosenPublicPlan)el.textContent='Plan elegido: '+chosenPublicPlan+'. Al entrar, podrás solicitar saldo ficticio para este escenario.';
+  if(chosenPublicPlan)el.textContent='Plan elegido: '+chosenPublicPlan+'. Al entrar, pulsa «Invertir» y confirma el importe ficticio para solicitar la activación del plan.';
  }
 }
 function planDestination(){return chosenPublicPlan?'app.html?plan='+encodeURIComponent(chosenPublicPlan):'app.html';}

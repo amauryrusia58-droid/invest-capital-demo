@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,requestVirtualCredit,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=90';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=93';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -398,35 +398,52 @@ function choosePlan(plan){
 function openPlanWallet(plan){
  const cfg=plans[plan];if(!cfg)return;
  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){
-  modal('Pendiente de revisión','<div class="notice">Ya tienes una activación de plan pendiente. Espera la decisión del profesor.</div>');return;
+  modal('Pendiente de revisión','<div class="notice">Ya existe una solicitud de activación pendiente. Espera la decisión del profesor.</div>');return;
  }
  if(planActivationRequests.some(r=>r.status==='approved'&&r.plan===plan)){
   modal('Plan ya aprobado','<p>El profesor ya aprobó este plan de práctica. Comprueba su activación en tu cartera.</p>');return;
  }
- record('plan_view',`Seleccionó el plan ${plan} para practicar su activación`,'planes');
- modal('Cartera USDT ficticia · '+plan,`
-  <div class="ic-demo-wallet" role="group" aria-label="Cartera de simulación sin transacciones reales">
+ // Abrir la cartera no escribe solicitudes. La única petición ocurre al confirmar abajo.
+ modal('Invertir para activar · '+plan,`
+  <p>Para activar el plan <strong>${esc(plan)}</strong>, introduce un importe de práctica de al menos <strong>${money(cfg.min)} USDT ficticios</strong>.</p>
+  <label class="field-label" for="planActivationAmount">Cantidad que deseas invertir (USDT de práctica)</label>
+  <input class="plain-input" id="planActivationAmount" type="number" min="${cfg.min}" max="100000" step="0.01" value="${cfg.min}" inputmode="decimal" required>
+  <div class="ic-demo-wallet" role="group" aria-label="Cartera USDT de práctica sin transacciones reales">
    <div class="ic-wallet-head"><span>◈ INVEST CAPITAL</span><b>USDT · DEMO</b></div>
-   <small>CUENTA DE DESTINO DEL EJERCICIO</small>
+   <small>CARTERA FICTICIA PARA EL EJERCICIO</small>
    <strong>CAR-PRÁCTICA-INVEST-CAPITAL</strong>
-   <div class="ic-wallet-amount">${money(cfg.min)} <small>ficticios</small></div>
-   <p>Plan a activar: <b>${esc(plan)}</b></p>
+   <div class="ic-wallet-amount"><span id="walletPlanAmount">${money(cfg.min)}</span> <small>ficticios</small></div>
+   <p>Plan elegido: <b>${esc(plan)}</b></p>
   </div>
-  <p>Para activar <strong>${esc(plan)}</strong>, simula el envío de <strong>${money(cfg.min)} USDT</strong> a esta cartera de práctica.</p>
-  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA.</strong> Esta cartera es únicamente un dibujo del ejercicio; no contiene dirección blockchain ni acepta depósitos. No envíes USDT auténticos.</div>
+  <div class="modal-note"><strong>SOLO SIMULACIÓN.</strong> Esta cartera no posee dirección blockchain y no acepta depósitos reales. No envíes dinero ni criptomonedas.</div>
+  <p>Solo después de pulsar «Invertir y solicitar activación · DEMO» se enviará <strong>una solicitud</strong> al profesor para activar el plan indicado.</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
-  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya existe una solicitud pendiente.');return;}
+  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una activación pendiente de revisión.');return;}
+  const amountInput=$('#planActivationAmount');
+  const inputText=amountInput?.value?.trim()||'';
+  const inputAmount=Number(inputText);
+  const amount=num(inputAmount);
+  if(!inputText || !Number.isFinite(inputAmount) || amount!==inputAmount || amount<cfg.min || amount>100000){
+   err(`Escribe una cantidad entre ${money(cfg.min)} y ${money(100000)} de práctica, con un máximo de dos decimales.`);return;
+  }
   planSubmitBusy=true;confirmBtn.disabled=true;
   try{
    await ensureStudentFirebaseSession();
-   planSubmitId=await requestVirtualPlanActivation(session,plan,alias);
-   record('plan_requested',`Solicitó activar ${plan} con ${cfg.min.toFixed(2)} USDT DEMO`,'planes');
-   modal('Plan pendiente de revisión',`<div class="notice"><b>${esc(plan)} · ${money(cfg.min)} ficticios</b></div><p>El profesor recibió tu simulación de envío. El plan no estará activo hasta que lo apruebe.</p><p class="tiny">No se ha acreditado saldo libre ni transferido ninguna criptomoneda.</p>`);
+   planSubmitId=await requestVirtualPlanActivation(session,plan,alias,amount);
+   record('plan_requested',`Solicitó invertir ${amount.toFixed(2)} USDT-DEMO para activar ${plan}`,'planes');
+   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT ficticios</b></div><p>El profesor ha recibido una única solicitud de activación. El plan no se activa hasta que la apruebe.</p><p class="tiny">No se genera saldo libre ni transferencia de criptomonedas.</p>`);
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
- },`Simular envío de ${money(cfg.min)}`);
+ },'Invertir y solicitar activación · DEMO');
+ const amountInput=$('#planActivationAmount');
+ const amountLabel=$('#walletPlanAmount');
+ amountInput?.addEventListener('input',()=>{
+  const a=Number(amountInput.value);
+  if(amountLabel)amountLabel.textContent=Number.isFinite(a)&&a>=0?money(a):'—';
+ });
 }
+
 function renderPlanActivationRequests(){
  const box=$('#planActivationBox');if(!box)return;box.replaceChildren();
  const h=document.createElement('h2');h.textContent='Activaciones de planes';box.append(h);
@@ -448,7 +465,7 @@ function onPlanActivationRequests(rows){
  for(const r of rows){
   if(r.status!=='approved'||account.activatedPlanRequestIds[r.id])continue;
   const plan=plans[r.plan],amount=num(r.amount);
-  if(!plan||amount!==plan.min)continue;
+  if(!plan||!Number.isFinite(amount)||amount<plan.min||amount>100000)continue;
   // Cada ID aprobado se aplica una vez. El importe se convierte directamente en
   // posición del plan indicado y NUNCA pasa por account.cash.
   account.activatedPlanRequestIds[r.id]=true;
@@ -477,35 +494,8 @@ function startPlanInvestment(){
   const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
  }));
 }
-// Nueva inversión de clase: solicitud de crédito virtual, SIN saldo anticipado.
-function deposit(presetAmount=100){
- if(creditSubmissionInFlight || justSubmittedCreditId || creditRequests.some(r=>r.status==='pending')){
-  modal('Solicitud pendiente','<div class="notice"><strong>Ya tienes una solicitud de crédito virtual pendiente.</strong></div><p>Espera la decisión del profesor; no necesitas enviar otra solicitud por el mismo plan.</p>');
-  return;
- }
- const startAmount=(typeof presetAmount==='number' && Number.isFinite(presetAmount) && presetAmount>=1 && presetAmount<=100000)?presetAmount:100;
- record('deposit_open','Abrió la solicitud de crédito virtual de prueba');
- modal('Solicitar inversión simulada',`
- <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong> · No envíes dinero ni criptomonedas. El profesor revisará únicamente una cantidad ficticia.</div>
- <label class="field-label" for="amountValue">Cantidad virtual (USDT de práctica)</label>
- <input class="plain-input" id="amountValue" type="number" min="1" max="100000" step="0.01" value="${startAmount}" inputmode="decimal">
- <p id="modalError" class="form-error" hidden></p>
- <p class="tiny">Hasta la aprobación del profesor, el importe no se acredita en el saldo disponible.</p>
- `,async()=>{
-  const raw=$('#amountValue').value,n=num(raw);
-  if(!raw.trim()||!Number.isFinite(Number(raw))||n<1||n>100000){err('Introduce una cantidad ficticia entre 1 y 100.000.');return;}
-  if(!sessionReady||session.mode!=='cloud'){err('No hay conexión con Firebase. No se ha creado ninguna solicitud ni acreditado saldo.');return;}
-  if(creditSubmissionInFlight||justSubmittedCreditId||creditRequests.some(r=>r.status==='pending')){err('Ya existe una solicitud pendiente de revisión.');return;}
-  creditSubmissionInFlight=true;confirmBtn.disabled=true;
-  try{
-   const requestId=await requestVirtualCredit(session,n,alias);
-   justSubmittedCreditId=requestId;
-   record('credit_requested',`Solicitó revisión de ${n.toFixed(2)} USDT virtuales`);
-   modal('Pendiente de revisión',`<div class="notice"><strong>${money(n)} ficticios · Pendiente de revisión</strong></div><p>Tu solicitud se ha enviado al panel del profesor. El saldo se acreditará únicamente si la aprueba.</p><p class="tiny">Consulta su estado en el resumen de cuenta. No se realiza ninguna transferencia.</p>`);
-  }catch(e){err('No se pudo registrar la solicitud: '+e.message);confirmBtn.disabled=false;}
-  finally{creditSubmissionInFlight=false;showChosenPlanBanner();}
- },'Enviar solicitud');
-}
+// Solicitudes de crédito anteriores: se conservan únicamente para mostrar su historial
+// y reconstruir saldos ya aprobados. No se crean créditos libres desde la interfaz V9.3.
 let creditRequests=[],withdrawalRequests=[],creditSubmissionInFlight=false,justSubmittedCreditId='';
 function renderCreditRequests(){
  const box=$('#creditRequestBox');if(!box)return;
@@ -573,7 +563,9 @@ function onCreditRequests(rows){
  showChosenPlanBanner();
 }
 // No se activa un plan mediante saldo libre. Cada plan necesita su aprobación propia.
-function planSelect(plan){choosePlan(plan);openPlanWallet(plan);}
+// Seleccionar no es solicitar: la única escritura de solicitud ocurre tras confirmar en la cartera.
+function planSelect(plan){choosePlan(plan);}
+
 
 function renderWithdrawalRequests(){
  const box=$('#withdrawRequestBox');if(!box)return;
@@ -792,7 +784,8 @@ async function attachStudentListeners(){
  unsubscribeTeacherSettings=watchStudentTeacherSettings(session,(data,serverConfirmed)=>{
   testSettings={extraDays:Math.min(365,Math.max(0,Math.floor(Number(data.extraDays)||0))),bonus:Math.min(100000,Math.max(0,num(data.bonus))),plan:plans[data.plan]?data.plan:'',planStartedAt:Number(data.planStartedAt)||0};
   syncTeacherPosition();
-  if(testSettings.plan)rememberChosenPlan(testSettings.plan);
+  // Un escenario docente no debe sobrescribir el plan elegido expresamente en la portada.
+  if(testSettings.plan && !currentChosenPlan())rememberChosenPlan(testSettings.plan);
   teacherSettingsReady=serverConfirmed;
   onWithdrawalRequests(withdrawalRequests);
   showChosenPlanBanner();void syncEarningsSummary(true);
@@ -829,7 +822,7 @@ async function ensureStudentFirebaseSession(){
   await ensureStudentFirebaseSession();
   record('entry','Entró al panel');await flush();
   if(planQuery&&plans[planQuery]){
-   setView('planes');showChosenPlanBanner();
+   setView('resumen');showChosenPlanBanner();
    history.replaceState(null,'',location.pathname);
   }
  }catch(e){

@@ -1,4 +1,4 @@
-import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries,watchAdminTeacherSettings,setAdminTeacherSettings} from './backend.js?v=89';
+import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries,watchAdminTeacherSettings,setAdminTeacherSettings} from './backend.js?v=93';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 let offTeacherSettings=()=>{},teacherSelectedUid='',teacherSettings={extraDays:0,bonus:0,plan:''};
@@ -58,7 +58,7 @@ function renderAdminCreditRequests(){
  const list=$('#creditApprovalList');list.replaceChildren();
  const pending=creditRequests.filter(x=>x.status==='pending');
  $('#pendingApprovals').textContent=String(pending.length);
- $('#approvalsSummary').textContent=pending.length?`${pending.length} solicitud(es) pendientes de revisión · Actualización en vivo`:'No hay solicitudes pendientes. Las nuevas aparecerán aquí automáticamente.';
+ $('#approvalsSummary').textContent=pending.length?`${pending.length} solicitud(es) antiguas sin resolver · Archivo de consulta (no se utilizan para activar planes)`:'Archivo de registros antiguos. No se generan solicitudes nuevas aquí.';
  const recent=[...creditRequests].sort((a,b)=>{
   if(a.status==='pending'&&b.status!=='pending')return -1;
   if(b.status==='pending'&&a.status!=='pending')return 1;
@@ -72,19 +72,8 @@ function renderAdminCreditRequests(){
   detail.append(addText('strong',name),addText('p',`${money(r.amount)} ficticios · ${shortDate(r.createdAt)}`,'tiny'));
   const state=addText('span',r.status==='approved'?'Aprobada':r.status==='rejected'?'Rechazada':'Pendiente de revisión','tag '+(r.status==='pending'?'warn':r.status==='rejected'?'danger':''));
   row.append(detail,state);
-  if(r.status==='pending'){
-   for(const [decision,caption,variant] of [['approved','Aprobar','btn-primary'],['rejected','Rechazar','btn-soft']]){
-    const b=document.createElement('button');b.type='button';b.className='btn '+variant;b.textContent=caption;
-    b.addEventListener('click',async()=>{
-      const action=decision==='approved'?'aprobar':'rechazar';
-      if(!window.confirm(`¿Confirmas ${action} ${money(r.amount)} ficticios para ${name}? Esta acción no puede deshacerse.`))return;
-      row.querySelectorAll('button').forEach(button=>button.disabled=true);
-      $('#approvalsMessage').textContent='Guardando decisión…';
-      try{await reviewVirtualCreditRequest(firebase,r.id,decision);$('#approvalsMessage').textContent='Decisión guardada. El alumno verá el cambio en su panel al estar conectado.';}
-      catch(e){$('#approvalsMessage').textContent='No se pudo guardar: '+e.message;row.querySelectorAll('button').forEach(button=>button.disabled=false);}
-    });row.append(b);
-   }
-  }
+  // Solo lectura: no pedir una segunda aprobación sobre créditos del flujo antiguo.
+  // Las solicitudes de activación nuevas se administran exclusivamente en la bandeja de planes.
   list.append(row);
  }
 }

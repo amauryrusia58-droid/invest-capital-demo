@@ -214,9 +214,11 @@ export async function reviewVirtualWithdrawalRequest(f,requestId,decision){
 
 // V8.3 · Activación de PLAN con USDT DEMO. Nunca se envía dinero ni una transacción blockchain.
 const CLASSROOM_PLAN_AMOUNTS={Essential:100,Advanced:300,Prime:500,'Magnate Supremo':1000,Platinum:1500,Signature:3000};
-export async function requestVirtualPlanActivation(session,plan,studentAlias){
+export async function requestVirtualPlanActivation(session,plan,studentAlias,requestedAmount=CLASSROOM_PLAN_AMOUNTS[plan]){
  if(session.mode!=='cloud')throw new Error('Debes estar conectado a Firebase para este ejercicio.');
  if(!Object.hasOwn(CLASSROOM_PLAN_AMOUNTS,plan))throw new Error('Plan de práctica no reconocido.');
+ const amount=Number(requestedAmount);
+ if(!Number.isFinite(amount)||amount<CLASSROOM_PLAN_AMOUNTS[plan]||amount>100000||Math.abs(amount*100-Math.round(amount*100))>1e-6)throw new Error('Cantidad ficticia fuera del rango permitido para este plan.');
  const {db,Store,uid}=session;
  const q=Store.query(Store.collection(db,'virtualPlanRequests'),Store.where('studentUid','==',uid));
  const snap=await Store.getDocs(q);
@@ -224,7 +226,7 @@ export async function requestVirtualPlanActivation(session,plan,studentAlias){
  if(snap.docs.some(d=>d.data()?.status==='approved'&&d.data()?.plan===plan))throw new Error('Este plan ya tiene una activación aprobada. Revisa tu cartera.');
  const ref=await Store.addDoc(Store.collection(db,'virtualPlanRequests'),{
   studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
-  plan,amount:CLASSROOM_PLAN_AMOUNTS[plan],currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
+  plan,amount,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
  });
  return ref.id;
 }
