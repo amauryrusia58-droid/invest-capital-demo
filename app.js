@@ -438,15 +438,16 @@ function openDemoPaymentMethods(plan,amount){
  // Tasa académica fija: NO representa una cotización de mercado.
  const demoRubPerUsdt=95;
  const rubAmount=Math.round(amount*demoRubPerUsdt*100)/100;
- const formatRub=value=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(value)+' ₽ DEMO';
+ const formatRub=value=>{const [integer,cents]=Number(value).toFixed(2).split('.');return integer.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+cents+' ₽ DEMO';};
  // Todas las referencias son identificadores de aula deliberadamente incompatibles
  // con direcciones blockchain y cuentas bancarias reales.
  const methods={
   bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain (solo demostración)',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
   trc20:{title:'USDT · TRC20',description:'Red TRON (solo demostración)',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
-  rub:{title:'Rublos rusos',description:'Tarjeta ficticia en rublos para la simulación educativa',reference:'2202 2084 9050 0601',label:'Tarjeta DEMO en rublos',logo:'₽',logoClass:'rub'}
+  rub:{title:'Sberbank · rublos rusos',description:'Tarjeta ficticia de Sberbank para la simulación educativa',reference:'2202 2084 9050 0601',label:'Tarjeta DEMO Sberbank',logo:'SBER',logoClass:'sber'}
  };
- const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div><span class="ic-method-logo ${esc(m.logoClass)}" aria-hidden="true">${esc(m.logo)}</span></div></button>`).join('');
+ const sberMark='<span class="ic-sber-logo" aria-hidden="true"><svg viewBox="0 0 42 42" focusable="false"><path d="M33 10A16 16 0 1 0 36 25" fill="none" stroke="#9fecc4" stroke-width="5" stroke-linecap="round"/><path d="M11 21l7 7 14-15" fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+ const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div>${key==='rub'?sberMark:`<span class="ic-method-logo ${esc(m.logoClass)}" aria-hidden="true">${esc(m.logo)}</span>`}</div></button>`).join('');
  modal('Elegir método de práctica',`
   <div class="ic-demo-step">PASO 2 DE 2 · ACTIVACIÓN DE ${esc(plan)}</div>
   <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT-DEMO</strong></p>
@@ -484,7 +485,7 @@ function openDemoPaymentMethods(plan,amount){
     :`<small>Importe para ${esc(method.title)}</small><strong>${money(amount)} USDT-DEMO</strong><small>Sin conversión de divisa</small>`;
   }
   const isRub=button.dataset.icMethod==='rub';
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div><div class="ic-method-head" style="margin:8px 0 10px"><small>${isRub?'Tarjeta ficticia de práctica (no acepta pagos)':'Referencia de práctica (no acepta pagos)'}</small><span class="ic-method-logo ${esc(method.logoClass)}" aria-hidden="true">${esc(method.logo)}</span></div><div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small>${isRub?'Tarjeta DEMO mostrada solo con fines visuales dentro del ejercicio. No acepta transferencias ni pagos reales.':'Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.'}</small>`;
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div>${isRub?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Sberbank · Сбербанк<br><small>TARJETA EDUCATIVA</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">SOLO DEMO · SIN VALIDEZ</span></div>`:`<div class="ic-method-head" style="margin:8px 0 10px"><small>Referencia de práctica (no acepta pagos)</small><span class="ic-method-logo ${esc(method.logoClass)}" aria-hidden="true">${esc(method.logo)}</span></div>`}<div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small>${isRub?'Tarjeta ilustrativa de clase: no es una tarjeta bancaria emitida por Sberbank ni recibe transferencias.':'Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.'}</small>`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
    try{await navigator.clipboard.writeText(method.reference);if(feedback)feedback.textContent=isRub?'Tarjeta DEMO copiada.':'Referencia DEMO copiada.';}
