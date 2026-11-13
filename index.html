@@ -1,166 +1,144 @@
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><meta name="description" content="Invest Capital: simulador educativo con seis planes de inversión ficticia, aprobaciones docentes y carteras virtuales. Sin dinero real."><title>Invest Capital · Seis planes de simulación financiera</title><link rel="stylesheet" href="styles.css?v=98"></head>
-<body>
-<header class="site-header"><a class="brand" href="index.html" aria-label="Invest Capital inicio"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><nav class="top-nav"><a href="#planes">Planes</a><a href="#plataforma">Plataforma</a><a href="#estrategia">Estrategia</a></nav><div class="header-actions"><button class="btn btn-primary btn-header-register" id="openRegister">Registrarse</button><button class="btn btn-ghost" id="openApp">Acceder <span aria-hidden="true">↗</span></button></div></header>
-<main>
-<section class="hero outer ic-home-hero" aria-labelledby="homeHeroTitle">
-  <div class="hero-text ic-hero-copy">
-    <div class="eyebrow"><span class="status-dot"></span> INVEST CAPITAL</div>
-    <h1 id="homeHeroTitle">Descubre cada plan.<br><em>Explora cada posibilidad.</em></h1>
-    <p>Una experiencia interactiva para comparar escenarios de inversión <strong>con capital</strong>, visualizar resultados y aprender cómo funcionan las solicitudes y los plazos de una cartera.</p>
-    <div class="cta ic-hero-actions">
-      <a class="btn btn-primary btn-large" href="#planes">Explorar los seis planes <span aria-hidden="true">↗</span></a>
-      <button class="btn btn-soft btn-large" id="startBtn" type="button">Crear cuenta </button>
-    </div>
-    <div class="ic-hero-metrics" aria-label="Características de la simulación">
-      <span><b>06</b><small>Planes</small></span>
-      <span><b>30D</b><small>Ciclo de retiros </small></span>
-      <span><b>0</b><small>Depósitos</small></span>
-    </div>
-    <p class="ic-sim-notice"><span aria-hidden="true">ⓘ</span> Los porcentajes y saldos son asi.Rendimientos garantizados.</p>
-  </div>
-  <div class="ic-hero-board" aria-label="Vista ilustrativa del simulador">
-    <div class="ic-board-glow" aria-hidden="true"></div>
-    <div class="ic-board-card">
-      <div class="ic-board-top"><span class="ic-mini-brand">IC<span>◈</span></span><span class="ic-demo-tag"><span class="ic-demo-dot"></span> DEMOSTRACIÓN</span></div>
-      <div class="ic-board-kicker">Explorador de escenarios</div>
-      <h2>Todo comienza<br>con una decisión.</h2>
-      <p>Elige un plan, crea tu cuenta.</p>
-      <div class="ic-board-graphic" aria-hidden="true">
-        <div class="ic-graph-guides"><i></i><i></i><i></i><i></i></div>
-        <svg viewBox="0 0 520 170" preserveAspectRatio="none"><defs><linearGradient id="icPath" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8e63d9"/><stop offset="55%" stop-color="#c3a0ff"/><stop offset="100%" stop-color="#f3d3ff"/></linearGradient><linearGradient id="icFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#9a59ea" stop-opacity=".35"/><stop offset="100%" stop-color="#9a59ea" stop-opacity="0"/></linearGradient></defs>
-          <path d="M0 154 C60 130,75 146,121 109 S203 124,257 78 S346 91,396 49 S473 54,520 15 L520 170 L0 170Z" fill="url(#icFill)"/>
-          <path d="M0 154 C60 130,75 146,121 109 S203 124,257 78 S346 91,396 49 S473 54,520 15" stroke="url(#icPath)" fill="none" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="520" cy="15" r="6" fill="#ead5ff" stroke="#9b65d9" stroke-width="3"/>
-        </svg>
-      </div>
-      <div class="ic-board-note">TRAZADO ILUSTRATIVO · GANANCIAS REALES</div>
-      <div class="ic-board-steps"><span><b>01</b><small>Elegir</small></span><i></i><span><b>02</b><small>Registrarse</small></span><i></i><span><b>03</b><small>Solicitar</small></span></div>
-    </div>
-  </div>
-</section>
+<!DOCTYPE html>
 
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="#09070f" name="theme-color"/><meta content="Invest Capital: simulador educativo con seis planes de inversión ficticia, aprobaciones docentes y carteras virtuales. Sin dinero real." name="description"/><title>Invest Capital · Seis planes de simulación financiera</title><link href="styles.css?v=98" rel="stylesheet"/><style>
+/* Portada Invest Capital V12.9, aislada de los estilos de formularios y planes */
+.ic29-header,.ic29-hero{font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#fff;box-sizing:border-box}
+.ic29-header *,.ic29-hero *{box-sizing:border-box}
+.ic29-header{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:16px clamp(18px,4vw,70px);background:#100b29;border-bottom:1px solid #8437d9;box-shadow:0 2px 22px #6e1cbf44}
+.ic29-header a{text-decoration:none;color:#f7efff}.ic29-brand{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:900;line-height:.95;letter-spacing:.02em;white-space:nowrap}.ic29-logo{font-size:33px;color:#b268ff;text-shadow:0 0 18px #aa36ff}
+.ic29-header nav{display:flex;gap:clamp(12px,2vw,32px);align-items:center;flex-wrap:wrap;font-size:14px;font-weight:650}.ic29-header nav a:hover{color:#d5a2ff}.ic29-actions,.ic29-cta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ic29-primary,.ic29-outline{font:700 14px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer;border-radius:13px;padding:14px 20px;display:inline-flex;justify-content:center;align-items:center;min-height:46px;transition:transform .15s,filter .15s}
+.ic29-primary:hover,.ic29-outline:hover{transform:translateY(-2px);filter:brightness(1.12)}.ic29-primary{color:white;border:1px solid #e16bff;background:linear-gradient(145deg,#bd23fa,#6513bb);box-shadow:0 0 19px #a520ed88}.ic29-outline{color:white;border:1px solid #b5a2e9;background:#120c30aa}
+.ic29-hero{min-height:650px;position:relative;display:flex;align-items:center;padding:80px clamp(24px,6vw,110px) 54px;background:linear-gradient(90deg,#0b0827 0%,#0d0b32e8 32%,#1011447a 65%,#130a3266 100%),url('portada-mercados.webp') center center / cover no-repeat;overflow:hidden}
+.ic29-hero:before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 8% 55%,#6a0ea43b,transparent 55%);pointer-events:none}.ic29-copy{position:relative;z-index:1;max-width:860px;text-shadow:0 2px 12px #08041b}.ic29-eyebrow{color:#e6c9ff;letter-spacing:.16em;font-weight:700;font-size:12px;margin:0 0 18px}.ic29-chart{font-size:44px;color:#d38aff;letter-spacing:-.16em;text-shadow:0 0 15px #a833f9;margin-bottom:12px}.ic29-copy h1{font-size:clamp(43px,5.4vw,87px);font-weight:900;letter-spacing:-.035em;line-height:1.02;margin:0 0 12px;color:#fff}.ic29-copy h2{font-size:clamp(17px,2vw,29px);font-weight:750;margin:0 0 20px;letter-spacing:.01em;color:#eee4ff}.ic29-copy>p:not(.ic29-eyebrow):not(.ic29-disclaimer){font-size:clamp(16px,1.45vw,21px);line-height:1.5;max-width:640px;margin:0 0 29px;color:#f2ebff}.ic29-cta{margin-bottom:34px}.ic29-cta .ic29-primary,.ic29-cta .ic29-outline{font-size:16px;padding:17px 24px}.ic29-benefits{display:flex;flex-wrap:wrap;gap:0;margin-top:16px}.ic29-benefits>*{padding:0 20px;border-right:1px solid #a47aca77;font-size:15px;font-weight:700;color:#fff;text-align:center;text-decoration:none}.ic29-benefits>*:first-child{padding-left:0}.ic29-benefits>*:last-child{border:0}.ic29-benefits small{font-size:12px;font-weight:400;color:#d7c7ee}.ic29-disclaimer{font-size:12px;color:#e1d5f1;margin:32px 0 0}
+@media(max-width:1000px){.ic29-header{flex-wrap:wrap}.ic29-header nav{order:3;width:100%;justify-content:center}.ic29-hero{background-position:58% center}}
+@media(max-width:650px){.ic29-header{padding:13px 16px;gap:12px}.ic29-brand{font-size:17px}.ic29-logo{font-size:25px}.ic29-header nav{font-size:12px;gap:13px}.ic29-actions{gap:6px}.ic29-actions .ic29-primary,.ic29-actions .ic29-outline{padding:9px 10px;font-size:12px;min-height:37px}.ic29-hero{min-height:630px;padding:64px 20px 45px;background:linear-gradient(90deg,#0b0827f5,#0b0827d8),url('portada-mercados.webp') 60% center/cover no-repeat}.ic29-copy h1{font-size:43px}.ic29-chart{font-size:33px}.ic29-cta{align-items:stretch;flex-direction:column}.ic29-cta>*{width:100%}.ic29-benefits{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}.ic29-benefits>*{padding:0!important;border:0!important}.ic29-disclaimer{line-height:1.5}}
+</style></head>
+<body>
+<header class="ic29-header"><a aria-label="Invest Capital inicio" class="ic29-brand" href="index.html"><span class="ic29-logo">▂▅▇↗</span><span>INVEST<br/>CAPITAL</span></a><nav aria-label="Navegación principal"><a href="index.html">Inicio</a><a href="#planes">Inversiones</a><a href="#mercados">Mercados</a><a href="#plataforma">Plataforma</a><a href="app.html?view=soporte">Soporte</a></nav><div class="ic29-actions"><button class="ic29-outline" id="openApp" type="button">Acceder</button><button class="ic29-primary" id="openRegister" type="button">Registrarse</button></div></header>
+<main>
+<section aria-labelledby="homeHeroTitle" class="ic29-hero"><div class="ic29-copy"><p class="ic29-eyebrow">TECNOLOGÍA · MERCADOS · FORMACIÓN</p><div aria-hidden="true" class="ic29-chart">▂ ▄ ▆ █ ↗</div><h1 id="homeHeroTitle">INVEST CAPITAL</h1><h2>INVERSIONES Y MERCADOS FINANCIEROS</h2><p>Explora los mercados y aprende cómo funcionan los planes, las carteras y las operaciones financieras en un entorno de práctica.</p><div class="ic29-cta"><button class="ic29-primary" id="startBtn" type="button">↗ EMPEZAR A INVERTIR</button><a class="ic29-outline" href="#mercados">◎ EXPLORAR MERCADOS</a></div><div class="ic29-benefits"><span>◈ Aprendizaje<br/><small>Entorno guiado</small></span><span>▥ Análisis<br/><small>Datos ilustrativos</small></span><span>↗ Simulación<br/><small>Operaciones virtuales</small></span><a href="app.html?view=soporte">◌ Soporte<br/><small>Centro de atención</small></a></div><p class="ic29-disclaimer">Simulación educativa · No se aceptan inversiones ni depósitos reales</p></div></section>
 <!-- V9.8: Banda visual independiente de las funciones de registro y cuentas -->
-<section class="ic-market-visual outer" aria-label="Ilustraciones animadas de mercado y tecnología de minería">
-  <div class="ic-market-caption"><span class="ic-market-dot" aria-hidden="true"></span> VISUALIZACIÓN DEL MERCADO <span class="ic-market-caption-note">Gráficos ilustrativos · No representan cotizaciones reales</span></div>
-  <div class="ic-market-banner ic-candles-banner"><img src="grafico_velas.gif" alt="Animación ilustrativa de velas japonesas con tendencia ascendente" width="716" height="188" decoding="async"></div>
-  <div class="ic-market-caption ic-mining-caption">TECNOLOGÍA DE MINERÍA <span class="ic-market-caption-note">Equipos ilustrativos</span></div>
-  <div class="ic-market-banner ic-mining-banner"><img src="maquinas_minado.gif" alt="Animación de máquinas de minería con iluminación violeta" width="716" height="116" loading="lazy" decoding="async"></div>
-  <div class="ic-market-banner ic-crypto-strip"><img src="cinta_criptomonedas.gif" alt="Cinta animada de símbolos de criptomonedas" width="716" height="51" loading="lazy" decoding="async"></div>
+<section aria-label="Ilustraciones animadas de mercado y tecnología de minería" class="ic-market-visual outer" id="mercados">
+<div class="ic-market-caption"><span aria-hidden="true" class="ic-market-dot"></span> VISUALIZACIÓN DEL MERCADO <span class="ic-market-caption-note">Gráficos ilustrativos · No representan cotizaciones reales</span></div>
+<div class="ic-market-banner ic-candles-banner"><img alt="Animación ilustrativa de velas japonesas con tendencia ascendente" decoding="async" height="188" src="grafico_velas.gif" width="716"/></div>
+<div class="ic-market-caption ic-mining-caption">TECNOLOGÍA DE MINERÍA <span class="ic-market-caption-note">Equipos ilustrativos</span></div>
+<div class="ic-market-banner ic-mining-banner"><img alt="Animación de máquinas de minería con iluminación violeta" decoding="async" height="116" loading="lazy" src="maquinas_minado.gif" width="716"/></div>
+<div class="ic-market-banner ic-crypto-strip"><img alt="Cinta animada de símbolos de criptomonedas" decoding="async" height="51" loading="lazy" src="cinta_criptomonedas.gif" width="716"/></div>
 </section>
-<section class="ic-public-plans outer" id="planes" aria-labelledby="publicPlansTitle">
-  <div class="ic-section-heading">
-    <div><p class="eyebrow">EXPLORA · COMPARA · APRENDE</p><h2 id="publicPlansTitle">Un plan para cada <em>escenario.</em></h2><p>Selecciona cualquiera de los seis planes para abrir el registro. Después entrarás a tu panel con el plan elegido. Seleccionarlo no envía solicitudes: solo al confirmar «Invertir».</p></div>
-    <div class="ic-heading-pill"><span class="ic-small-glow"></span> 6 planes</div>
-  </div>
-  <div class="ic-plan-grid"><button type="button" class="ic-plan-card" data-public-plan="Essential" aria-label="Seleccionar plan ficticio Essential, capital de práctica 100 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">01 / 06</span><span class="ic-plan-chip">Entrada al simulador</span></span>
-      <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span class="ic-plan-name">ESSENTIAL</span>
-      <span class="ic-plan-description">Primer escenario</span>
-      <span class="ic-plan-divider"></span>
-      <span class="ic-plan-amount"><small>Capital virtual desde</small><b>100 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>2,0 %</b><small>Tasa semanal hipotética</small></span><span><b>8 semanas</b><small>Duración del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
-    </button>
-<button type="button" class="ic-plan-card" data-public-plan="Advanced" aria-label="Seleccionar plan ficticio Advanced, capital de práctica 300 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">02 / 06</span><span class="ic-plan-chip">Análisis comparativo</span></span>
-      <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span class="ic-plan-name">ADVANCED</span>
-      <span class="ic-plan-description">Escenario intermedio</span>
-      <span class="ic-plan-divider"></span>
-      <span class="ic-plan-amount"><small>Capital virtual desde</small><b>300 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>3,5 %</b><small>Tasa semanal hipotética</small></span><span><b>12 semanas</b><small>Duración del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
-    </button>
-<button type="button" class="ic-plan-card" data-public-plan="Prime" aria-label="Seleccionar plan ficticio Prime, capital de práctica 500 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">03 / 06</span><span class="ic-plan-chip">Mayor horizonte</span></span>
-      <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span class="ic-plan-name">PRIME</span>
-      <span class="ic-plan-description">Seguimiento de cartera</span>
-      <span class="ic-plan-divider"></span>
-      <span class="ic-plan-amount"><small>Capital virtual desde</small><b>500 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>5,0 %</b><small>Tasa semanal hipotética</small></span><span><b>16 semanas</b><small>Duración del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
-    </button>
-<button type="button" class="ic-plan-card ic-plan-featured" data-public-plan="Magnate Supremo" aria-label="Seleccionar plan ficticio Magnate Supremo, capital de práctica 1000 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">04 / 06</span><span class="ic-plan-chip">Caso intensivo</span></span>
-      <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span class="ic-plan-name">MAGNATE SUPREMO</span>
-      <span class="ic-plan-description">Evaluación de riesgo</span>
-      <span class="ic-plan-divider"></span>
-      <span class="ic-plan-amount"><small>Capital virtual desde</small><b>1.000 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>7,0 %</b><small>Tasa semanal hipotética</small></span><span><b>20 semanas</b><small>Duración del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
-    </button>
-<button type="button" class="ic-plan-card ic-plan-new" data-public-plan="Platinum" aria-label="Seleccionar plan ficticio Platinum, capital de práctica 1500 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">05 / 06</span><span class="ic-plan-chip">Nuevo escenario</span></span>
-      <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span class="ic-plan-name">PLATINUM</span>
-      <span class="ic-plan-description">Nivel avanzado</span>
-      <span class="ic-plan-divider"></span>
-      <span class="ic-plan-amount"><small>Capital virtual desde</small><b>1.500 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>8,5 %</b><small>Tasa semanal hipotética</small></span><span><b>24 semanas</b><small>Duración del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
-    </button>
-<button type="button" class="ic-plan-card ic-plan-new" data-public-plan="Signature" aria-label="Seleccionar plan ficticio Signature, capital de práctica 3000 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">06 / 06</span><span class="ic-plan-chip">Nuevo escenario</span></span>
-      <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span class="ic-plan-name">SIGNATURE</span>
-      <span class="ic-plan-description">Caso de alta exposición</span>
-      <span class="ic-plan-divider"></span>
-      <span class="ic-plan-amount"><small>Capital virtual desde</small><b>3.000 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>10,0 %</b><small>Tasa semanal hipotética</small></span><span><b>28 semanas</b><small>Duración del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
-    </button></div>
-  <p class="ic-plan-footnote"><b>Importante:</b> Todos los importes, tasas y plazos son hipótesis del simulador. Las cuentas no reciben pagos reales. Los porcentajes altos sirven para estudiar riesgos, no para prometer resultados.</p>
+<section aria-labelledby="publicPlansTitle" class="ic-public-plans outer" id="planes">
+<div class="ic-section-heading">
+<div><p class="eyebrow">EXPLORA · COMPARA · APRENDE</p><h2 id="publicPlansTitle">Un plan para cada <em>escenario.</em></h2><p>Selecciona cualquiera de los seis planes para abrir el registro. Después entrarás a tu panel con el plan elegido. Seleccionarlo no envía solicitudes: solo al confirmar «Invertir».</p></div>
+<div class="ic-heading-pill"><span class="ic-small-glow"></span> 6 planes</div>
+</div>
+<div class="ic-plan-grid"><button aria-label="Seleccionar plan ficticio Essential, capital de práctica 100 USDT, y registrarme" class="ic-plan-card" data-public-plan="Essential" type="button">
+<span class="ic-plan-top"><span class="ic-plan-index">01 / 06</span><span class="ic-plan-chip">Entrada al simulador</span></span>
+<span aria-hidden="true" class="ic-plan-monogram"><span></span><span></span><span></span></span>
+<span class="ic-plan-name">ESSENTIAL</span>
+<span class="ic-plan-description">Primer escenario</span>
+<span class="ic-plan-divider"></span>
+<span class="ic-plan-amount"><small>Capital virtual desde</small><b>100 <em>USDT demo</em></b></span>
+<span class="ic-plan-specs"><span><b>2,0 %</b><small>Tasa semanal hipotética</small></span><span><b>8 semanas</b><small>Duración del escenario</small></span></span>
+<span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
+</button>
+<button aria-label="Seleccionar plan ficticio Advanced, capital de práctica 300 USDT, y registrarme" class="ic-plan-card" data-public-plan="Advanced" type="button">
+<span class="ic-plan-top"><span class="ic-plan-index">02 / 06</span><span class="ic-plan-chip">Análisis comparativo</span></span>
+<span aria-hidden="true" class="ic-plan-monogram"><span></span><span></span><span></span></span>
+<span class="ic-plan-name">ADVANCED</span>
+<span class="ic-plan-description">Escenario intermedio</span>
+<span class="ic-plan-divider"></span>
+<span class="ic-plan-amount"><small>Capital virtual desde</small><b>300 <em>USDT demo</em></b></span>
+<span class="ic-plan-specs"><span><b>3,5 %</b><small>Tasa semanal hipotética</small></span><span><b>12 semanas</b><small>Duración del escenario</small></span></span>
+<span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
+</button>
+<button aria-label="Seleccionar plan ficticio Prime, capital de práctica 500 USDT, y registrarme" class="ic-plan-card" data-public-plan="Prime" type="button">
+<span class="ic-plan-top"><span class="ic-plan-index">03 / 06</span><span class="ic-plan-chip">Mayor horizonte</span></span>
+<span aria-hidden="true" class="ic-plan-monogram"><span></span><span></span><span></span></span>
+<span class="ic-plan-name">PRIME</span>
+<span class="ic-plan-description">Seguimiento de cartera</span>
+<span class="ic-plan-divider"></span>
+<span class="ic-plan-amount"><small>Capital virtual desde</small><b>500 <em>USDT demo</em></b></span>
+<span class="ic-plan-specs"><span><b>5,0 %</b><small>Tasa semanal hipotética</small></span><span><b>16 semanas</b><small>Duración del escenario</small></span></span>
+<span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
+</button>
+<button aria-label="Seleccionar plan ficticio Magnate Supremo, capital de práctica 1000 USDT, y registrarme" class="ic-plan-card ic-plan-featured" data-public-plan="Magnate Supremo" type="button">
+<span class="ic-plan-top"><span class="ic-plan-index">04 / 06</span><span class="ic-plan-chip">Caso intensivo</span></span>
+<span aria-hidden="true" class="ic-plan-monogram"><span></span><span></span><span></span></span>
+<span class="ic-plan-name">MAGNATE SUPREMO</span>
+<span class="ic-plan-description">Evaluación de riesgo</span>
+<span class="ic-plan-divider"></span>
+<span class="ic-plan-amount"><small>Capital virtual desde</small><b>1.000 <em>USDT demo</em></b></span>
+<span class="ic-plan-specs"><span><b>7,0 %</b><small>Tasa semanal hipotética</small></span><span><b>20 semanas</b><small>Duración del escenario</small></span></span>
+<span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
+</button>
+<button aria-label="Seleccionar plan ficticio Platinum, capital de práctica 1500 USDT, y registrarme" class="ic-plan-card ic-plan-new" data-public-plan="Platinum" type="button">
+<span class="ic-plan-top"><span class="ic-plan-index">05 / 06</span><span class="ic-plan-chip">Nuevo escenario</span></span>
+<span aria-hidden="true" class="ic-plan-monogram"><span></span><span></span><span></span></span>
+<span class="ic-plan-name">PLATINUM</span>
+<span class="ic-plan-description">Nivel avanzado</span>
+<span class="ic-plan-divider"></span>
+<span class="ic-plan-amount"><small>Capital virtual desde</small><b>1.500 <em>USDT demo</em></b></span>
+<span class="ic-plan-specs"><span><b>8,5 %</b><small>Tasa semanal hipotética</small></span><span><b>24 semanas</b><small>Duración del escenario</small></span></span>
+<span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
+</button>
+<button aria-label="Seleccionar plan ficticio Signature, capital de práctica 3000 USDT, y registrarme" class="ic-plan-card ic-plan-new" data-public-plan="Signature" type="button">
+<span class="ic-plan-top"><span class="ic-plan-index">06 / 06</span><span class="ic-plan-chip">Nuevo escenario</span></span>
+<span aria-hidden="true" class="ic-plan-monogram"><span></span><span></span><span></span></span>
+<span class="ic-plan-name">SIGNATURE</span>
+<span class="ic-plan-description">Caso de alta exposición</span>
+<span class="ic-plan-divider"></span>
+<span class="ic-plan-amount"><small>Capital virtual desde</small><b>3.000 <em>USDT demo</em></b></span>
+<span class="ic-plan-specs"><span><b>10,0 %</b><small>Tasa semanal hipotética</small></span><span><b>28 semanas</b><small>Duración del escenario</small></span></span>
+<span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">↗</span></span>
+</button></div>
+<p class="ic-plan-footnote"><b>Importante:</b> Todos los importes, tasas y plazos son hipótesis del simulador. Las cuentas no reciben pagos reales. Los porcentajes altos sirven para estudiar riesgos, no para prometer resultados.</p>
 </section>
 <section class="trust-strip"><div>VISIÓN ESTRATÉGICA</div><div>CONTROL DE CARTERA</div><div>ANÁLISIS DE MOVIMIENTOS</div><div>GESTIÓN DIGITAL</div></section>
-<section id="plataforma" class="section outer"><div class="section-intro"><p class="eyebrow">PLATAFORMA</p><h2>Una visión completa del mercado,<br><span>en un solo lugar.</span></h2><p>Consulta información financiera, compara estrategias y revisa cada movimiento desde un panel organizado.</p></div><div class="feature-grid"><article class="feature"><div class="feature-icon">▤</div><h3>Panel de cartera</h3><p>Visualiza posiciones, variaciones y la distribución de activos de un vistazo.</p></article><article class="feature"><div class="feature-icon">⌁</div><h3>Planes de gestión</h3><p>Compara distintos esquemas de rendimiento, condiciones y horizontes de inversión.</p></article><article class="feature"><div class="feature-icon">⧉</div><h3>Centro de movimientos</h3><p>Consulta solicitudes, operaciones registradas y estados de procesamiento.</p></article></div></section>
-<section id="estrategia" class="section outer narrow-split"><div><p class="eyebrow">ESTRATEGIA</p><h2>Analiza cada dato.<br><span>Comprende cada decisión.</span></h2><p>Los números solo son el principio. El verdadero análisis está en comprender su origen, sus riesgos y su sostenibilidad.</p></div><div class="strategy-list"><div><strong>01</strong><div><b>Información</b><p>Revisa la documentación disponible y los resultados.</p></div></div><div><strong>02</strong><div><b>Seguimiento</b><p>Observa cambios en condiciones, estados y actividad.</p></div></div><div><strong>03</strong><div><b>Criterio propio</b><p>Evalúa por ti mismo antes de tomar cualquier decisión.</p></div></div></div></section>
-<section id="soluciones" class="bottom-cta outer"><div><p class="eyebrow">INVEST CAPITAL</p><h2>Descubre la experiencia.</h2><p>Explora el panel y sus herramientas desde una misma interfaz.</p></div><button class="btn btn-primary btn-large" id="bottomBtn">Crear cuenta ↗</button></section>
+<section class="section outer" id="plataforma"><div class="section-intro"><p class="eyebrow">PLATAFORMA</p><h2>Una visión completa del mercado,<br/><span>en un solo lugar.</span></h2><p>Consulta información financiera, compara estrategias y revisa cada movimiento desde un panel organizado.</p></div><div class="feature-grid"><article class="feature"><div class="feature-icon">▤</div><h3>Panel de cartera</h3><p>Visualiza posiciones, variaciones y la distribución de activos de un vistazo.</p></article><article class="feature"><div class="feature-icon">⌁</div><h3>Planes de gestión</h3><p>Compara distintos esquemas de rendimiento, condiciones y horizontes de inversión.</p></article><article class="feature"><div class="feature-icon">⧉</div><h3>Centro de movimientos</h3><p>Consulta solicitudes, operaciones registradas y estados de procesamiento.</p></article></div></section>
+<section class="section outer narrow-split" id="estrategia"><div><p class="eyebrow">ESTRATEGIA</p><h2>Analiza cada dato.<br/><span>Comprende cada decisión.</span></h2><p>Los números solo son el principio. El verdadero análisis está en comprender su origen, sus riesgos y su sostenibilidad.</p></div><div class="strategy-list"><div><strong>01</strong><div><b>Información</b><p>Revisa la documentación disponible y los resultados.</p></div></div><div><strong>02</strong><div><b>Seguimiento</b><p>Observa cambios en condiciones, estados y actividad.</p></div></div><div><strong>03</strong><div><b>Criterio propio</b><p>Evalúa por ti mismo antes de tomar cualquier decisión.</p></div></div></div></section>
+<section class="bottom-cta outer" id="soluciones"><div><p class="eyebrow">INVEST CAPITAL</p><h2>Descubre la experiencia.</h2><p>Explora el panel y sus herramientas desde una misma interfaz.</p></div><button class="btn btn-primary btn-large" id="bottomBtn">Crear cuenta ↗</button></section>
 </main><footer class="site-footer outer"><span>© 2026 Invest Capital</span><span>Proyecto académico · Indicadores de referencia · Sin operaciones reales</span></footer>
 <!-- Dos pantallas separadas. Las contraseñas se gestionan ÚNICAMENTE con Firebase Authentication. -->
-<div id="consent" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
-  <form class="dialog register-dialog auth-dialog" id="registrationForm" novalidate>
-    <p class="dialog-kicker">INVEST CAPITAL · REGISTRO</p>
-    <h2 id="consentTitle">Crear cuenta</h2>
-    <p>Crea tus credenciales para acceder al simulador de Invest Capital.</p><p id="selectedPlanReg" class="ic-selected-plan-hint hidden" role="status"></p>
-    <div class="ic-existing-session hidden" id="existingSessionNotice" role="status" aria-live="polite">
-      <strong>Este navegador conserva una sesión iniciada</strong>
-      <p>Cuenta activa: <span id="existingSessionEmail"></span>. Aunque no hayas abierto Invest Capital recientemente, Firebase puede mantener tu sesión anterior en este navegador.</p>
-      <p>Para crear otra cuenta, cierra primero esta sesión. No se borrará la cuenta anterior ni su historial de simulación.</p>
-      <div class="ic-existing-session-actions">
-        <button type="button" id="changeStudentAccount" class="btn btn-soft">Cerrar sesión y registrar otra cuenta</button>
-        <button type="button" id="continueCurrentAccount" class="auth-link hidden">Continuar con mi cuenta</button>
-      </div>
-    </div>
-    <div class="registration-fields">
-      <div class="registration-field full"><label class="field-label" for="studentName">Nombre y apellidos *</label><input id="studentName" name="studentName" class="text-input" autocomplete="name" required maxlength="60" placeholder="Ej. Ana Pérez"></div>
-      <div class="registration-field full"><label class="field-label" for="studentEmail">Correo electrónico *</label><input id="studentEmail" name="studentEmail" class="text-input" autocomplete="email" type="email" required maxlength="120" placeholder="correo@ejemplo.com"></div>
-      <div class="registration-field"><label class="field-label" for="studentPassword">Crear contraseña *</label><input id="studentPassword" name="studentPassword" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="Mínimo 8 caracteres"></div>
-      <div class="registration-field"><label class="field-label" for="studentPasswordConfirm">Confirmar contraseña *</label><input id="studentPasswordConfirm" name="studentPasswordConfirm" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="Repite la contraseña"></div>
-      <div class="registration-field full"><label class="field-label" for="studentReferral">Código de referido <span class="field-optional">(opcional)</span></label><input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-…" autocomplete="off" spellcheck="false"><p class="tiny">Introduce el código de tu compañero si recibiste una invitación del aula.</p></div>
-    </div>
-    <div class="legacy-upgrade hidden" id="legacyUpgradeRow"><label><input type="checkbox" id="legacyUpgrade"> Ya tengo una cuenta de práctica en este navegador: conservar mis actividades y mi código de referido al crear contraseña.</label></div>
-    <div class="registration-consent"><input type="checkbox" id="academicConsent" required><label for="academicConsent">Acepto participar en un <strong>ejercicio académico de inversión simulada</strong>, sin depósitos ni dinero reales. El profesor podrá ver mis datos de registro, mi actividad y vínculos de compañeros. Mi nombre y correo se enviarán al servicio externo FormSubmit para avisar del alta; mi contraseña nunca se enviará a ese servicio.</label></div>
-    <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Cancelar</button><button type="submit" id="acceptBtn" class="btn btn-primary">Crear cuenta</button></div>
-    <p class="form-error" id="consentError" aria-live="polite"></p>
-    <p class="switch-auth">¿Ya tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesión</button></p>
-  </form>
+<div aria-labelledby="consentTitle" aria-modal="true" class="overlay hidden" id="consent" role="dialog">
+<form class="dialog register-dialog auth-dialog" id="registrationForm" novalidate="">
+<p class="dialog-kicker">INVEST CAPITAL · REGISTRO</p>
+<h2 id="consentTitle">Crear cuenta</h2>
+<p>Crea tus credenciales para acceder al simulador de Invest Capital.</p><p class="ic-selected-plan-hint hidden" id="selectedPlanReg" role="status"></p>
+<div aria-live="polite" class="ic-existing-session hidden" id="existingSessionNotice" role="status">
+<strong>Este navegador conserva una sesión iniciada</strong>
+<p>Cuenta activa: <span id="existingSessionEmail"></span>. Aunque no hayas abierto Invest Capital recientemente, Firebase puede mantener tu sesión anterior en este navegador.</p>
+<p>Para crear otra cuenta, cierra primero esta sesión. No se borrará la cuenta anterior ni su historial de simulación.</p>
+<div class="ic-existing-session-actions">
+<button class="btn btn-soft" id="changeStudentAccount" type="button">Cerrar sesión y registrar otra cuenta</button>
+<button class="auth-link hidden" id="continueCurrentAccount" type="button">Continuar con mi cuenta</button>
 </div>
-<div id="loginOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-  <form class="dialog auth-dialog login-dialog" id="loginForm" novalidate>
-    <p class="dialog-kicker">INVEST CAPITAL · ACCESO</p>
-    <h2 id="loginTitle">Iniciar sesión</h2>
-    <p>Entra con el correo y la contraseña de tu cuenta.</p><p id="selectedPlanLogin" class="ic-selected-plan-hint hidden" role="status"></p>
-    <label class="field-label" for="loginEmail">Correo electrónico</label><input class="text-input" id="loginEmail" name="email" type="email" autocomplete="email" required placeholder="correo@ejemplo.com">
-    <label class="field-label" for="loginPassword">Contraseña</label><input class="text-input" id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña">
-    <div class="login-help"><button type="button" id="resetPassword" class="auth-link">Olvidé mi contraseña</button></div>
-    <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelLogin">Cancelar</button><button class="btn btn-primary" id="submitLogin" type="submit">Entrar a mi cuenta</button></div>
-    <p class="form-error" id="loginError" role="status" aria-live="polite"></p>
-    <p class="switch-auth">¿No tienes una cuenta? <button type="button" class="auth-link" id="goRegister">Registrarse</button></p>
-    <p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
-  </form>
+</div>
+<div class="registration-fields">
+<div class="registration-field full"><label class="field-label" for="studentName">Nombre y apellidos *</label><input autocomplete="name" class="text-input" id="studentName" maxlength="60" name="studentName" placeholder="Ej. Ana Pérez" required=""/></div>
+<div class="registration-field full"><label class="field-label" for="studentEmail">Correo electrónico *</label><input autocomplete="email" class="text-input" id="studentEmail" maxlength="120" name="studentEmail" placeholder="correo@ejemplo.com" required="" type="email"/></div>
+<div class="registration-field"><label class="field-label" for="studentPassword">Crear contraseña *</label><input autocomplete="new-password" class="text-input" id="studentPassword" maxlength="128" minlength="8" name="studentPassword" placeholder="Mínimo 8 caracteres" required="" type="password"/></div>
+<div class="registration-field"><label class="field-label" for="studentPasswordConfirm">Confirmar contraseña *</label><input autocomplete="new-password" class="text-input" id="studentPasswordConfirm" maxlength="128" minlength="8" name="studentPasswordConfirm" placeholder="Repite la contraseña" required="" type="password"/></div>
+<div class="registration-field full"><label class="field-label" for="studentReferral">Código de referido <span class="field-optional">(opcional)</span></label><input autocomplete="off" class="text-input" id="studentReferral" maxlength="72" name="studentReferral" placeholder="IC-…" spellcheck="false"/><p class="tiny">Introduce el código de tu compañero si recibiste una invitación del aula.</p></div>
+</div>
+<div class="legacy-upgrade hidden" id="legacyUpgradeRow"><label><input id="legacyUpgrade" type="checkbox"/> Ya tengo una cuenta de práctica en este navegador: conservar mis actividades y mi código de referido al crear contraseña.</label></div>
+<div class="registration-consent"><input id="academicConsent" required="" type="checkbox"/><label for="academicConsent">Acepto participar en un <strong>ejercicio académico de inversión simulada</strong>, sin depósitos ni dinero reales. El profesor podrá ver mis datos de registro, mi actividad y vínculos de compañeros. Mi nombre y correo se enviarán al servicio externo FormSubmit para avisar del alta; mi contraseña nunca se enviará a ese servicio.</label></div>
+<div class="dialog-actions"><button class="btn btn-soft" id="cancelBtn" type="button">Cancelar</button><button class="btn btn-primary" id="acceptBtn" type="submit">Crear cuenta</button></div>
+<p aria-live="polite" class="form-error" id="consentError"></p>
+<p class="switch-auth">¿Ya tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesión</button></p>
+</form>
+</div>
+<div aria-labelledby="loginTitle" aria-modal="true" class="overlay hidden" id="loginOverlay" role="dialog">
+<form class="dialog auth-dialog login-dialog" id="loginForm" novalidate="">
+<p class="dialog-kicker">INVEST CAPITAL · ACCESO</p>
+<h2 id="loginTitle">Iniciar sesión</h2>
+<p>Entra con el correo y la contraseña de tu cuenta.</p><p class="ic-selected-plan-hint hidden" id="selectedPlanLogin" role="status"></p>
+<label class="field-label" for="loginEmail">Correo electrónico</label><input autocomplete="email" class="text-input" id="loginEmail" name="email" placeholder="correo@ejemplo.com" required="" type="email"/>
+<label class="field-label" for="loginPassword">Contraseña</label><input autocomplete="current-password" class="text-input" id="loginPassword" name="password" placeholder="Tu contraseña" required="" type="password"/>
+<div class="login-help"><button class="auth-link" id="resetPassword" type="button">Olvidé mi contraseña</button></div>
+<div class="dialog-actions"><button class="btn btn-soft" id="cancelLogin" type="button">Cancelar</button><button class="btn btn-primary" id="submitLogin" type="submit">Entrar a mi cuenta</button></div>
+<p aria-live="polite" class="form-error" id="loginError" role="status"></p>
+<p class="switch-auth">¿No tienes una cuenta? <button class="auth-link" id="goRegister" type="button">Registrarse</button></p>
+<p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
+</form>
 </div>
 <script src="landing.js?v=93" type="module"></script></body></html>

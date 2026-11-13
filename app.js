@@ -857,7 +857,10 @@ $$('[data-calc-days]').forEach(button=>button.addEventListener('click',()=>{$('#
 $('#calcPlan').addEventListener('change',()=>{const p=plans[$('#calcPlan').value];if(Number($('#calcCapital').value)<p.min)$('#calcCapital').value=p.min;updateCalculator();});
 ['calcCapital','calcDays'].forEach(id=>$('#'+id).addEventListener('change',()=>record('calculator',`Simuló ${$('#calcCapital').value} USDT durante ${$('#calcDays').value} días en ${$('#calcPlan').value}`,'calculadora')));
 updateCalculator();
-$$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));$$('[data-period]').forEach(b=>{
+$$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+// Acceso directo desde la portada al mismo centro de soporte del dashboard.
+if(new URLSearchParams(location.search).get('view')==='soporte'){setView('soporte');}
+$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));$$('[data-period]').forEach(b=>{
  const isShort=b.dataset.period==='6M';
  b.dataset.projectionDays=isShort?'30':'90';
  b.textContent=isShort?'30D':'90D';
