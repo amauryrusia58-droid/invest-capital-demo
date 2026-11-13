@@ -2,24 +2,23 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#060d1a">
-  <meta name="description" content="Invest Capital: simulador educativo con seis planes de inversi√≥n ficticia, aprobaciones docentes y carteras virtuales. Sin dinero real.">
-  <title>Invest Capital ¬∑ Seis planes de simulaci√≥n financiera</title>
+  <meta name="description" content="Invest Capital: simulador educativo con seis planes de inversiÛn ficticia, aprobaciones docentes y carteras virtuales. Sin dinero real.">
+  <title>Invest Capital ∑ Seis planes de simulaciÛn financiera</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=98">
+  <link rel="stylesheet" href="styles.css?v=99">
   <style>
     /* ==========================================================================
-       INVEST CAPITAL - TEMA EJECUTIVO AZUL MARINO & ORO MET√ÅLICO
-       Sobrescribe √∫nicamente la capa visual manteniendo toda la l√≥gica intacta
+       INVEST CAPITAL - DISE—O EJECUTIVO 100% RESPONSIVE & PROFESIONAL
        ========================================================================== */
     :root {
       --bg-deep: #060d1a;
       --bg-navy: #0b162c;
-      --bg-card: rgba(13, 25, 48, 0.78);
-      --bg-card-hover: rgba(19, 36, 68, 0.92);
+      --bg-card: rgba(13, 25, 48, 0.85);
+      --bg-card-hover: rgba(19, 36, 68, 0.95);
       --gold-primary: #d4af37;
       --gold-light: #f3e5ab;
       --gold-dark: #aa8220;
@@ -28,12 +27,13 @@
       --text-muted: #9eb0c9;
       --border-subtle: rgba(212, 175, 55, 0.18);
       --border-strong: rgba(212, 175, 55, 0.45);
-      --radius-lg: 18px;
-      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-md: 10px;
     }
 
     * {
       box-sizing: border-box;
+      min-width: 0;
     }
 
     html {
@@ -52,13 +52,15 @@
       color: var(--text-main);
       line-height: 1.6;
       overflow-x: hidden;
+      width: 100%;
     }
 
     .outer {
+      width: 100%;
       max-width: 1220px;
       margin: 0 auto;
-      padding-left: 24px;
-      padding-right: 24px;
+      padding-left: 20px;
+      padding-right: 20px;
     }
 
     /* --- HEADER --- */
@@ -69,21 +71,22 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 32px;
-      background: rgba(6, 13, 26, 0.85);
+      padding: 16px 24px;
+      background: rgba(6, 13, 26, 0.9);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border-subtle);
+      width: 100%;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
       color: var(--text-main);
       font-family: 'Cinzel', serif;
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       letter-spacing: 0.08em;
     }
 
@@ -91,18 +94,18 @@
       display: inline-flex;
       align-items: flex-end;
       gap: 3px;
-      height: 22px;
+      height: 20px;
     }
 
     .brand-mark span {
-      width: 4px;
+      width: 3px;
       background: linear-gradient(180deg, var(--gold-light), var(--gold-primary));
       border-radius: 2px;
     }
 
-    .brand-mark span:nth-child(1) { height: 10px; }
-    .brand-mark span:nth-child(2) { height: 16px; }
-    .brand-mark span:nth-child(3) { height: 22px; }
+    .brand-mark span:nth-child(1) { height: 8px; }
+    .brand-mark span:nth-child(2) { height: 14px; }
+    .brand-mark span:nth-child(3) { height: 20px; }
 
     .brand-highlight {
       color: var(--gold-primary);
@@ -111,13 +114,13 @@
 
     .top-nav {
       display: flex;
-      gap: 28px;
+      gap: 24px;
     }
 
     .top-nav a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 500;
       transition: color 0.25s ease;
     }
@@ -129,7 +132,7 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     /* --- BOTONES --- */
@@ -138,20 +141,21 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 10px;
       font-family: inherit;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       transition: all 0.25s ease;
       border: 1px solid transparent;
+      white-space: nowrap;
     }
 
     .btn-large {
-      padding: 14px 26px;
-      font-size: 0.98rem;
+      padding: 13px 24px;
+      font-size: 0.96rem;
     }
 
     .btn-primary {
@@ -163,7 +167,6 @@
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 26px rgba(212, 175, 55, 0.4);
-      filter: brightness(1.05);
     }
 
     .btn-soft {
@@ -174,7 +177,6 @@
 
     .btn-soft:hover {
       background: rgba(212, 175, 55, 0.16);
-      transform: translateY(-2px);
     }
 
     .btn-ghost {
@@ -191,39 +193,39 @@
     /* --- HERO SECTION --- */
     .ic-home-hero {
       display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 48px;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
       align-items: center;
-      padding-top: 64px;
-      padding-bottom: 64px;
+      padding-top: 48px;
+      padding-bottom: 48px;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--gold-primary);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .status-dot, .ic-demo-dot, .ic-market-dot, .ic-small-glow {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--gold-primary);
-      box-shadow: 0 0 10px var(--gold-primary);
+      box-shadow: 0 0 8px var(--gold-primary);
       display: inline-block;
     }
 
     .ic-hero-copy h1 {
       font-family: 'Cinzel', serif;
-      font-size: clamp(2.2rem, 4vw, 3.4rem);
-      line-height: 1.15;
-      margin: 0 0 20px 0;
+      font-size: clamp(2rem, 3.8vw, 3.2rem);
+      line-height: 1.2;
+      margin: 0 0 18px 0;
       color: #ffffff;
     }
 
@@ -236,27 +238,27 @@
 
     .ic-hero-copy p {
       color: var(--text-muted);
-      font-size: 1.05rem;
-      max-width: 560px;
-      margin-bottom: 28px;
+      font-size: 1.02rem;
+      max-width: 540px;
+      margin-bottom: 24px;
     }
 
     .ic-hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 36px;
+      gap: 12px;
+      margin-bottom: 28px;
     }
 
     .ic-hero-metrics {
       display: flex;
-      gap: 32px;
-      padding: 18px 24px;
+      gap: 24px;
+      padding: 16px 20px;
       background: rgba(11, 22, 44, 0.7);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       max-width: fit-content;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .ic-hero-metrics span {
@@ -266,51 +268,51 @@
 
     .ic-hero-metrics b {
       font-family: 'Cinzel', serif;
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       color: var(--gold-light);
     }
 
     .ic-hero-metrics small {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
 
     .ic-sim-notice {
-      font-size: 0.85rem !important;
+      font-size: 0.82rem !important;
       color: var(--text-muted) !important;
       margin-bottom: 0 !important;
     }
 
-    /* --- TARJETA VISUAL DERECHA (BOARD) --- */
+    /* --- TARJETA HERO BOARD --- */
     .ic-hero-board {
       position: relative;
     }
 
     .ic-board-glow {
       position: absolute;
-      inset: -15px;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.18), transparent 70%);
-      filter: blur(24px);
+      inset: -10px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.15), transparent 70%);
+      filter: blur(20px);
       z-index: 0;
     }
 
     .ic-board-card {
       position: relative;
       z-index: 1;
-      background: linear-gradient(160deg, rgba(16, 31, 60, 0.92), rgba(8, 16, 33, 0.96));
+      background: linear-gradient(160deg, rgba(16, 31, 60, 0.95), rgba(8, 16, 33, 0.98));
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-lg);
-      padding: 28px;
-      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
     .ic-board-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .ic-mini-brand {
@@ -318,21 +320,22 @@
       font-weight: 700;
       letter-spacing: 0.1em;
       color: var(--gold-light);
+      font-size: 0.95rem;
     }
 
     .ic-mini-brand span {
       color: var(--gold-primary);
-      margin-left: 4px;
+      margin-left: 3px;
     }
 
     .ic-demo-tag {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
+      gap: 5px;
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
-      padding: 4px 10px;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
       border-radius: 999px;
       background: rgba(212, 175, 55, 0.12);
       border: 1px solid var(--border-strong);
@@ -340,35 +343,35 @@
     }
 
     .ic-board-kicker {
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       color: var(--gold-primary);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .ic-board-card h2 {
       font-family: 'Cinzel', serif;
-      font-size: 1.65rem;
-      line-height: 1.25;
-      margin: 0 0 8px 0;
+      font-size: 1.45rem;
+      line-height: 1.2;
+      margin: 0 0 6px 0;
       color: #fff;
     }
 
     .ic-board-card > p {
       color: var(--text-muted);
-      font-size: 0.92rem;
-      margin: 0 0 20px 0;
+      font-size: 0.88rem;
+      margin: 0 0 16px 0;
     }
 
     .ic-board-graphic {
       position: relative;
-      height: 150px;
-      background: rgba(5, 11, 22, 0.65);
+      height: 135px;
+      background: rgba(5, 11, 22, 0.75);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       overflow: hidden;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .ic-board-graphic svg {
@@ -377,18 +380,18 @@
     }
 
     .ic-board-note {
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
       color: var(--text-muted);
       text-align: center;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .ic-board-steps {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 16px;
+      padding-top: 14px;
       border-top: 1px solid var(--border-subtle);
     }
 
@@ -400,25 +403,25 @@
 
     .ic-board-steps b {
       color: var(--gold-primary);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .ic-board-steps small {
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.74rem;
     }
 
     .ic-board-steps i {
       flex: 1;
       height: 1px;
       background: var(--border-subtle);
-      margin: 0 12px;
+      margin: 0 10px;
     }
 
-    /* --- BANDA VISUAL DE MERCADO --- */
+    /* --- NUEVO PANEL PROFESIONAL DE MERCADO (EN SUSTITUCI”N DE BANNERS ANTIGUOS) --- */
     .ic-market-visual {
-      padding-top: 24px;
-      padding-bottom: 48px;
+      padding-top: 20px;
+      padding-bottom: 40px;
     }
 
     .ic-market-caption {
@@ -426,52 +429,102 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       color: var(--gold-light);
-      margin: 18px 0 10px;
+      margin: 20px 0 12px;
     }
 
     .ic-market-caption-note {
       font-weight: 400;
       letter-spacing: 0.02em;
       color: var(--text-muted);
+      font-size: 0.74rem;
     }
 
-    .ic-market-banner {
-      border-radius: var(--radius-md);
-      overflow: hidden;
+    .ic-market-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .ic-market-ticker-card {
+      background: linear-gradient(145deg, rgba(11, 22, 44, 0.9), rgba(6, 13, 26, 0.95));
       border: 1px solid var(--border-subtle);
-      background: #070f1e;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s ease;
     }
 
-    .ic-market-banner img {
-      display: block;
-      width: 100%;
-      height: auto;
-      filter: sepia(0.25) hue-rotate(175deg) saturate(1.15);
+    .ic-market-ticker-card:hover {
+      border-color: var(--border-strong);
     }
 
-    /* --- SECCI√ìN DE PLANES --- */
+    .ic-ticker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ic-ticker-symbol {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #ffffff;
+      letter-spacing: 0.06em;
+    }
+
+    .ic-ticker-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(46, 204, 113, 0.15);
+      color: #2ecc71;
+      border: 1px solid rgba(46, 204, 113, 0.3);
+    }
+
+    .ic-ticker-badge.negative {
+      background: rgba(231, 76, 60, 0.15);
+      color: #e74c3c;
+      border-color: rgba(231, 76, 60, 0.3);
+    }
+
+    .ic-ticker-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gold-light);
+    }
+
+    .ic-ticker-footer {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* --- SECCI”N DE PLANES --- */
     .ic-public-plans {
-      padding-top: 56px;
-      padding-bottom: 64px;
+      padding-top: 48px;
+      padding-bottom: 56px;
     }
 
     .ic-section-heading {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      gap: 24px;
-      margin-bottom: 36px;
+      gap: 20px;
+      margin-bottom: 32px;
     }
 
     .ic-section-heading h2 {
       font-family: 'Cinzel', serif;
-      font-size: clamp(1.8rem, 3vw, 2.5rem);
-      margin: 0 0 12px 0;
+      font-size: clamp(1.6rem, 2.8vw, 2.3rem);
+      margin: 0 0 10px 0;
     }
 
     .ic-section-heading h2 em {
@@ -481,28 +534,29 @@
 
     .ic-section-heading p {
       color: var(--text-muted);
-      max-width: 660px;
+      max-width: 620px;
       margin: 0;
+      font-size: 0.95rem;
     }
 
     .ic-heading-pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
+      gap: 6px;
+      padding: 6px 14px;
       border-radius: 999px;
       background: rgba(212, 175, 55, 0.1);
       border: 1px solid var(--border-strong);
       color: var(--gold-light);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       white-space: nowrap;
     }
 
     .ic-plan-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 20px;
     }
 
     .ic-plan-card {
@@ -512,25 +566,26 @@
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
-      padding: 26px;
+      padding: 24px;
       color: var(--text-main);
       font-family: inherit;
       cursor: pointer;
-      transition: all 0.28s ease;
+      transition: all 0.25s ease;
       position: relative;
       overflow: hidden;
+      width: 100%;
     }
 
     .ic-plan-card:hover {
       background: var(--bg-card-hover);
       border-color: var(--gold-primary);
-      transform: translateY(-5px);
-      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45), 0 0 22px var(--gold-glow);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4), 0 0 18px var(--gold-glow);
     }
 
     .ic-plan-featured {
       border-color: var(--border-strong);
-      background: linear-gradient(165deg, rgba(22, 42, 78, 0.9), rgba(10, 20, 40, 0.95));
+      background: linear-gradient(165deg, rgba(22, 42, 78, 0.92), rgba(10, 20, 40, 0.96));
     }
 
     .ic-plan-top {
@@ -538,20 +593,20 @@
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .ic-plan-index {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 700;
       color: var(--text-muted);
       letter-spacing: 0.1em;
     }
 
     .ic-plan-chip {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 6px;
       background: rgba(212, 175, 55, 0.12);
       color: var(--gold-light);
@@ -561,11 +616,11 @@
     .ic-plan-monogram {
       display: inline-flex;
       gap: 4px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .ic-plan-monogram span {
-      width: 18px;
+      width: 16px;
       height: 3px;
       background: var(--gold-primary);
       border-radius: 2px;
@@ -573,15 +628,15 @@
 
     .ic-plan-name {
       font-family: 'Cinzel', serif;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       color: #ffffff;
       margin-bottom: 4px;
     }
 
     .ic-plan-description {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
     }
 
@@ -590,31 +645,31 @@
       width: 100%;
       height: 1px;
       background: var(--border-subtle);
-      margin: 18px 0;
+      margin: 16px 0;
     }
 
     .ic-plan-amount {
       display: flex;
       flex-direction: column;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .ic-plan-amount small {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
 
     .ic-plan-amount b {
-      font-size: 1.75rem;
+      font-size: 1.6rem;
       color: var(--gold-light);
       margin-top: 2px;
     }
 
     .ic-plan-amount em {
       font-style: normal;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 500;
       color: var(--gold-primary);
     }
@@ -622,12 +677,12 @@
     .ic-plan-specs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
-      padding: 12px;
-      background: rgba(5, 11, 22, 0.55);
+      padding: 10px 12px;
+      background: rgba(5, 11, 22, 0.6);
       border-radius: var(--radius-md);
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .ic-plan-specs span {
@@ -636,12 +691,12 @@
     }
 
     .ic-plan-specs b {
-      font-size: 1.05rem;
+      font-size: 1rem;
       color: #ffffff;
     }
 
     .ic-plan-specs small {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
     }
 
@@ -651,19 +706,19 @@
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      padding-top: 14px;
+      padding-top: 12px;
       border-top: 1px solid var(--border-subtle);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--gold-light);
     }
 
     .ic-plan-footnote {
-      margin-top: 24px;
-      font-size: 0.85rem;
+      margin-top: 20px;
+      font-size: 0.82rem;
       color: var(--text-muted);
       background: rgba(11, 22, 44, 0.5);
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-left: 3px solid var(--gold-primary);
       border-radius: 0 8px 8px 0;
     }
@@ -672,28 +727,28 @@
     .trust-strip {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      padding: 24px 32px;
+      gap: 12px;
+      padding: 20px 24px;
       background: rgba(10, 20, 40, 0.85);
       border-top: 1px solid var(--border-subtle);
       border-bottom: 1px solid var(--border-subtle);
       text-align: center;
       font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.14em;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
       color: var(--gold-light);
     }
 
     /* --- PLATAFORMA & ESTRATEGIA --- */
     .section {
-      padding-top: 72px;
-      padding-bottom: 72px;
+      padding-top: 60px;
+      padding-bottom: 60px;
     }
 
     .section-intro h2, .narrow-split h2 {
       font-family: 'Cinzel', serif;
-      font-size: clamp(1.7rem, 3vw, 2.3rem);
-      margin: 0 0 14px 0;
+      font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+      margin: 0 0 12px 0;
     }
 
     .section-intro h2 span, .narrow-split h2 span {
@@ -702,21 +757,22 @@
 
     .section-intro p, .narrow-split p {
       color: var(--text-muted);
-      max-width: 620px;
+      max-width: 600px;
+      font-size: 0.95rem;
     }
 
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin-top: 36px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 32px;
     }
 
     .feature {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
-      padding: 28px;
+      padding: 24px;
       transition: border-color 0.25s ease;
     }
 
@@ -728,46 +784,46 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
       background: rgba(212, 175, 55, 0.12);
       border: 1px solid var(--border-strong);
       color: var(--gold-primary);
-      font-size: 1.3rem;
-      margin-bottom: 16px;
+      font-size: 1.2rem;
+      margin-bottom: 14px;
     }
 
     .feature h3 {
-      margin: 0 0 10px 0;
-      font-size: 1.15rem;
+      margin: 0 0 8px 0;
+      font-size: 1.1rem;
       color: #ffffff;
     }
 
     .feature p {
       margin: 0;
       color: var(--text-muted);
-      font-size: 0.94rem;
+      font-size: 0.91rem;
     }
 
     .narrow-split {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 48px;
+      gap: 40px;
       align-items: center;
     }
 
     .strategy-list {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
 
     .strategy-list > div {
       display: flex;
-      gap: 18px;
+      gap: 16px;
       align-items: flex-start;
-      padding: 20px;
+      padding: 18px;
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
@@ -775,19 +831,20 @@
 
     .strategy-list strong {
       font-family: 'Cinzel', serif;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       color: var(--gold-primary);
     }
 
     .strategy-list b {
       display: block;
       color: #ffffff;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      font-size: 0.95rem;
     }
 
     .strategy-list p {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
     }
 
@@ -796,49 +853,50 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 24px;
-      padding: 44px;
-      margin-bottom: 64px;
+      gap: 20px;
+      padding: 36px;
+      margin-bottom: 48px;
       background: linear-gradient(135deg, rgba(18, 36, 70, 0.92), rgba(9, 18, 36, 0.96));
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-lg);
-      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
     }
 
     .bottom-cta h2 {
       font-family: 'Cinzel', serif;
-      margin: 0 0 8px 0;
-      font-size: 1.9rem;
+      margin: 0 0 6px 0;
+      font-size: 1.7rem;
     }
 
     .bottom-cta p {
       margin: 0;
       color: var(--text-muted);
+      font-size: 0.95rem;
     }
 
     .site-footer {
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 16px;
-      padding-top: 28px;
-      padding-bottom: 36px;
+      gap: 14px;
+      padding-top: 24px;
+      padding-bottom: 32px;
       border-top: 1px solid var(--border-subtle);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
     }
 
-    /* --- MODALES DE REGISTRO Y ACCESO --- */
+    /* --- MODALES --- */
     .overlay {
       position: fixed;
       inset: 0;
       z-index: 100;
-      background: rgba(3, 7, 15, 0.82);
-      backdrop-filter: blur(8px);
+      background: rgba(3, 7, 15, 0.85);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
     }
 
     .overlay.hidden, .hidden {
@@ -847,41 +905,41 @@
 
     .dialog {
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       max-height: 90vh;
       overflow-y: auto;
       background: linear-gradient(170deg, #0e1d38 0%, #070f1f 100%);
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-lg);
-      padding: 32px;
-      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.7);
+      padding: 28px;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
       color: var(--text-main);
     }
 
     .dialog-kicker {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
       color: var(--gold-primary);
-      margin: 0 0 8px 0;
+      margin: 0 0 6px 0;
     }
 
     .dialog h2 {
       font-family: 'Cinzel', serif;
-      margin: 0 0 8px 0;
-      font-size: 1.65rem;
+      margin: 0 0 6px 0;
+      font-size: 1.5rem;
     }
 
     .dialog > p {
       color: var(--text-muted);
-      font-size: 0.92rem;
-      margin: 0 0 18px 0;
+      font-size: 0.9rem;
+      margin: 0 0 16px 0;
     }
 
     .registration-fields {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 12px;
     }
 
     .registration-field.full {
@@ -890,22 +948,22 @@
 
     .field-label {
       display: block;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--gold-light);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .text-input {
       width: 100%;
-      padding: 11px 14px;
+      padding: 10px 12px;
       background: rgba(5, 11, 22, 0.85);
       border: 1px solid var(--border-subtle);
       border-radius: 8px;
       color: #ffffff;
       font-family: inherit;
-      font-size: 0.94rem;
-      margin-bottom: 12px;
+      font-size: 0.92rem;
+      margin-bottom: 10px;
     }
 
     .text-input:focus {
@@ -915,17 +973,17 @@
     }
 
     .tiny {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
-      margin: -6px 0 10px 0;
+      margin: -4px 0 8px 0;
     }
 
     .registration-consent {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      margin: 16px 0;
-      font-size: 0.82rem;
+      margin: 14px 0;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
@@ -937,8 +995,8 @@
     .dialog-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 10px;
+      margin-top: 18px;
     }
 
     .auth-link {
@@ -954,21 +1012,22 @@
 
     .form-error {
       color: #ff7b7b;
-      font-size: 0.85rem;
-      margin-top: 10px;
+      font-size: 0.82rem;
+      margin-top: 8px;
     }
 
     .switch-auth {
       text-align: center;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
-      margin-top: 18px;
+      margin-top: 16px;
     }
 
-    /* --- RESPONSIVE --- */
+    /* --- RESPONSIVE OPTIMIZADO PARA M”VILES --- */
     @media (max-width: 920px) {
       .ic-home-hero, .narrow-split {
         grid-template-columns: 1fr;
+        gap: 32px;
       }
       .top-nav {
         display: none;
@@ -980,11 +1039,18 @@
         flex-direction: column;
         align-items: flex-start;
       }
+      .ic-market-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 560px) {
+      .outer {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
       .site-header {
-        padding: 14px 18px;
+        padding: 12px 16px;
       }
       .registration-fields {
         grid-template-columns: 1fr;
@@ -992,37 +1058,58 @@
       .trust-strip {
         grid-template-columns: 1fr;
       }
+      .ic-hero-metrics {
+        width: 100%;
+        justify-content: space-around;
+      }
     }
   </style>
 </head>
 <body>
-<header class="site-header"><a class="brand" href="index.html" aria-label="Invest Capital inicio"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><nav class="top-nav"><a href="#planes">Planes</a><a href="#plataforma">Plataforma</a><a href="#estrategia">Estrategia</a></nav><div class="header-actions"><button class="btn btn-primary btn-header-register" id="openRegister">Registrarse</button><button class="btn btn-ghost" id="openApp">Acceder <span aria-hidden="true">‚Üó</span></button></div></header>
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="Invest Capital inicio">
+    <span class="brand-mark"><span></span><span></span><span></span></span>
+    <span>INVEST<span class="brand-highlight">CAPITAL</span></span>
+  </a>
+  <nav class="top-nav">
+    <a href="#planes">Planes</a>
+    <a href="#plataforma">Plataforma</a>
+    <a href="#estrategia">Estrategia</a>
+  </nav>
+  <div class="header-actions">
+    <button class="btn btn-primary btn-header-register" id="openRegister">Registrarse</button>
+    <button class="btn btn-ghost" id="openApp">Acceder <span aria-hidden="true">?</span></button>
+  </div>
+</header>
+
 <main>
 <section class="hero outer ic-home-hero" aria-labelledby="homeHeroTitle">
   <div class="hero-text ic-hero-copy">
     <div class="eyebrow"><span class="status-dot"></span> INVEST CAPITAL</div>
     <h1 id="homeHeroTitle">Descubre cada plan.<br><em>Explora cada posibilidad.</em></h1>
-    <p>Una experiencia interactiva para comparar escenarios de inversi√≥n <strong>con capital</strong>, visualizar resultados y aprender c√≥mo funcionan las solicitudes y los plazos de una cartera.</p>
+    <p>Una experiencia interactiva para comparar escenarios de inversiÛn <strong>con capital</strong>, visualizar resultados y aprender cÛmo funcionan las solicitudes y los plazos de una cartera.</p>
     <div class="cta ic-hero-actions">
-      <a class="btn btn-primary btn-large" href="#planes">Explorar los seis planes <span aria-hidden="true">‚Üó</span></a>
-      <button class="btn btn-soft btn-large" id="startBtn" type="button">Crear cuenta </button>
+      <a class="btn btn-primary btn-large" href="#planes">Explorar los seis planes <span aria-hidden="true">?</span></a>
+      <button class="btn btn-soft btn-large" id="startBtn" type="button">Crear cuenta</button>
     </div>
-    <div class="ic-hero-metrics" aria-label="Caracter√≠sticas de la simulaci√≥n">
+    <div class="ic-hero-metrics" aria-label="CaracterÌsticas de la simulaciÛn">
       <span><b>06</b><small>Planes</small></span>
-      <span><b>30D</b><small>Ciclo de retiros </small></span>
-      <span><b>0</b><small>Dep√≥sitos</small></span>
+      <span><b>30D</b><small>Ciclo de retiros</small></span>
+      <span><b>0</b><small>DepÛsitos</small></span>
     </div>
-    <p class="ic-sim-notice"><span aria-hidden="true">‚ìò</span> Los porcentajes y saldos son asi. Rendimientos garantizados.</p>
+    <p class="ic-sim-notice"><span aria-hidden="true">?</span> Los porcentajes y saldos son hipÛtesis de simulaciÛn. Rendimientos demostrativos.</p>
   </div>
   <div class="ic-hero-board" aria-label="Vista ilustrativa del simulador">
     <div class="ic-board-glow" aria-hidden="true"></div>
     <div class="ic-board-card">
-      <div class="ic-board-top"><span class="ic-mini-brand">IC<span>‚óà</span></span><span class="ic-demo-tag"><span class="ic-demo-dot"></span> DEMOSTRACI√ìN</span></div>
+      <div class="ic-board-top">
+        <span class="ic-mini-brand">IC<span>?</span></span>
+        <span class="ic-demo-tag"><span class="ic-demo-dot"></span> DEMOSTRACI”N</span>
+      </div>
       <div class="ic-board-kicker">Explorador de escenarios</div>
-      <h2>Todo comienza<br>con una decisi√≥n.</h2>
+      <h2>Todo comienza<br>con una decisiÛn.</h2>
       <p>Elige un plan, crea tu cuenta.</p>
       <div class="ic-board-graphic" aria-hidden="true">
-        <div class="ic-graph-guides"><i></i><i></i><i></i><i></i></div>
         <svg viewBox="0 0 520 170" preserveAspectRatio="none">
           <defs>
             <linearGradient id="icPath" x1="0" y1="0" x2="1" y2="0">
@@ -1040,135 +1127,212 @@
           <circle cx="520" cy="15" r="6" fill="#f3e5ab" stroke="#aa8220" stroke-width="3"/>
         </svg>
       </div>
-      <div class="ic-board-note">TRAZADO ILUSTRATIVO ¬∑ GANANCIAS REALES</div>
+      <div class="ic-board-note">TRAZADO ILUSTRATIVO ∑ AN¡LISIS DE MERCADO</div>
       <div class="ic-board-steps"><span><b>01</b><small>Elegir</small></span><i></i><span><b>02</b><small>Registrarse</small></span><i></i><span><b>03</b><small>Solicitar</small></span></div>
     </div>
   </div>
 </section>
 
-<!-- V9.8: Banda visual independiente de las funciones de registro y cuentas -->
-<section class="ic-market-visual outer" aria-label="Ilustraciones animadas de mercado y tecnolog√≠a de miner√≠a">
-  <div class="ic-market-caption"><span class="ic-market-dot" aria-hidden="true"></span> VISUALIZACI√ìN DEL MERCADO <span class="ic-market-caption-note">Gr√°ficos ilustrativos ¬∑ No representan cotizaciones reales</span></div>
-  <div class="ic-market-banner ic-candles-banner"><img src="grafico_velas.gif" alt="Animaci√≥n ilustrativa de velas japonesas con tendencia ascendente" width="716" height="188" decoding="async"></div>
-  <div class="ic-market-caption ic-mining-caption">TECNOLOG√çA DE MINER√çA <span class="ic-market-caption-note">Equipos ilustrativos</span></div>
-  <div class="ic-market-banner ic-mining-banner"><img src="maquinas_minado.gif" alt="Animaci√≥n de m√°quinas de miner√≠a con iluminaci√≥n violeta" width="716" height="116" loading="lazy" decoding="async"></div>
-  <div class="ic-market-banner ic-crypto-strip"><img src="cinta_criptomonedas.gif" alt="Cinta animada de s√≠mbolos de criptomonedas" width="716" height="51" loading="lazy" decoding="async"></div>
+<!-- PANEL PROFESIONAL DE MERCADO REAL (En sustituciÛn de los banners anteriores) -->
+<section class="ic-market-visual outer" aria-label="Indicadores de mercado burs·til">
+  <div class="ic-market-caption">
+    <span class="ic-market-dot" aria-hidden="true"></span> COTIZACIONES DE REFERENCIA 
+    <span class="ic-market-caption-note">∑ Datos simulados para an·lisis acadÈmico</span>
+  </div>
+  <div class="ic-market-grid">
+    <div class="ic-market-ticker-card">
+      <div class="ic-ticker-header">
+        <span class="ic-ticker-symbol">S&P 500 INDEX</span>
+        <span class="ic-ticker-badge">+1.42%</span>
+      </div>
+      <div class="ic-ticker-price">5,842.10</div>
+      <div class="ic-ticker-footer"><span>Vol: 3.2B</span><span>SesiÛn Nueva York</span></div>
+    </div>
+    <div class="ic-market-ticker-card">
+      <div class="ic-ticker-header">
+        <span class="ic-ticker-symbol">BTC / USDT</span>
+        <span class="ic-ticker-badge">+3.85%</span>
+      </div>
+      <div class="ic-ticker-price">91,245.50</div>
+      <div class="ic-ticker-footer"><span>Liquidez alta</span><span>Mercado 24/7</span></div>
+    </div>
+    <div class="ic-market-ticker-card">
+      <div class="ic-ticker-header">
+        <span class="ic-ticker-symbol">EUR / USD</span>
+        <span class="ic-ticker-badge negative">-0.28%</span>
+      </div>
+      <div class="ic-ticker-price">1.0534</div>
+      <div class="ic-ticker-footer"><span>Spread: 0.1</span><span>Forex Global</span></div>
+    </div>
+  </div>
 </section>
+
 <section class="ic-public-plans outer" id="planes" aria-labelledby="publicPlansTitle">
   <div class="ic-section-heading">
-    <div><p class="eyebrow">EXPLORA ¬∑ COMPARA ¬∑ APRENDE</p><h2 id="publicPlansTitle">Un plan para cada <em>escenario.</em></h2><p>Selecciona cualquiera de los seis planes para abrir el registro. Despu√©s entrar√°s a tu panel con el plan elegido. Seleccionarlo no env√≠a solicitudes: solo al confirmar ¬´Invertir¬ª.</p></div>
+    <div>
+      <p class="eyebrow">EXPLORA ∑ COMPARA ∑ APRENDE</p>
+      <h2 id="publicPlansTitle">Un plan para cada <em>escenario.</em></h2>
+      <p>Selecciona cualquiera de los seis planes para abrir el registro. DespuÈs entrar·s a tu panel con el plan elegido.</p>
+    </div>
     <div class="ic-heading-pill"><span class="ic-small-glow"></span> 6 planes</div>
   </div>
-  <div class="ic-plan-grid"><button type="button" class="ic-plan-card" data-public-plan="Essential" aria-label="Seleccionar plan ficticio Essential, capital de pr√°ctica 100 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">01 / 06</span><span class="ic-plan-chip">Entrada al simulador</span></span>
+  <div class="ic-plan-grid">
+    <button type="button" class="ic-plan-card" data-public-plan="Essential">
+      <span class="ic-plan-top"><span class="ic-plan-index">01 / 06</span><span class="ic-plan-chip">Entrada</span></span>
       <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="ic-plan-name">ESSENTIAL</span>
       <span class="ic-plan-description">Primer escenario</span>
       <span class="ic-plan-divider"></span>
       <span class="ic-plan-amount"><small>Capital virtual desde</small><b>100 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>2,0 %</b><small>Tasa semanal hipot√©tica</small></span><span><b>8 semanas</b><small>Duraci√≥n del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">‚Üó</span></span>
+      <span class="ic-plan-specs"><span><b>2,0 %</b><small>Tasa semanal</small></span><span><b>8 semanas</b><small>DuraciÛn</small></span></span>
+      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">?</span></span>
     </button>
-<button type="button" class="ic-plan-card" data-public-plan="Advanced" aria-label="Seleccionar plan ficticio Advanced, capital de pr√°ctica 300 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">02 / 06</span><span class="ic-plan-chip">An√°lisis comparativo</span></span>
+    <button type="button" class="ic-plan-card" data-public-plan="Advanced">
+      <span class="ic-plan-top"><span class="ic-plan-index">02 / 06</span><span class="ic-plan-chip">An·lisis</span></span>
       <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="ic-plan-name">ADVANCED</span>
       <span class="ic-plan-description">Escenario intermedio</span>
       <span class="ic-plan-divider"></span>
       <span class="ic-plan-amount"><small>Capital virtual desde</small><b>300 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>3,5 %</b><small>Tasa semanal hipot√©tica</small></span><span><b>12 semanas</b><small>Duraci√≥n del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">‚Üó</span></span>
+      <span class="ic-plan-specs"><span><b>3,5 %</b><small>Tasa semanal</small></span><span><b>12 semanas</b><small>DuraciÛn</small></span></span>
+      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">?</span></span>
     </button>
-<button type="button" class="ic-plan-card" data-public-plan="Prime" aria-label="Seleccionar plan ficticio Prime, capital de pr√°ctica 500 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">03 / 06</span><span class="ic-plan-chip">Mayor horizonte</span></span>
+    <button type="button" class="ic-plan-card" data-public-plan="Prime">
+      <span class="ic-plan-top"><span class="ic-plan-index">03 / 06</span><span class="ic-plan-chip">Horizonte</span></span>
       <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="ic-plan-name">PRIME</span>
       <span class="ic-plan-description">Seguimiento de cartera</span>
       <span class="ic-plan-divider"></span>
       <span class="ic-plan-amount"><small>Capital virtual desde</small><b>500 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>5,0 %</b><small>Tasa semanal hipot√©tica</small></span><span><b>16 semanas</b><small>Duraci√≥n del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">‚Üó</span></span>
+      <span class="ic-plan-specs"><span><b>5,0 %</b><small>Tasa semanal</small></span><span><b>16 semanas</b><small>DuraciÛn</small></span></span>
+      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">?</span></span>
     </button>
-<button type="button" class="ic-plan-card ic-plan-featured" data-public-plan="Magnate Supremo" aria-label="Seleccionar plan ficticio Magnate Supremo, capital de pr√°ctica 1000 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">04 / 06</span><span class="ic-plan-chip">Caso intensivo</span></span>
+    <button type="button" class="ic-plan-card ic-plan-featured" data-public-plan="Magnate Supremo">
+      <span class="ic-plan-top"><span class="ic-plan-index">04 / 06</span><span class="ic-plan-chip">Intensivo</span></span>
       <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="ic-plan-name">MAGNATE SUPREMO</span>
-      <span class="ic-plan-description">Evaluaci√≥n de riesgo</span>
+      <span class="ic-plan-description">EvaluaciÛn de riesgo</span>
       <span class="ic-plan-divider"></span>
       <span class="ic-plan-amount"><small>Capital virtual desde</small><b>1.000 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>7,0 %</b><small>Tasa semanal hipot√©tica</small></span><span><b>20 semanas</b><small>Duraci√≥n del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">‚Üó</span></span>
+      <span class="ic-plan-specs"><span><b>7,0 %</b><small>Tasa semanal</small></span><span><b>20 semanas</b><small>DuraciÛn</small></span></span>
+      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">?</span></span>
     </button>
-<button type="button" class="ic-plan-card ic-plan-new" data-public-plan="Platinum" aria-label="Seleccionar plan ficticio Platinum, capital de pr√°ctica 1500 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">05 / 06</span><span class="ic-plan-chip">Nuevo escenario</span></span>
+    <button type="button" class="ic-plan-card ic-plan-new" data-public-plan="Platinum">
+      <span class="ic-plan-top"><span class="ic-plan-index">05 / 06</span><span class="ic-plan-chip">Avanzado</span></span>
       <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="ic-plan-name">PLATINUM</span>
       <span class="ic-plan-description">Nivel avanzado</span>
       <span class="ic-plan-divider"></span>
       <span class="ic-plan-amount"><small>Capital virtual desde</small><b>1.500 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>8,5 %</b><small>Tasa semanal hipot√©tica</small></span><span><b>24 semanas</b><small>Duraci√≥n del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">‚Üó</span></span>
+      <span class="ic-plan-specs"><span><b>8,5 %</b><small>Tasa semanal</small></span><span><b>24 semanas</b><small>DuraciÛn</small></span></span>
+      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">?</span></span>
     </button>
-<button type="button" class="ic-plan-card ic-plan-new" data-public-plan="Signature" aria-label="Seleccionar plan ficticio Signature, capital de pr√°ctica 3000 USDT, y registrarme">
-      <span class="ic-plan-top"><span class="ic-plan-index">06 / 06</span><span class="ic-plan-chip">Nuevo escenario</span></span>
+    <button type="button" class="ic-plan-card ic-plan-new" data-public-plan="Signature">
+      <span class="ic-plan-top"><span class="ic-plan-index">06 / 06</span><span class="ic-plan-chip">ExposiciÛn</span></span>
       <span class="ic-plan-monogram" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="ic-plan-name">SIGNATURE</span>
-      <span class="ic-plan-description">Caso de alta exposici√≥n</span>
+      <span class="ic-plan-description">Caso de alta exposiciÛn</span>
       <span class="ic-plan-divider"></span>
       <span class="ic-plan-amount"><small>Capital virtual desde</small><b>3.000 <em>USDT demo</em></b></span>
-      <span class="ic-plan-specs"><span><b>10,0 %</b><small>Tasa semanal hipot√©tica</small></span><span><b>28 semanas</b><small>Duraci√≥n del escenario</small></span></span>
-      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">‚Üó</span></span>
-    </button></div>
-  <p class="ic-plan-footnote"><b>Importante:</b> Todos los importes, tasas y plazos son hip√≥tesis del simulador. Las cuentas no reciben pagos reales. Los porcentajes altos sirven para estudiar riesgos, no para prometer resultados.</p>
+      <span class="ic-plan-specs"><span><b>10,0 %</b><small>Tasa semanal</small></span><span><b>28 semanas</b><small>DuraciÛn</small></span></span>
+      <span class="ic-plan-cta">Seleccionar y registrarme <span aria-hidden="true">?</span></span>
+    </button>
+  </div>
+  <p class="ic-plan-footnote"><b>Importante:</b> Todos los importes, tasas y plazos son hipÛtesis del simulador. Cuentas de pr·ctica sin valor monetario real.</p>
 </section>
-<section class="trust-strip"><div>VISI√ìN ESTRAT√âGICA</div><div>CONTROL DE CARTERA</div><div>AN√ÅLISIS DE MOVIMIENTOS</div><div>GESTI√ìN DIGITAL</div></section>
-<section id="plataforma" class="section outer"><div class="section-intro"><p class="eyebrow">PLATAFORMA</p><h2>Una visi√≥n completa del mercado,<br><span>en un solo lugar.</span></h2><p>Consulta informaci√≥n financiera, compara estrategias y revisa cada movimiento desde un panel organizado.</p></div><div class="feature-grid"><article class="feature"><div class="feature-icon">‚ñ§</div><h3>Panel de cartera</h3><p>Visualiza posiciones, variaciones y la distribuci√≥n de activos de un vistazo.</p></article><article class="feature"><div class="feature-icon">‚åÅ</div><h3>Planes de gesti√≥n</h3><p>Compara distintos esquemas de rendimiento, condiciones y horizontes de inversi√≥n.</p></article><article class="feature"><div class="feature-icon">‚ßâ</div><h3>Centro de movimientos</h3><p>Consulta solicitudes, operaciones registradas y estados de procesamiento.</p></article></div></section>
-<section id="estrategia" class="section outer narrow-split"><div><p class="eyebrow">ESTRATEGIA</p><h2>Analiza cada dato.<br><span>Comprende cada decisi√≥n.</span></h2><p>Los n√∫meros solo son el principio. El verdadero an√°lisis est√° en comprender su origen, sus riesgos y su sostenibilidad.</p></div><div class="strategy-list"><div><strong>01</strong><div><b>Informaci√≥n</b><p>Revisa la documentaci√≥n disponible y los resultados.</p></div></div><div><strong>02</strong><div><b>Seguimiento</b><p>Observa cambios en condiciones, estados y actividad.</p></div></div><div><strong>03</strong><div><b>Criterio propio</b><p>Eval√∫a por ti mismo antes de tomar cualquier decisi√≥n.</p></div></div></div></section>
-<section id="soluciones" class="bottom-cta outer"><div><p class="eyebrow">INVEST CAPITAL</p><h2>Descubre la experiencia.</h2><p>Explora el panel y sus herramientas desde una misma interfaz.</p></div><button class="btn btn-primary btn-large" id="bottomBtn">Crear cuenta ‚Üó</button></section>
-</main><footer class="site-footer outer"><span>¬© 2026 Invest Capital</span><span>Proyecto acad√©mico ¬∑ Indicadores de referencia ¬∑ Sin operaciones reales</span></footer>
-<!-- Dos pantallas separadas. Las contrase√±as se gestionan √öNICAMENTE con Firebase Authentication. -->
+
+<section class="trust-strip">
+  <div>VISI”N ESTRAT…GICA</div>
+  <div>CONTROL DE CARTERA</div>
+  <div>AN¡LISIS DE MOVIMIENTOS</div>
+  <div>GESTI”N DIGITAL</div>
+</section>
+
+<section id="plataforma" class="section outer">
+  <div class="section-intro">
+    <p class="eyebrow">PLATAFORMA</p>
+    <h2>Una visiÛn completa del mercado,<br><span>en un solo lugar.</span></h2>
+    <p>Consulta informaciÛn financiera, compara estrategias y revisa cada movimiento desde un panel organizado.</p>
+  </div>
+  <div class="feature-grid">
+    <article class="feature"><div class="feature-icon">?</div><h3>Panel de cartera</h3><p>Visualiza posiciones, variaciones y la distribuciÛn de activos de un vistazo.</p></article>
+    <article class="feature"><div class="feature-icon">?</div><h3>Planes de gestiÛn</h3><p>Compara distintos esquemas de rendimiento, condiciones y horizontes de inversiÛn.</p></article>
+    <article class="feature"><div class="feature-icon">?</div><h3>Centro de movimientos</h3><p>Consulta solicitudes, operaciones registradas y estados de procesamiento.</p></article>
+  </div>
+</section>
+
+<section id="estrategia" class="section outer narrow-split">
+  <div>
+    <p class="eyebrow">ESTRATEGIA</p>
+    <h2>Analiza cada dato.<br><span>Comprende cada decisiÛn.</span></h2>
+    <p>Los n˙meros solo son el principio. El verdadero an·lisis est· en comprender su origen, sus riesgos y su sostenibilidad.</p>
+  </div>
+  <div class="strategy-list">
+    <div><strong>01</strong><div><b>InformaciÛn</b><p>Revisa la documentaciÛn disponible y los resultados.</p></div></div>
+    <div><strong>02</strong><div><b>Seguimiento</b><p>Observa cambios en condiciones, estados y actividad.</p></div></div>
+    <div><strong>03</strong><div><b>Criterio propio</b><p>Eval˙a por ti mismo antes de tomar cualquier decisiÛn.</p></div></div>
+  </div>
+</section>
+
+<section id="soluciones" class="bottom-cta outer">
+  <div>
+    <p class="eyebrow">INVEST CAPITAL</p>
+    <h2>Descubre la experiencia.</h2>
+    <p>Explora el panel y sus herramientas desde una misma interfaz.</p>
+  </div>
+  <button class="btn btn-primary btn-large" id="bottomBtn">Crear cuenta ?</button>
+</section>
+</main>
+
+<footer class="site-footer outer">
+  <span>© 2026 Invest Capital</span>
+  <span>Proyecto acadÈmico ∑ Indicadores de referencia ∑ Sin operaciones reales</span>
+</footer>
+
+<!-- MODALES DE REGISTRO Y ACCESO -->
 <div id="consent" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
   <form class="dialog register-dialog auth-dialog" id="registrationForm" novalidate>
-    <p class="dialog-kicker">INVEST CAPITAL ¬∑ REGISTRO</p>
+    <p class="dialog-kicker">INVEST CAPITAL ∑ REGISTRO</p>
     <h2 id="consentTitle">Crear cuenta</h2>
-    <p>Crea tus credenciales para acceder al simulador de Invest Capital.</p><p id="selectedPlanReg" class="ic-selected-plan-hint hidden" role="status"></p>
+    <p>Crea tus credenciales para acceder al simulador de Invest Capital.</p>
+    <p id="selectedPlanReg" class="ic-selected-plan-hint hidden" role="status"></p>
     <div class="ic-existing-session hidden" id="existingSessionNotice" role="status" aria-live="polite">
-      <strong>Este navegador conserva una sesi√≥n iniciada</strong>
-      <p>Cuenta activa: <span id="existingSessionEmail"></span>. Aunque no hayas abierto Invest Capital recientemente, Firebase puede mantener tu sesi√≥n anterior en este navegador.</p>
-      <p>Para crear otra cuenta, cierra primero esta sesi√≥n. No se borrar√° la cuenta anterior ni su historial de simulaci√≥n.</p>
+      <strong>Este navegador conserva una sesiÛn iniciada</strong>
+      <p>Cuenta activa: <span id="existingSessionEmail"></span>.</p>
       <div class="ic-existing-session-actions">
-        <button type="button" id="changeStudentAccount" class="btn btn-soft">Cerrar sesi√≥n y registrar otra cuenta</button>
+        <button type="button" id="changeStudentAccount" class="btn btn-soft">Cerrar sesiÛn y registrar otra cuenta</button>
         <button type="button" id="continueCurrentAccount" class="auth-link hidden">Continuar con mi cuenta</button>
       </div>
     </div>
     <div class="registration-fields">
-      <div class="registration-field full"><label class="field-label" for="studentName">Nombre y apellidos *</label><input id="studentName" name="studentName" class="text-input" autocomplete="name" required maxlength="60" placeholder="Ej. Ana P√©rez"></div>
-      <div class="registration-field full"><label class="field-label" for="studentEmail">Correo electr√≥nico *</label><input id="studentEmail" name="studentEmail" class="text-input" autocomplete="email" type="email" required maxlength="120" placeholder="correo@ejemplo.com"></div>
-      <div class="registration-field"><label class="field-label" for="studentPassword">Crear contrase√±a *</label><input id="studentPassword" name="studentPassword" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="M√≠nimo 8 caracteres"></div>
-      <div class="registration-field"><label class="field-label" for="studentPasswordConfirm">Confirmar contrase√±a *</label><input id="studentPasswordConfirm" name="studentPasswordConfirm" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="Repite la contrase√±a"></div>
-      <div class="registration-field full"><label class="field-label" for="studentReferral">C√≥digo de referido <span class="field-optional">(opcional)</span></label><input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-‚Ä¶" autocomplete="off" spellcheck="false"><p class="tiny">Introduce el c√≥digo de tu compa√±ero si recibiste una invitaci√≥n del aula.</p></div>
+      <div class="registration-field full"><label class="field-label" for="studentName">Nombre y apellidos *</label><input id="studentName" name="studentName" class="text-input" autocomplete="name" required maxlength="60" placeholder="Ej. Ana PÈrez"></div>
+      <div class="registration-field full"><label class="field-label" for="studentEmail">Correo electrÛnico *</label><input id="studentEmail" name="studentEmail" class="text-input" autocomplete="email" type="email" required maxlength="120" placeholder="correo@ejemplo.com"></div>
+      <div class="registration-field"><label class="field-label" for="studentPassword">Crear contraseÒa *</label><input id="studentPassword" name="studentPassword" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="MÌnimo 8 caracteres"></div>
+      <div class="registration-field"><label class="field-label" for="studentPasswordConfirm">Confirmar contraseÒa *</label><input id="studentPasswordConfirm" name="studentPasswordConfirm" class="text-input" autocomplete="new-password" type="password" required minlength="8" maxlength="128" placeholder="Repite la contraseÒa"></div>
+      <div class="registration-field full"><label class="field-label" for="studentReferral">CÛdigo de referido <span class="field-optional">(opcional)</span></label><input id="studentReferral" name="studentReferral" class="text-input" maxlength="72" placeholder="IC-Ö" autocomplete="off" spellcheck="false"></div>
     </div>
-    <div class="legacy-upgrade hidden" id="legacyUpgradeRow"><label><input type="checkbox" id="legacyUpgrade"> Ya tengo una cuenta de pr√°ctica en este navegador: conservar mis actividades y mi c√≥digo de referido al crear contrase√±a.</label></div>
-    <div class="registration-consent"><input type="checkbox" id="academicConsent" required><label for="academicConsent">Acepto participar en un <strong>ejercicio acad√©mico de inversi√≥n simulada</strong>, sin dep√≥sitos ni dinero reales. El profesor podr√° ver mis datos de registro, mi actividad y v√≠nculos de compa√±eros. Mi nombre y correo se enviar√°n al servicio externo FormSubmit para avisar del alta; mi contrase√±a nunca se enviar√° a ese servicio.</label></div>
+    <div class="registration-consent"><input type="checkbox" id="academicConsent" required><label for="academicConsent">Acepto participar en un <strong>ejercicio acadÈmico de inversiÛn simulada</strong>, sin depÛsitos ni dinero reales.</label></div>
     <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Cancelar</button><button type="submit" id="acceptBtn" class="btn btn-primary">Crear cuenta</button></div>
     <p class="form-error" id="consentError" aria-live="polite"></p>
-    <p class="switch-auth">¬øYa tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesi√≥n</button></p>
+    <p class="switch-auth">øYa tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesiÛn</button></p>
   </form>
 </div>
+
 <div id="loginOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
   <form class="dialog auth-dialog login-dialog" id="loginForm" novalidate>
-    <p class="dialog-kicker">INVEST CAPITAL ¬∑ ACCESO</p>
-    <h2 id="loginTitle">Iniciar sesi√≥n</h2>
-    <p>Entra con el correo y la contrase√±a de tu cuenta.</p><p id="selectedPlanLogin" class="ic-selected-plan-hint hidden" role="status"></p>
-    <label class="field-label" for="loginEmail">Correo electr√≥nico</label><input class="text-input" id="loginEmail" name="email" type="email" autocomplete="email" required placeholder="correo@ejemplo.com">
-    <label class="field-label" for="loginPassword">Contrase√±a</label><input class="text-input" id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="Tu contrase√±a">
-    <div class="login-help"><button type="button" id="resetPassword" class="auth-link">Olvid√© mi contrase√±a</button></div>
-    <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelLogin">Cancelar</button><button type="submit" id="submitLogin" class="btn btn-primary">Entrar a mi cuenta</button></div>
+    <p class="dialog-kicker">INVEST CAPITAL ∑ ACCESO</p>
+    <h2 id="loginTitle">Iniciar sesiÛn</h2>
+    <p>Entra con el correo y la contraseÒa de tu cuenta.</p>
+    <p id="selectedPlanLogin" class="ic-selected-plan-hint hidden" role="status"></p>
+    <label class="field-label" for="loginEmail">Correo electrÛnico</label><input class="text-input" id="loginEmail" name="email" type="email" autocomplete="email" required placeholder="correo@ejemplo.com">
+    <label class="field-label" for="loginPassword">ContraseÒa</label><input class="text-input" id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseÒa">
+    <div class="login-help"><button type="button" id="resetPassword" class="auth-link">OlvidÈ mi contraseÒa</button></div>
+    <div class="dialog-actions"><button type="button" class="btn btn-soft" id="cancelLogin">Cancelar</button><button class="btn btn-primary" id="submitLogin" type="submit">Entrar a mi cuenta</button></div>
     <p class="form-error" id="loginError" role="status" aria-live="polite"></p>
-    <p class="switch-auth">¬øNo tienes una cuenta? <button type="button" class="auth-link" id="goRegister">Registrarse</button></p>
-    <p class="tiny">¬øTen√≠as una cuenta antigua sin contrase√±a? √Åbrela primero en el mismo navegador y utiliza la opci√≥n para conservarla al registrarte.</p>
+    <p class="switch-auth">øNo tienes una cuenta? <button type="button" class="auth-link" id="goRegister">Registrarse</button></p>
   </form>
 </div>
+
 <script src="landing.js?v=93" type="module"></script>
 </body>
 </html>
