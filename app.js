@@ -439,7 +439,7 @@ function openDemoPaymentMethods(plan,amount){
  const methods={
   bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
   trc20:{title:'USDT · TRC20',description:'Red TRON',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
-  rub:{title:'Sberbank · rublos rusos',description:'Tarjeta Sberbank · práctica de clase',reference:'2202 2084 9050 0601',label:'Tarjeta Sberbank · educativa',logo:'SBER',logoClass:'sber'}
+  rub:{title:'Sberbank · rublos rusos',description:'Rublos rusos · tarjeta Sberbank',reference:'2202 2084 9050 0601',label:'Tarjeta Sberbank · educativa',logo:'SBER',logoClass:'sber'}
  };
  const sberMark='<span class="ic-sber-logo" aria-hidden="true"><svg viewBox="0 0 42 42" focusable="false"><path d="M33 10A16 16 0 1 0 36 25" fill="none" stroke="#9fecc4" stroke-width="5" stroke-linecap="round"/><path d="M11 21l7 7 14-15" fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
  const tetherMark='<span class="ic-tether-logo" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path fill="#fff" d="M11 12h26v6H27v5.4c8 .5 13 2.1 13 4.1s-5 3.5-13 4.1V40h-6v-8.4c-8-.6-13-2.1-13-4.1s5-3.6 13-4.1V18H11zm10 14c-4.7.3-7.8.9-9.3 1.5 1.7.7 4.8 1.2 9.3 1.5zm6 3c4.5-.3 7.6-.8 9.3-1.5-1.5-.6-4.6-1.2-9.3-1.5z"/></svg></span>';
@@ -448,11 +448,12 @@ function openDemoPaymentMethods(plan,amount){
  const methodMarks=key=>key==='rub'?sberMark:`<span class="ic-crypto-symbols">${tetherMark}${key==='bep20'?bnbMark:tronMark}</span>`;
  const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div>${methodMarks(key)}</div></button>`).join('');
  modal('Elegir método de pago',`
-  <div class="ic-demo-step">ACTIVACIÓN DE ${esc(plan)}</div>
-  <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT-DEMO</strong></p>
-  <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe de práctica.</div>
+  <div class="ic-payment-brand" aria-hidden="true"><span class="ic-payment-brand-bars">▂ ▅ █</span><strong>INVEST CAPITAL</strong></div>
+  <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT</strong></p>
+  <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe.</div>
   <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
-  <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta de práctica.</p></div>
+  <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta.</p></div>
+  <p class="ic-payment-disclosure">Entorno educativo: las referencias y los importes son ilustrativos; no se reciben pagos reales.</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
