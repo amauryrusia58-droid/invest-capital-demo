@@ -437,9 +437,9 @@ function openDemoPaymentMethods(plan,amount){
  // Todas las referencias son identificadores de aula deliberadamente incompatibles
  // con direcciones blockchain y cuentas bancarias reales.
  const methods={
-  bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain (solo demostración)',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
-  trc20:{title:'USDT · TRC20',description:'Red TRON (solo demostración)',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
-  rub:{title:'Sberbank · rublos rusos',description:'Tarjeta ficticia de Sberbank para la simulación educativa',reference:'2202 2084 9050 0601',label:'Tarjeta Sberbank · educativa',logo:'SBER',logoClass:'sber'}
+  bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
+  trc20:{title:'USDT · TRC20',description:'Red TRON',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
+  rub:{title:'Sberbank · rublos rusos',description:'Tarjeta Sberbank · práctica de clase',reference:'2202 2084 9050 0601',label:'Tarjeta Sberbank · educativa',logo:'SBER',logoClass:'sber'}
  };
  const sberMark='<span class="ic-sber-logo" aria-hidden="true"><svg viewBox="0 0 42 42" focusable="false"><path d="M33 10A16 16 0 1 0 36 25" fill="none" stroke="#9fecc4" stroke-width="5" stroke-linecap="round"/><path d="M11 21l7 7 14-15" fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
  const tetherMark='<span class="ic-tether-logo" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path fill="#fff" d="M11 12h26v6H27v5.4c8 .5 13 2.1 13 4.1s-5 3.5-13 4.1V40h-6v-8.4c-8-.6-13-2.1-13-4.1s5-3.6 13-4.1V18H11zm10 14c-4.7.3-7.8.9-9.3 1.5 1.7.7 4.8 1.2 9.3 1.5zm6 3c4.5-.3 7.6-.8 9.3-1.5-1.5-.6-4.6-1.2-9.3-1.5z"/></svg></span>';
@@ -487,8 +487,12 @@ function openDemoPaymentMethods(plan,amount){
     ?`<small>Equivalente en rublos de práctica</small><strong>${esc(formatRub(rubAmount))}</strong><small>${money(amount)} USDT-DEMO × 95 ₽/USDT · tasa fija de simulación</small>`
     :`<small>Importe para ${esc(method.title)}</small><strong>${money(amount)} USDT-DEMO</strong><small>Sin conversión de divisa</small>`;
   }
-  const isRub=button.dataset.icMethod==='rub';
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div>${isRub?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Tarjeta Sberbank<br><small>TITULAR: INVEST CAPITAL</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">SIMULACIÓN · SIN VALIDEZ</span></div>`:`<div class="ic-method-head" style="margin:8px 0 10px"><small>Referencia de práctica (no acepta pagos)</small>${methodMarks(button.dataset.icMethod)}</div>`}<div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status">Copia la referencia y pégala en tu dispositivo. Después pulsa «Enviado» para registrar el envío simulado.</p><small>${isRub?'Tarjeta ilustrativa de clase; no recibe transferencias.':'Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.'}</small>`;
+  const key=button.dataset.icMethod;
+  const isRub=key==='rub';
+  const paymentCard=isRub
+    ?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Tarjeta Sberbank<br><small>TITULAR: INVEST CAPITAL</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">TARJETA DE CLASE</span></div>`
+    :`<div class="ic-usdt-card ${key==='trc20'?'ic-usdt-card-tron':'ic-usdt-card-bnb'}"><div class="ic-usdt-card-heading"><div><strong>USDT · ${key==='bep20'?'BEP20':'TRC20'}</strong><small>${key==='bep20'?'BNB SMART CHAIN':'RED TRON'} · INVEST CAPITAL</small></div>${methodMarks(key)}</div><div class="ic-usdt-card-reference">${esc(method.reference)}</div><span class="ic-usdt-card-caption">REFERENCIA DE CLASE · SIN VALIDEZ BLOCKCHAIN</span></div>`;
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div>${paymentCard}<div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status">Copia la referencia y pégala en tu dispositivo. Después pulsa «Enviado» para registrar.</p><small class="ic-card-footnote">${isRub?'Tarjeta ilustrativa de clase: no recibe transferencias.':'Referencia de clase: no permite transferencias de criptomonedas.'}</small>`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
    try{
@@ -497,7 +501,7 @@ function openDemoPaymentMethods(plan,amount){
     if(modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod!==button.dataset.icMethod)return;
     modalContent.dataset.icCopiedMethod=button.dataset.icMethod;
     confirmBtn.disabled=false;
-    if(feedback)feedback.textContent='Referencia copiada. Pégala en tu dispositivo y pulsa «Enviado» después del envío simulado.';
+    if(feedback)feedback.textContent='Referencia copiada. Después pulsa «Enviado» para registrar.';
    }catch{if(feedback)feedback.textContent='No se pudo copiar. Comprueba los permisos del navegador e inténtalo otra vez.';}
   });
  }));
