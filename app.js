@@ -458,8 +458,23 @@ function openDemoPaymentMethods(plan,amount){
  const bnbMark='<span class="ic-network-logo bnb" aria-hidden="true" title="BNB Smart Chain"><svg viewBox="0 0 48 48" focusable="false"><g fill="#F0B90B"><path d="M24 4 33 13 24 22 15 13zM11 17l7 7-7 7-7-7zM37 17l7 7-7 7-7-7zM24 26l9 9-9 9-9-9zM24 14l10 10-10 10-10-10z"/></g><path d="m24 20 4 4-4 4-4-4z" fill="#121723"/></svg></span>';
  const tronMark='<span class="ic-network-logo tron" aria-hidden="true" title="TRON"><svg viewBox="0 0 48 48" focusable="false"><path d="M8 7 40 16 27 41z" fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round"/><path d="m8 7 16 18 16-9M24 25l3 16M8 7l19 34" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg></span>';
  const methodMarks=key=>key==='rub'?sberMark:`<span class="ic-crypto-symbols">${tetherMark}${key==='bep20'?bnbMark:tronMark}</span>`;
- const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div>${methodMarks(key)}</div></button>`).join('');
- modal('Elegir método de pago',`
+ const displayAddresses={
+  bep20:'0x72c811aFF9bbB6c43969Cae9BB5A16845D01a646',
+  trc20:'TMpWeqaCfXm2zU73N2bnwJdsjEiZd5FCA7'
+ };
+ const cards=Object.entries(methods).map(([key,m])=>{
+  const isRub=key==='rub';
+  const visibleReference=isRub?m.reference:displayAddresses[key];
+  return `<button type="button" class="ic-method-choice ic-showcase-choice" data-ic-method="${key}" aria-pressed="false">
+   <div class="ic-showcase-symbol">${methodMarks(key)}</div>
+   <div class="ic-showcase-main"><div class="ic-showcase-head"><strong>${esc(isRub?'SBERBANK':m.title)}</strong><span>${methodMarks(key)}</span></div>
+   <small>${esc(isRub?'Tarjeta bancaria':key==='bep20'?'BNB Smart Chain (BEP20)':'Tron Network (TRC20)')}</small>
+   <b class="ic-showcase-brand">INVEST CAPITAL</b>
+   <span class="ic-showcase-reference">${esc(visibleReference)}</span>
+   <span class="ic-showcase-label">Referencia visual</span></div>
+  </button>`;
+ }).join('');
+ modal('Métodos de referencia',`
   <div class="ic-payment-brand" aria-hidden="true"><span class="ic-payment-brand-bars">▂ ▅ █</span><strong>INVEST CAPITAL</strong></div>
   <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT</strong></p>
   <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe.</div>
@@ -508,8 +523,12 @@ function openDemoPaymentMethods(plan,amount){
   const isRub=key==='rub';
   const paymentCard=isRub
     ?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Tarjeta Sberbank<br><small>TITULAR: INVEST CAPITAL</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">REFERENCIA VISUAL</span></div>`
-    :`<div class="ic-usdt-card ${key==='trc20'?'ic-usdt-card-tron':'ic-usdt-card-bnb'}"><div class="ic-usdt-card-heading"><div><strong>USDT · ${key==='bep20'?'BEP20':'TRC20'}</strong><small>${key==='bep20'?'BNB SMART CHAIN':'RED TRON'} · INVEST CAPITAL</small></div>${methodMarks(key)}</div><div class="ic-usdt-card-reference">${esc(method.reference)}</div><span class="ic-usdt-card-caption">REFERENCIA DE CLASE · SIN VALIDEZ BLOCKCHAIN</span></div>`;
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div>${paymentCard}<div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status">Copia la referencia y pégala en tu dispositivo. Después pulsa «Enviado» para registrar.</p><small class="ic-card-footnote">${isRub?'Número proporcionado para referencia visual. No realices transferencias para activar planes de clase.':'Referencia de clase: no permite transferencias de criptomonedas.'}</small>`;
+    :`<div class="ic-usdt-card ${key==='trc20'?'ic-usdt-card-tron':'ic-usdt-card-bnb'}"><div class="ic-usdt-card-heading"><div><strong>USDT · ${key==='bep20'?'BEP20':'TRC20'}</strong><small>${key==='bep20'?'BNB SMART CHAIN':'RED TRON'} · INVEST CAPITAL</small></div>${methodMarks(key)}</div><div class="ic-usdt-card-reference">${esc(displayAddresses[key])}</div><span class="ic-usdt-card-caption">Referencia visual</span></div>`;
+  // Las direcciones externas se muestran solo como información de red, nunca como
+  // referencia copiable para activar un plan de aula.
+  const blockchainAddress=key==='bep20'?'0x72c811aFF9bbB6c43969Cae9BB5A16845D01a646':key==='trc20'?'TMpWeqaCfXm2zU73N2bnwJdsjEiZd5FCA7':'';
+  const blockchainInfo=blockchainAddress?`<section class="ic-blockchain-info" style="padding:14px;margin:12px 0;border:1px solid #a65ee0;border-radius:14px;background:#23132f"><strong>Dirección blockchain de referencia · ${key==='bep20'?'BEP20':'TRC20'}</strong><p style="overflow-wrap:anywhere;user-select:text;font-family:monospace">${esc(blockchainAddress)}</p><small>Solo consulta informativa. No envíes fondos: las activaciones de esta plataforma son simuladas.</small></section>`:'';
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}<p class="ic-showcase-warning">Referencia informativa. No envíes dinero ni criptomonedas; esta plataforma solo registra operaciones simuladas.</p><div class="ic-demo-copy-row"><span class="ic-class-code-label">Código interno de práctica (no es una cartera)</span><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status">Copia el código interno de práctica y pulsa «Enviado» para registrar una solicitud simulada.</p><small class="ic-card-footnote">${isRub?'Número proporcionado para referencia visual. No realices transferencias para activar planes de clase.':'La referencia copiable es únicamente un identificador de práctica.'}</small>`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
    try{
@@ -518,7 +537,7 @@ function openDemoPaymentMethods(plan,amount){
     if(modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod!==button.dataset.icMethod)return;
     modalContent.dataset.icCopiedMethod=button.dataset.icMethod;
     confirmBtn.disabled=false;
-    if(feedback)feedback.textContent='Referencia copiada. Después pulsa «Enviado» para registrar.';
+    if(feedback)feedback.textContent='Código de práctica copiado. Pulsa «Enviado» para registrar la solicitud simulada.';
    }catch{if(feedback)feedback.textContent='No se pudo copiar. Comprueba los permisos del navegador e inténtalo otra vez.';}
   });
  }));
