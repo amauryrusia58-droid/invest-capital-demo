@@ -445,7 +445,7 @@ function openDemoPaymentMethods(plan,amount){
  // Tasa académica fija: NO representa una cotización de mercado.
  const demoRubPerUsdt=95;
  const rubAmount=Math.round(amount*demoRubPerUsdt*100)/100;
- const formatRub=value=>{const [integer,cents]=Number(value).toFixed(2).split('.');return integer.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+cents+' ₽ DEMO';};
+ const formatRub=value=>{const [integer,cents]=Number(value).toFixed(2).split('.');return integer.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+cents+' ₽';};
  // Todas las referencias son identificadores de aula deliberadamente incompatibles
  // con direcciones blockchain y cuentas bancarias reales.
  const methods={
@@ -480,7 +480,7 @@ function openDemoPaymentMethods(plan,amount){
   <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe.</div>
   <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
   <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta.</p></div>
-  <p class="ic-payment-disclosure">Entorno educativo: las referencias y los importes son ilustrativos; no se reciben pagos reales.</p>
+  <p class="ic-payment-disclosure">Operación simulada</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
@@ -519,7 +519,7 @@ function openDemoPaymentMethods(plan,amount){
   const amountDisplay=modalContent.querySelector('#icMethodAmount');
   if(amountDisplay){
    amountDisplay.innerHTML=button.dataset.icMethod==='rub'
-    ?`<small>Equivalente en rublos de práctica</small><strong>${esc(formatRub(rubAmount))}</strong><small>${money(amount)} USDT-DEMO × 95 ₽/USDT · tasa fija de simulación</small>`
+    ?`<small>Equivalente en rublos de práctica</small><strong>${esc(formatRub(rubAmount))}</strong><small>${money(amount)} USDT × 95 ₽/USDT · tasa fija del ejercicio</small>`
     :`<small>Importe para ${esc(method.title)}</small><strong>${money(amount)} USDT</strong><small>Sin conversión de divisa</small>`;
   }
   const key=button.dataset.icMethod;

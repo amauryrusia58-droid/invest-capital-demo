@@ -202,6 +202,19 @@
 #actionModal .dialog:has(.ic-confirmation) .dialog-actions{margin-top:0;justify-content:flex-end}
 #actionModal .dialog:has(.ic-confirmation) #closeModal{background:linear-gradient(110deg,#b73dff,#6e19b9);border:1px solid #ca7aff;color:white;min-width:150px;border-radius:14px;font-size:17px;font-weight:700;padding:12px 20px;box-shadow:0 0 15px #a82df855}
 @media(max-width:550px){.ic-confirmation-brand{gap:8px}.ic-confirmation-bars{font-size:22px}.ic-confirmation-success{gap:9px}.ic-confirmation-check{width:40px;height:40px;flex-basis:40px;font-size:27px}.ic-confirmation-details{padding:7px 10px}.ic-confirmation-details>div{gap:9px}.ic-confirmation-message{margin:18px 4px}.ic-confirmation-conversion{border-radius:15px}.ic-confirmation-foot{margin:18px 0 5px}}
+
+/* V12.3: pie discreto debajo de los botones en ambos cuadros. */
+#actionModal .dialog:has(.ic-confirmation) #modalTitle,
+#actionModal .dialog:has(.ic-confirmation) .dialog-kicker{display:none!important}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-foot,
+#actionModal .dialog:has(.ic-payment-brand) .ic-payment-disclosure{display:none!important}
+#actionModal .dialog:has(.ic-confirmation)::after,
+#actionModal .dialog:has(.ic-payment-brand)::after{content:'Operación simulada';display:block;text-align:center;color:#baa9c8;font-size:10px;font-style:italic;letter-spacing:.025em;margin-top:9px;opacity:.85}
+#actionModal .dialog:has(.ic-confirmation){display:flex;flex-direction:column}
+#actionModal .dialog:has(.ic-confirmation) .dialog-actions{order:3}
+#actionModal .dialog:has(.ic-confirmation)::after{order:4}
+#actionModal .dialog:has(.ic-payment-brand)::after{order:4}
+
 </style></head><body class="dash-body"><div class="dash-layout"><div class="ic-mobile-nav-scrim" id="icMobileNavScrim" aria-hidden="true"></div><aside class="sidebar" id="icMobileSidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><button type="button" id="icMobileNavToggle" class="ic-mobile-nav-toggle" aria-expanded="false" aria-controls="icMobileSidebar" aria-label="Abrir menú de navegación">☰ Menú</button><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
 <div id="selectedPlanBanner" class="ic-selected-plan-banner hidden" role="status" aria-live="polite">
   <div><small>PLAN ELEGIDO · SIMULACIÓN EDUCATIVA / USDT-DEMO</small><strong id="selectedPlanTitle"></strong><p id="selectedPlanMessage"></p></div>
