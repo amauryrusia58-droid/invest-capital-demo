@@ -443,19 +443,20 @@ function openDemoPaymentMethods(plan,amount){
  };
  const sberMark='<span class="ic-sber-logo" aria-hidden="true"><svg viewBox="0 0 42 42" focusable="false"><path d="M33 10A16 16 0 1 0 36 25" fill="none" stroke="#9fecc4" stroke-width="5" stroke-linecap="round"/><path d="M11 21l7 7 14-15" fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
  const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div>${key==='rub'?sberMark:`<span class="ic-method-logo ${esc(m.logoClass)}" aria-hidden="true">${esc(m.logo)}</span>`}</div></button>`).join('');
- modal('Elegir método de práctica',`
+ modal('Elegir método de pago',`
   <div class="ic-demo-step">ACTIVACIÓN DE ${esc(plan)}</div>
   <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT-DEMO</strong></p>
   <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe de práctica.</div>
   <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
   <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta de práctica.</p></div>
-  <div class="modal-note"><strong>SOLO DEMO.</strong> Las referencias y tarjetas mostradas son ficticias. No envíes criptomonedas, rublos ni datos bancarios reales.</div>
-  <p>La solicitud se enviará una sola vez al profesor cuando pulses «Enviado».</p>
+  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA.</strong> Pulsa «Copiar» y pega la referencia en tu dispositivo para realizar el ejercicio. No envíes dinero ni criptomonedas reales.</div>
+  <p id="icDemoSubmitHint" class="ic-submit-hint" role="status">El botón «Enviado» se habilita después de copiar la referencia del método elegido. Púlsalo únicamente cuando hayas completado el envío <strong>simulado</strong> de tu ejercicio.</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
   const key=modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod;
   if(!key||!methods[key]){err('Selecciona un método de práctica antes de enviar la solicitud.');return;}
+  if(modalContent.dataset.icCopiedMethod!==key){err('Copia primero la referencia del método elegido antes de pulsar «Enviado».');confirmBtn.disabled=true;return;}
   planSubmitBusy=true;confirmBtn.disabled=true;
   try{
    await ensureStudentFirebaseSession();
@@ -468,8 +469,15 @@ function openDemoPaymentMethods(plan,amount){
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
  },'Enviado');
+ // La selección/copiar no demuestra transferencias: solo desbloquea el reporte de práctica.
+ modalContent.dataset.icCopiedMethod='';
+ confirmBtn.disabled=true;
  const details=modalContent.querySelector('#icMethodDetail');
  modalContent.querySelectorAll('.ic-method-choice').forEach(button=>button.addEventListener('click',()=>{
+  modalContent.dataset.icCopiedMethod='';
+  confirmBtn.disabled=true;
+  const hint=modalContent.querySelector('#icDemoSubmitHint');
+  if(hint)hint.innerHTML='Pulsa «Copiar» y pega la referencia en tu dispositivo para realizar el ejercicio. Después pulsa «Enviado» para registrar el envío <strong>simulado</strong>.';
   modalContent.querySelectorAll('.ic-method-choice').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
   const method=methods[button.dataset.icMethod];
   if(!method||!details)return;
@@ -483,8 +491,16 @@ function openDemoPaymentMethods(plan,amount){
   details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div>${isRub?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Sberbank · Сбербанк<br><small>TARJETA EDUCATIVA</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">SOLO DEMO · SIN VALIDEZ</span></div>`:`<div class="ic-method-head" style="margin:8px 0 10px"><small>Referencia de práctica (no acepta pagos)</small><span class="ic-method-logo ${esc(method.logoClass)}" aria-hidden="true">${esc(method.logo)}</span></div>`}<div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small>${isRub?'Tarjeta ilustrativa de clase: no es una tarjeta bancaria emitida por Sberbank ni recibe transferencias.':'Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.'}</small>`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
-   try{await navigator.clipboard.writeText(method.reference);if(feedback)feedback.textContent=isRub?'Tarjeta DEMO copiada.':'Referencia DEMO copiada.';}
-   catch{if(feedback)feedback.textContent=isRub?'Puedes seleccionar y copiar manualmente la tarjeta DEMO.':'Puedes seleccionar y copiar la referencia manualmente.';}
+   try{
+    await navigator.clipboard.writeText(method.reference);
+    if(!modalContent.contains(details))return;
+    if(modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod!==button.dataset.icMethod)return;
+    modalContent.dataset.icCopiedMethod=button.dataset.icMethod;
+    confirmBtn.disabled=false;
+    if(feedback)feedback.textContent='Referencia DEMO copiada. Ya puedes pulsar «Enviado» después del ejercicio simulado.';
+    const hint=modalContent.querySelector('#icDemoSubmitHint');
+    if(hint)hint.innerHTML='Referencia copiada. Pulsa «Enviado» <strong>solo después de completar el envío simulado</strong>; no realices pagos reales.';
+   }catch{if(feedback)feedback.textContent='No se pudo copiar. Comprueba los permisos del navegador e inténtalo otra vez.';}
   });
  }));
 }
