@@ -435,21 +435,26 @@ function openPlanWallet(plan){
  `,()=>openDemoPaymentMethods(plan,amount),'Invertir · elegir método de práctica');
 }
 function openDemoPaymentMethods(plan,amount){
+ // Tasa académica fija: NO representa una cotización de mercado.
+ const demoRubPerUsdt=95;
+ const rubAmount=Math.round(amount*demoRubPerUsdt*100)/100;
+ const formatRub=value=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(value)+' ₽ DEMO';
  // Todas las referencias son identificadores de aula deliberadamente incompatibles
  // con direcciones blockchain y cuentas bancarias reales.
  const methods={
   bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain (solo demostración)',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
   trc20:{title:'USDT · TRC20',description:'Red TRON (solo demostración)',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
-  rub:{title:'Rublos rusos',description:'Método de pago en rublos simulado, sin cuenta bancaria',reference:'IC-DEMO-RUB-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'₽',logoClass:'rub'}
+  rub:{title:'Rublos rusos',description:'Tarjeta ficticia en rublos para la simulación educativa',reference:'2202 2084 9050 0601',label:'Tarjeta DEMO en rublos',logo:'₽',logoClass:'rub'}
  };
  const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div><span class="ic-method-logo ${esc(m.logoClass)}" aria-hidden="true">${esc(m.logo)}</span></div></button>`).join('');
  modal('Elegir método de práctica',`
   <div class="ic-demo-step">PASO 2 DE 2 · ACTIVACIÓN DE ${esc(plan)}</div>
   <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT-DEMO</strong></p>
+  <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe de práctica.</div>
   <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
-  <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia de práctica.</p></div>
-  <div class="modal-note"><strong>SOLO DEMO.</strong> Las referencias no son direcciones blockchain ni cuentas bancarias. No envíes criptomonedas, rublos ni datos bancarios.</div>
-  <p>La solicitud se enviará una sola vez al profesor cuando pulses «Enviar solicitud de activación».</p>
+  <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta de práctica.</p></div>
+  <div class="modal-note"><strong>SOLO DEMO.</strong> Las referencias y tarjetas mostradas son ficticias. No envíes criptomonedas, rublos ni datos bancarios reales.</div>
+  <p>La solicitud se enviará una sola vez al profesor cuando pulses «Enviado».</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
@@ -461,21 +466,29 @@ function openDemoPaymentMethods(plan,amount){
    // La solicitud existente de Firebase conserva su estructura original:
    // no se alteran reglas, aprobación, saldos ni rendimientos.
    planSubmitId=await requestVirtualPlanActivation(session,plan,alias,amount);
-   record('plan_requested',`Solicitó activar ${plan} por ${amount.toFixed(2)} USDT-DEMO. Método visual: ${methods[key].title}`,'planes');
-   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT-DEMO</b><p>Método seleccionado: ${esc(methods[key].title)}</p></div><p>El profesor recibió una única solicitud de activación. El plan no se activa hasta su aprobación.</p><p class="tiny">Operación exclusivamente simulada, sin fondos reales.</p>`);
+   const displayedAmount=key==='rub'?formatRub(rubAmount):money(amount)+' USDT-DEMO';
+   record('plan_requested',`Solicitó activar ${plan} por ${amount.toFixed(2)} USDT-DEMO. Método visual: ${methods[key].title}; equivalencia visual: ${displayedAmount}`,'planes');
+   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT-DEMO</b><p>Método seleccionado: ${esc(methods[key].title)}</p><p>Importe mostrado: ${esc(displayedAmount)}</p></div><p>El profesor recibió una única solicitud de activación. El plan no se activa hasta su aprobación.</p><p class="tiny">Conversión fija para el ejercicio: 1 USDT-DEMO = 95 ₽ DEMO. No es un tipo de cambio real ni se reciben fondos.</p>`);
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
- },'Enviar solicitud de activación');
+ },'Enviado');
  const details=modalContent.querySelector('#icMethodDetail');
  modalContent.querySelectorAll('.ic-method-choice').forEach(button=>button.addEventListener('click',()=>{
   modalContent.querySelectorAll('.ic-method-choice').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
   const method=methods[button.dataset.icMethod];
   if(!method||!details)return;
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div><div class="ic-method-head" style="margin:8px 0 10px"><small>Referencia de práctica (no acepta pagos)</small><span class="ic-method-logo ${esc(method.logoClass)}" aria-hidden="true">${esc(method.logo)}</span></div><div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small>Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.</small>`;
+  const amountDisplay=modalContent.querySelector('#icMethodAmount');
+  if(amountDisplay){
+   amountDisplay.innerHTML=button.dataset.icMethod==='rub'
+    ?`<small>Equivalente en rublos de práctica</small><strong>${esc(formatRub(rubAmount))}</strong><small>${money(amount)} USDT-DEMO × 95 ₽/USDT · tasa fija de simulación</small>`
+    :`<small>Importe para ${esc(method.title)}</small><strong>${money(amount)} USDT-DEMO</strong><small>Sin conversión de divisa</small>`;
+  }
+  const isRub=button.dataset.icMethod==='rub';
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div><div class="ic-method-head" style="margin:8px 0 10px"><small>${isRub?'Tarjeta ficticia de práctica (no acepta pagos)':'Referencia de práctica (no acepta pagos)'}</small><span class="ic-method-logo ${esc(method.logoClass)}" aria-hidden="true">${esc(method.logo)}</span></div><div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small>${isRub?'Tarjeta DEMO mostrada solo con fines visuales dentro del ejercicio. No acepta transferencias ni pagos reales.':'Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.'}</small>`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
-   try{await navigator.clipboard.writeText(method.reference);if(feedback)feedback.textContent='Referencia DEMO copiada.';}
-   catch{if(feedback)feedback.textContent='Puedes seleccionar y copiar la referencia manualmente.';}
+   try{await navigator.clipboard.writeText(method.reference);if(feedback)feedback.textContent=isRub?'Tarjeta DEMO copiada.':'Referencia DEMO copiada.';}
+   catch{if(feedback)feedback.textContent=isRub?'Puedes seleccionar y copiar manualmente la tarjeta DEMO.':'Puedes seleccionar y copiar la referencia manualmente.';}
   });
  }));
 }
