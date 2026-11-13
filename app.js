@@ -427,12 +427,7 @@ function openPlanWallet(plan){
   modal('Plan ya aprobado','<p>El profesor ya aprobó este plan de práctica. Comprueba su activación en tu cartera.</p>');return;
  }
  const amount=num(cfg.min); // El importe se determina exclusivamente por el plan elegido.
- modal('Invertir para activar · '+plan,`
-  <div class="ic-demo-step">PASO 1 DE 2 · RESUMEN DEL PLAN</div>
-  <div class="ic-fixed-plan"><span>Plan seleccionado</span><strong>${esc(plan)}</strong><span>Importe de activación</span><strong>${money(amount)} USDT-DEMO</strong></div>
-  <p>Esta cantidad es fija para el plan seleccionado. No necesitas escribir ningún importe ni dirección.</p>
-  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA.</strong> No se reciben pagos ni transferencias reales.</div>
- `,()=>openDemoPaymentMethods(plan,amount),'Invertir · elegir método de práctica');
+ openDemoPaymentMethods(plan,amount); // Abrir directamente métodos, sin pantalla redundante.
 }
 function openDemoPaymentMethods(plan,amount){
  // Tasa académica fija: NO representa una cotización de mercado.
@@ -449,7 +444,7 @@ function openDemoPaymentMethods(plan,amount){
  const sberMark='<span class="ic-sber-logo" aria-hidden="true"><svg viewBox="0 0 42 42" focusable="false"><path d="M33 10A16 16 0 1 0 36 25" fill="none" stroke="#9fecc4" stroke-width="5" stroke-linecap="round"/><path d="M11 21l7 7 14-15" fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
  const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div>${key==='rub'?sberMark:`<span class="ic-method-logo ${esc(m.logoClass)}" aria-hidden="true">${esc(m.logo)}</span>`}</div></button>`).join('');
  modal('Elegir método de práctica',`
-  <div class="ic-demo-step">PASO 2 DE 2 · ACTIVACIÓN DE ${esc(plan)}</div>
+  <div class="ic-demo-step">ACTIVACIÓN DE ${esc(plan)}</div>
   <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT-DEMO</strong></p>
   <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe de práctica.</div>
   <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
