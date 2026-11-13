@@ -778,6 +778,7 @@ $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó id
 // Soporte Telegram: solo se confirma al recibir una respuesta exitosa del servidor.
 // El token de BotFather NUNCA se expone al navegador ni a GitHub.
 const SUPPORT_WORKER_URL='https://investcapital-soporte.investcapital8310.workers.dev/support';
+const SUPPORT_THREADS_URL='https://investcapital-soporte.investcapital8310.workers.dev/threads';
 let sendingSupport=false;
 $('#sendSupport').addEventListener('click',async()=>{
  if(sendingSupport)return;
@@ -804,12 +805,45 @@ $('#sendSupport').addEventListener('click',async()=>{
   $('#supportText').value='';
   tx('Consulta · '+subject,0,'Enviada','support');
   modal('Consulta enviada','Tu mensaje fue enviado al soporte.');
+  if(view==='soporte')void loadSupportReplies();
  }catch(error){
   console.error('Error al enviar consulta a soporte',error);
   modal('No se pudo enviar',esc(error?.message||'Revisa la conexión y vuelve a intentarlo.'));
  }finally{sendingSupport=false;btn.disabled=false;btn.textContent='Enviar consulta';}
 });
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
+// Histórico de respuestas privadas de soporte, cargadas solo con la sesión del alumno.
+const supportSection=document.querySelector('[data-section="soporte"]');
+const supportHistory=document.createElement('div');
+supportHistory.style.cssText='margin-top:20px;padding:18px;border:1px solid #7952a6;border-radius:14px;background:rgba(35,18,60,.5)';
+const supportTitle=document.createElement('h3');supportTitle.textContent='Mis consultas y respuestas';supportTitle.style.margin='0 0 12px';
+const supportList=document.createElement('div');supportList.textContent='Abre Soporte para consultar tus mensajes.';
+supportHistory.append(supportTitle,supportList);supportSection?.append(supportHistory);
+let supportLoading=false;
+async function loadSupportReplies(){
+ if(supportLoading||view!=='soporte')return;
+ supportLoading=true;
+ try{
+  await ensureStudentFirebaseSession();
+  const fb=await getFirebase();const token=await fb?.auth?.currentUser?.getIdToken();
+  if(!token)throw new Error('Inicia sesión para ver las consultas.');
+  const result=await fetch(SUPPORT_THREADS_URL,{headers:{Authorization:'Bearer '+token}});
+  const json=await result.json();if(!result.ok||!json.ok)throw new Error(json.error||'No se pudieron cargar las respuestas');
+  supportList.replaceChildren();
+  if(!json.tickets?.length){supportList.textContent='Aún no tienes consultas registradas.';return;}
+  for(const item of json.tickets){
+   const card=document.createElement('div');card.style.cssText='padding:12px 0;border-top:1px solid #765a99;white-space:pre-wrap;overflow-wrap:anywhere';
+   const heading=document.createElement('strong');heading.textContent=item.subject+' · '+(item.status==='respondida'?'Respondida':'Pendiente');
+   const question=document.createElement('p');question.textContent='Tu mensaje: '+item.message;
+   const answer=document.createElement('p');answer.style.cssText='font-weight:600;color:#d7c5ff';answer.textContent=item.response?'Soporte: '+item.response:'Esperando respuesta del equipo de soporte.';
+   card.append(heading,question,answer);supportList.append(card);
+  }
+ }catch(e){supportList.textContent='No se pudo consultar el historial: '+(e?.message||'Error de conexión');}
+ finally{supportLoading=false;}
+}
+// Las respuestas se actualizan al entrar en Soporte y mientras esa sección está abierta.
+for(const btn of document.querySelectorAll('.side-link'))if(btn.dataset.view==='soporte')btn.addEventListener('click',()=>void loadSupportReplies());
+setInterval(()=>{if(view==='soporte')void loadSupportReplies()},20000);
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
 $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
 async function attachStudentListeners(){
