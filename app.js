@@ -449,8 +449,8 @@ function openDemoPaymentMethods(plan,amount){
  // Todas las referencias son identificadores de aula deliberadamente incompatibles
  // con direcciones blockchain y cuentas bancarias reales.
  const methods={
-  bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
-  trc20:{title:'USDT · TRC20',description:'Red TRON',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
+  bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain',reference:'IC-REF-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
+  trc20:{title:'USDT · TRC20',description:'Red TRON',reference:'IC-REF-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
   rub:{title:'Sberbank · rublos rusos',description:'Rublos rusos · tarjeta Sberbank',reference:'2202 2084 9050 0601',label:'Tarjeta Sberbank · referencia visual',logo:'SBER',logoClass:'sber'}
  };
  const sberMark='<span class="ic-sber-logo" aria-hidden="true"><svg viewBox="0 0 42 42" focusable="false"><path d="M33 10A16 16 0 1 0 36 25" fill="none" stroke="#9fecc4" stroke-width="5" stroke-linecap="round"/><path d="M11 21l7 7 14-15" fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
@@ -531,7 +531,7 @@ function openDemoPaymentMethods(plan,amount){
   // referencia copiable para activar un plan de aula.
   const blockchainAddress=key==='bep20'?'0x72c811aFF9bbB6c43969Cae9BB5A16845D01a646':key==='trc20'?'TMpWeqaCfXm2zU73N2bnwJdsjEiZd5FCA7':'';
   const blockchainInfo=blockchainAddress?`<section class="ic-blockchain-info" style="padding:14px;margin:12px 0;border:1px solid #a65ee0;border-radius:14px;background:#23132f"><strong>Dirección blockchain de referencia · ${key==='bep20'?'BEP20':'TRC20'}</strong><p style="overflow-wrap:anywhere;user-select:text;font-family:monospace">${esc(blockchainAddress)}</p><small>Solo consulta informativa. No envíes fondos: las activaciones de esta plataforma son simuladas.</small></section>`:'';
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}<p class="ic-showcase-warning">Operación simulada · No se reciben pagos reales.</p><div class="ic-demo-copy-row"><span class="ic-class-code-label">Código interno</span><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small class="ic-card-footnote">${isRub?'Número proporcionado para referencia visual.':'Número proporcionado para referencia visual.'}</small>`;
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}<div class="ic-demo-copy-row"><span class="ic-class-code-label">Código interno</span><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small class="ic-card-footnote">${isRub?'Número proporcionado para referencia visual.':'Número proporcionado para referencia visual.'}</small>`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
    try{
@@ -540,7 +540,7 @@ function openDemoPaymentMethods(plan,amount){
     if(modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod!==button.dataset.icMethod)return;
     modalContent.dataset.icCopiedMethod=button.dataset.icMethod;
     confirmBtn.disabled=false;
-    if(feedback)feedback.textContent='Código de práctica copiado. Pulsa «Enviado» para registrar la solicitud simulada.';
+    if(feedback)feedback.textContent='Código interno copiado.';
    }catch{if(feedback)feedback.textContent='No se pudo copiar. Comprueba los permisos del navegador e inténtalo otra vez.';}
   });
  }));
