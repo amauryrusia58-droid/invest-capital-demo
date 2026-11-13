@@ -178,6 +178,18 @@ function principal(){return num(activePositions().reduce((s,p)=>s+remainingPrinc
 // Si falta conectar con Firebase no se habilitan retiros nuevos ni se muestran
 // ganancias disponibles hasta conocer el historial completo.
 let withdrawalHistoryReady=false,teacherSettingsReady=false,withdrawalAuditConflict=false;
+let syncFailureMessage='';
+let syncWatchdog=null;
+function reportSyncFailure(source,error){
+ const reason=String(error?.message||error||'Error desconocido');
+ syncFailureMessage=source+': '+reason;
+ console.error('Invest Capital / Firebase:',syncFailureMessage,error);
+ const status=document.querySelector('#syncStatus');
+ if(status)status.textContent='Error de sincronización: '+syncFailureMessage;
+ render();
+}
+function syncDisplay(waiting){return waiting && syncFailureMessage?'Error de conexión':waiting;}
+
 function earningsSynced(){return withdrawalHistoryReady&&teacherSettingsReady&&!withdrawalAuditConflict;}
 // Fuente principal: los documentos de retiros aprobados en Firestore.
 // Copia de seguridad: recibos confirmados y movimientos históricos de ESTE
@@ -395,10 +407,10 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=act
   // el valor calculado desde el navegador es provisional. Evitar el destello
   // de $5,100/$0 y su posterior sustitución sin explicación.
   const balancesConfirmed=teacherSettingsReady&&withdrawalHistoryReady;
-  $('#totalVal').textContent=balancesConfirmed?money(value):'Sincronizando…';$('#investedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):'Sincronizando…';$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):'Verificando…';$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):'Verificando…';$('#earningYield').textContent=balancesConfirmed?money(gain()):'Sincronizando…';$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias de práctica disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
+  $('#totalVal').textContent=balancesConfirmed?money(value):syncDisplay('Sincronizando…');$('#investedVal').textContent=teacherSettingsReady?money(invested):syncDisplay('Sincronizando…');$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):syncDisplay('Sincronizando…');$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):syncDisplay('Sincronizando…');$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):syncDisplay('Verificando…');$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):syncDisplay('Verificando…');$('#earningYield').textContent=balancesConfirmed?money(gain()):syncDisplay('Sincronizando…');$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias de práctica disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
-  $('#portfolioTotalVal').textContent=balancesConfirmed?money(invested+profit):'Sincronizando…';$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=teacherSettingsReady?money(invested):'Sincronizando…';$('#portfolioGainVal').textContent=balancesConfirmed?money(profit):'Sincronizando…';
+  $('#portfolioTotalVal').textContent=balancesConfirmed?money(invested+profit):syncDisplay('Sincronizando…');$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=teacherSettingsReady?money(invested):syncDisplay('Sincronizando…');$('#portfolioGainVal').textContent=balancesConfirmed?money(profit):syncDisplay('Sincronizando…');
   $('#positionRows').innerHTML=pos.length?pos.map(p=>`<tr><td>${esc(p.plan)}</td><td>${money(remainingPrincipal(p))}</td><td>${money(positionProfit(p))}</td><td>${Math.min(elapsedDays(legacyStart(p)),plans[p.plan].weeks*7)}</td><td>${esc(p.date)}</td><td><span class="tag">Activa</span></td></tr>`).join(''):'<tr><td colspan="6">Aún no tienes posiciones.</td></tr>';
   $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · DEMO</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
   drawPortfolioChart(pos,invested,profit);
@@ -911,7 +923,12 @@ const exit=document.createElement('button');exit.className='btn btn-soft';exit.t
 $('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
 async function attachStudentListeners(){
  unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();unsubscribePlanRequests();unsubscribeTeacherSettings();
- teacherSettingsReady=false;withdrawalHistoryReady=false;
+ teacherSettingsReady=false;withdrawalHistoryReady=false;syncFailureMessage='';
+ if(syncWatchdog)clearTimeout(syncWatchdog);
+ syncWatchdog=setTimeout(()=>{
+  if(!teacherSettingsReady||!withdrawalHistoryReady)
+   reportSyncFailure('Tiempo de espera','Firebase no confirmó ajustes o retiros en 15 segundos. Comprueba la conexión y las reglas de Firestore.');
+ },15000);
  unsubscribeTeacherSettings=watchStudentTeacherSettings(session,(data,serverConfirmed)=>{
   testSettings={extraDays:Math.min(365,Math.max(0,Math.floor(Number(data.extraDays)||0))),bonus:Math.min(100000,Math.max(0,num(data.bonus))),plan:plans[data.plan]?data.plan:'',planStartedAt:Number(data.planStartedAt)||0};
   syncTeacherPosition();
@@ -920,14 +937,14 @@ async function attachStudentListeners(){
   teacherSettingsReady=serverConfirmed;
   onWithdrawalRequests(withdrawalRequests);
   showChosenPlanBanner();void syncEarningsSummary(true);
- },e=>{$('#syncStatus').textContent='No se pudieron leer los ajustes del profesor: '+e.message;});
+ },e=>{reportSyncFailure('Ajustes del profesor',e);});
  unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='No se pudo leer el escenario';});
  if(session.mode==='cloud'){
   try{await applyClassroomCode(profile.referralCode||'');}
   catch(e){$('#refLinkStatus').textContent='El código indicado no pudo vincularse: '+e.message+' Puedes corregirlo aquí.';}
   unsubscribeCredits=watchVirtualCreditRequests(session,onCreditRequests,e=>{console.error('Error leyendo solicitudes',e);const box=$('#creditRequestBox');if(box)box.textContent='No se pudieron consultar las solicitudes: '+e.message;});
   unsubscribePlanRequests=watchVirtualPlanRequests(session,onPlanActivationRequests,e=>{console.error('Error leyendo activaciones',e);const box=$('#planActivationBox');if(box)box.textContent='No se pudieron consultar activaciones: '+e.message;});
-  unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,(rows,serverConfirmed)=>{withdrawalHistoryReady=serverConfirmed;onWithdrawalRequests(rows);void syncEarningsSummary(true);},e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;});
+  unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,(rows,serverConfirmed)=>{withdrawalHistoryReady=serverConfirmed;onWithdrawalRequests(rows);void syncEarningsSummary(true);},e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;reportSyncFailure('Solicitudes de retiro',e);});
   unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{$('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;});
   await flushContributions();
  }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre alumnos.';}
