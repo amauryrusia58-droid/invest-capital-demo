@@ -486,7 +486,7 @@ function openDemoPaymentMethods(plan,amount){
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
   const key=modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod;
   if(!key||!methods[key]){err('Selecciona un método de práctica antes de enviar la solicitud.');return;}
-  if(modalContent.dataset.icCopiedMethod!==key){err('Copia primero la referencia del método elegido antes de pulsar «Enviado».');confirmBtn.disabled=true;return;}
+  if(key==='rub' && modalContent.dataset.icCopiedMethod!==key){err('Copia primero la referencia del método elegido antes de pulsar «Enviado».');confirmBtn.disabled=true;return;}
   planSubmitBusy=true;confirmBtn.disabled=true;
   try{
    await ensureStudentFirebaseSession();
@@ -512,7 +512,7 @@ function openDemoPaymentMethods(plan,amount){
  const details=modalContent.querySelector('#icMethodDetail');
  modalContent.querySelectorAll('.ic-method-choice').forEach(button=>button.addEventListener('click',()=>{
   modalContent.dataset.icCopiedMethod='';
-  confirmBtn.disabled=true;
+  confirmBtn.disabled=button.dataset.icMethod==='rub';
   modalContent.querySelectorAll('.ic-method-choice').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
   const method=methods[button.dataset.icMethod];
   if(!method||!details)return;
@@ -527,11 +527,9 @@ function openDemoPaymentMethods(plan,amount){
   const paymentCard=isRub
     ?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Tarjeta Sberbank<br><small>TITULAR: INVEST CAPITAL</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">REFERENCIA VISUAL</span></div>`
     :`<div class="ic-usdt-card ${key==='trc20'?'ic-usdt-card-tron':'ic-usdt-card-bnb'}"><div class="ic-usdt-card-heading"><div><strong>USDT · ${key==='bep20'?'BEP20':'TRC20'}</strong><small>${key==='bep20'?'BNB SMART CHAIN':'RED TRON'} · INVEST CAPITAL</small></div>${methodMarks(key)}</div><div class="ic-usdt-card-reference">${esc(displayAddresses[key])}</div><span class="ic-usdt-card-caption">Referencia visual</span></div>`;
-  // Las direcciones externas se muestran solo como información de red, nunca como
-  // referencia copiable para activar un plan de aula.
-  const blockchainAddress=key==='bep20'?'0x72c811aFF9bbB6c43969Cae9BB5A16845D01a646':key==='trc20'?'TMpWeqaCfXm2zU73N2bnwJdsjEiZd5FCA7':'';
-  const blockchainInfo=blockchainAddress?`<section class="ic-blockchain-info" style="padding:14px;margin:12px 0;border:1px solid #a65ee0;border-radius:14px;background:#23132f"><strong>Dirección blockchain de referencia · ${key==='bep20'?'BEP20':'TRC20'}</strong><p style="overflow-wrap:anywhere;user-select:text;font-family:monospace">${esc(blockchainAddress)}</p><small>Solo consulta informativa. No envíes fondos: las activaciones de esta plataforma son simuladas.</small></section>`:'';
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}<div class="ic-demo-copy-row"><span class="ic-class-code-label">Código interno</span><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small class="ic-card-footnote">${isRub?'Número proporcionado para referencia visual.':'Número proporcionado para referencia visual.'}</small>`;
+  // Solo Sberbank conserva el bloque de código interno y el botón Copiar.
+  // Para BEP20 y TRC20 se presenta únicamente la tarjeta de referencia visual.
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}${isRub?`<div class="ic-demo-copy-row"><span class="ic-class-code-label">Código interno</span><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small class="ic-card-footnote">Número proporcionado para referencia visual.</small>`:''}`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
    try{
