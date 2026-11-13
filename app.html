@@ -48,7 +48,50 @@
   opacity: 1 !important;
   cursor: default;
 }
-</style></head><body class="dash-body"><div class="dash-layout"><aside class="sidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
+
+/* V10.0 — navegación accesible en móvil; escritorio sin modificaciones. */
+.ic-mobile-nav-toggle,.ic-mobile-nav-scrim{display:none}
+@media(max-width:750px){
+ .ic-mobile-nav-toggle{display:inline-flex;gap:9px;align-items:center;justify-content:center;position:relative;z-index:9;margin:0 0 18px;padding:12px 16px;background:#352045;border:1px solid #9c6fbb;border-radius:12px;color:#fff;font-size:15px;font-weight:750;min-height:46px}
+ .dash-layout>.sidebar{display:flex!important;flex-direction:column!important;gap:18px;position:fixed!important;inset:0 auto 0 0!important;width:min(85vw,320px)!important;height:100dvh;max-height:100dvh;overflow-y:auto;z-index:102!important;transform:translateX(-105%);transition:transform .2s ease;box-shadow:12px 0 45px #0008;padding:28px 18px!important;background:#180d25!important;border-right:1px solid #74518a!important}
+ .dash-layout>.sidebar .brand{display:inline-flex!important}
+ .dash-layout>.sidebar .sidebar-title{display:block!important}
+ .dash-layout>.sidebar .side-foot{display:block!important}
+ .dash-layout>.sidebar .side-menu{display:flex!important;flex-direction:column!important;gap:5px;overflow:visible!important;white-space:normal!important}
+ .dash-layout>.sidebar .side-link{width:100%;min-height:44px;padding:12px 14px;display:flex;flex-shrink:0}
+ .dash-layout>.sidebar .side-icon{display:grid!important}
+ .ic-mobile-nav-scrim{display:block;position:fixed;inset:0;background:rgba(4,2,9,.67);z-index:101;opacity:0;pointer-events:none;transition:opacity .2s}
+ body.ic-mobile-menu-open .dash-layout>.sidebar{transform:translateX(0)}
+ body.ic-mobile-menu-open .ic-mobile-nav-scrim{opacity:1;pointer-events:auto}
+ body.ic-mobile-menu-open{overflow:hidden}
+ .dash-main{min-width:0!important}
+}
+@media(prefers-reduced-motion:reduce){.dash-layout>.sidebar,.ic-mobile-nav-scrim{transition:none!important}}
+/* Referencia académica: no es una cartera real. */
+.ic-demo-copy-row{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;margin:9px 0 12px}
+.ic-demo-copy-value{flex:1;min-width:195px;padding:12px 13px;border:1px dashed #b787db;border-radius:10px;background:#150d20;color:#f2ddff;font-weight:750;overflow-wrap:anywhere;font-size:13px}
+.ic-demo-copy-btn{padding:10px 14px;min-height:42px;border:1px solid #c090ee;border-radius:10px;background:#67418e;color:#fff;font-weight:750}
+.ic-demo-reference-input{margin-top:7px!important}
+.ic-demo-copy-feedback{min-height:18px;font-size:12px;color:#dbbdf1}
+
+/* V10.1 — Opciones de pago exclusivamente visuales, sin cuentas reales. */
+.ic-demo-step{font-size:12px;letter-spacing:.1em;font-weight:800;color:#efc78e;margin:5px 0 15px}
+.ic-fixed-plan{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:16px;border:1px solid #9b6abd;border-radius:14px;background:linear-gradient(120deg,#392052,#23132e);margin:12px 0 18px}
+.ic-fixed-plan span{font-size:14px;color:#dac8e5}.ic-fixed-plan strong{text-align:right;color:#fff;font-size:16px}
+.ic-demo-fixed-sum{background:#392450;border-radius:12px;padding:13px 15px}
+.ic-method-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0}
+.ic-method-choice{display:flex;flex-direction:column;text-align:left;gap:7px;border:1px solid #8c65b7;border-radius:13px;padding:14px 12px;background:#291735;color:#f7eafd;cursor:pointer;min-height:100px}
+.ic-method-choice strong{font-size:15px}.ic-method-choice small{font-size:11px;line-height:1.4;color:#d3badd}
+.ic-method-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ic-method-title{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ic-method-logo{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:900;letter-spacing:.04em;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.ic-method-logo.usdt{background:linear-gradient(135deg,#1c8f62,#145a44);color:#effff7;border-color:#47c890}
+.ic-method-logo.rub{background:linear-gradient(135deg,#6f57a6,#4a3773);color:#f5eeff;border-color:#bba0f6;font-size:18px;padding:0 12px}
+.ic-method-choice[aria-pressed="true"]{background:linear-gradient(125deg,#674098,#443071);border-color:#e4bbff;box-shadow:0 0 0 2px #a96be355}
+.ic-method-detail{padding:14px;border:1px solid #71508b;border-radius:13px;margin:14px 0;background:#21132e;min-height:72px}
+.ic-method-detail small{color:#dbbedf}
+@media(max-width:550px){.ic-method-grid{grid-template-columns:1fr}.ic-method-choice{min-height:0}.ic-fixed-plan{grid-template-columns:1fr;gap:5px}.ic-fixed-plan strong{text-align:left}}
+</style></head><body class="dash-body"><div class="dash-layout"><div class="ic-mobile-nav-scrim" id="icMobileNavScrim" aria-hidden="true"></div><aside class="sidebar" id="icMobileSidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><button type="button" id="icMobileNavToggle" class="ic-mobile-nav-toggle" aria-expanded="false" aria-controls="icMobileSidebar" aria-label="Abrir menú de navegación">☰ Menú</button><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
 <div id="selectedPlanBanner" class="ic-selected-plan-banner hidden" role="status" aria-live="polite">
   <div><small>PLAN ELEGIDO · SIMULACIÓN EDUCATIVA / USDT-DEMO</small><strong id="selectedPlanTitle"></strong><p id="selectedPlanMessage"></p></div>
   <button id="selectedPlanAction" class="btn btn-primary" type="button">Continuar con mi plan</button>
@@ -135,4 +178,4 @@
 <section class="workspace-section" data-section="soporte"><h2 class="workspace-title">Centro de atención</h2><div class="content-grid"><div class="pane"><h2>Crear consulta</h2><label class="field-label" for="supportSubject">Motivo</label><select id="supportSubject" class="plain-input"><option>Estado de retiro</option><option>Condiciones de un plan</option><option>Información de la empresa</option><option>Programa de asociados</option></select><label class="field-label" for="supportText">Detalle de consulta</label><input id="supportText" class="plain-input" maxlength="130" placeholder="Escribe una consulta breve, sin información personal"><div class="action-panel"><button id="sendSupport" class="btn btn-primary">Enviar consulta</button></div></div><div class="pane"><h2>Estado del servicio</h2><p class="muted" id="supportStatus">Los canales de atención están operativos.</p><p class="muted">Horario de respuesta indicado: dentro de los siguientes tres días hábiles.</p></div></div></section>
 <footer class="site-footer" style="margin-top:45px"><span>© Invest Capital · Área personal</span><span>Entorno académico · No permite fondos reales</span></footer></main></div>
 <div id="actionModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-kicker">INVEST CAPITAL · SIMULACIÓN EDUCATIVA</div><h2 id="modalTitle">Detalle de operación</h2><div id="modalContent" class="muted"></div><div class="dialog-actions"><button id="closeModal" class="btn btn-soft">Cerrar</button><button id="confirmModal" class="btn btn-primary hidden">Confirmar</button></div></div></div>
-<script type="module" src="app.js?v=95"></script></body></html>
+<script type="module" src="app.js?v=100"></script></body></html>

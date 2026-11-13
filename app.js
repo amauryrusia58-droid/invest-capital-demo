@@ -145,7 +145,29 @@ function showFirebaseIssue(error){
 function save(){localStorage.setItem(STORE,JSON.stringify(account));}
 function record(type,label,which=view){if(!firebaseEnabled)return;pending.push({type,label,view:which});void flush();}
 async function flush(){if(!sessionReady||sending||session.mode!=='cloud')return;sending=true;try{while(pending.length){const a=pending[0];await logStudent(session,a.type,a.label,a.view);pending.shift();}$('#syncStatus').textContent='Actividad conectada';}catch(e){console.warn('Acciones pendientes de conexión',e);$('#syncStatus').textContent='Sincronización pendiente';}finally{sending=false;}}
-function setView(v){if(!titles[v])return;view=v;$$('.workspace-section').forEach(x=>x.classList.toggle('active',x.dataset.section===v));$$('.side-link').forEach(x=>{x.classList.toggle('active',x.dataset.view===v);x.setAttribute('aria-current',x.dataset.view===v?'page':'false');});$('#viewTitle').textContent=titles[v][0];$('#viewSubtitle').textContent=titles[v][1];record('section','Abrió '+titles[v][0],v);window.scrollTo({top:0,behavior:'smooth'});}
+function setView(v){if(!titles[v])return;closeMobileNav();view=v;$$('.workspace-section').forEach(x=>x.classList.toggle('active',x.dataset.section===v));$$('.side-link').forEach(x=>{x.classList.toggle('active',x.dataset.view===v);x.setAttribute('aria-current',x.dataset.view===v?'page':'false');});$('#viewTitle').textContent=titles[v][0];$('#viewSubtitle').textContent=titles[v][1];record('section','Abrió '+titles[v][0],v);window.scrollTo({top:0,behavior:'smooth'});}
+function closeMobileNav(){
+ document.body.classList.remove('ic-mobile-menu-open');
+ const toggle=document.getElementById('icMobileNavToggle');
+ if(toggle){toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Abrir menú de navegación');toggle.textContent='☰ Menú';}
+}
+function initMobileNav(){
+ const toggle=document.getElementById('icMobileNavToggle');
+ const scrim=document.getElementById('icMobileNavScrim');
+ if(!toggle||!scrim)return;
+ closeMobileNav();
+ toggle.addEventListener('click',()=>{
+  const opened=!document.body.classList.contains('ic-mobile-menu-open');
+  document.body.classList.toggle('ic-mobile-menu-open',opened);
+  toggle.setAttribute('aria-expanded',String(opened));
+  toggle.setAttribute('aria-label',opened?'Cerrar menú de navegación':'Abrir menú de navegación');
+  toggle.textContent=opened?'✕ Cerrar menú':'☰ Menú';
+ });
+ scrim.addEventListener('click',closeMobileNav);
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMobileNav();});
+ window.matchMedia('(min-width:751px)').addEventListener('change',closeMobileNav);
+}
+initMobileNav();
 function modal(title,html,callback=null,button='Confirmar'){modalTitle.textContent=title;modalContent.innerHTML=html;onConfirm=callback;confirmBtn.classList.toggle('hidden',!callback);confirmBtn.textContent=button;confirmBtn.disabled=false;overlay.classList.remove('hidden');}
 function close(){overlay.classList.add('hidden');onConfirm=null;}
 function err(text){const e=$('#modalError');if(e){e.textContent=text;e.hidden=false;}}
@@ -404,45 +426,58 @@ function openPlanWallet(plan){
  if(planActivationRequests.some(r=>r.status==='approved'&&r.plan===plan)){
   modal('Plan ya aprobado','<p>El profesor ya aprobó este plan de práctica. Comprueba su activación en tu cartera.</p>');return;
  }
- // Abrir la cartera no escribe solicitudes. La única petición ocurre al confirmar abajo.
+ const amount=num(cfg.min); // El importe se determina exclusivamente por el plan elegido.
  modal('Invertir para activar · '+plan,`
-  <p>Para activar el plan <strong>${esc(plan)}</strong>, introduce un importe de práctica de al menos <strong>${money(cfg.min)} USDT de práctica</strong>.</p>
-  <label class="field-label" for="planActivationAmount">Cantidad que deseas invertir (USDT de práctica)</label>
-  <input class="plain-input" id="planActivationAmount" type="number" min="${cfg.min}" max="100000" step="0.01" value="${cfg.min}" inputmode="decimal" required>
-  <div class="ic-demo-wallet" role="group" aria-label="Cartera USDT de práctica sin transacciones reales">
-   <div class="ic-wallet-head"><span>◈ INVEST CAPITAL</span><b>USDT · DEMO</b></div>
-   <small>CARTERA DE PRÁCTICA PARA EL EJERCICIO</small>
-   <strong>CAR-PRÁCTICA-INVEST-CAPITAL</strong>
-   <div class="ic-wallet-amount"><span id="walletPlanAmount">${money(cfg.min)}</span> <small>de práctica</small></div>
-   <p>Plan elegido: <b>${esc(plan)}</b></p>
-  </div>
-  <div class="modal-note"><strong>SOLO SIMULACIÓN.</strong> Esta cartera no posee dirección blockchain y no acepta depósitos reales. No envíes dinero ni criptomonedas.</div>
-  <p>Solo después de pulsar «Invertir y solicitar activación · DEMO» se enviará <strong>una solicitud</strong> al profesor para activar el plan indicado.</p>
+  <div class="ic-demo-step">PASO 1 DE 2 · RESUMEN DEL PLAN</div>
+  <div class="ic-fixed-plan"><span>Plan seleccionado</span><strong>${esc(plan)}</strong><span>Importe de activación</span><strong>${money(amount)} USDT-DEMO</strong></div>
+  <p>Esta cantidad es fija para el plan seleccionado. No necesitas escribir ningún importe ni dirección.</p>
+  <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA.</strong> No se reciben pagos ni transferencias reales.</div>
+ `,()=>openDemoPaymentMethods(plan,amount),'Invertir · elegir método de práctica');
+}
+function openDemoPaymentMethods(plan,amount){
+ // Todas las referencias son identificadores de aula deliberadamente incompatibles
+ // con direcciones blockchain y cuentas bancarias reales.
+ const methods={
+  bep20:{title:'USDT · BEP20',description:'Red BNB Smart Chain (solo demostración)',reference:'IC-DEMO-BEP20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
+  trc20:{title:'USDT · TRC20',description:'Red TRON (solo demostración)',reference:'IC-DEMO-TRC20-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'USDT',logoClass:'usdt'},
+  rub:{title:'Rublos rusos',description:'Método de pago en rublos simulado, sin cuenta bancaria',reference:'IC-DEMO-RUB-'+plan.toUpperCase().replace(/[^A-Z]/g,''),logo:'₽',logoClass:'rub'}
+ };
+ const cards=Object.entries(methods).map(([key,m])=>`<button type="button" class="ic-method-choice" data-ic-method="${key}" aria-pressed="false"><div class="ic-method-head"><div class="ic-method-title"><strong>${esc(m.title)}</strong><small>${esc(m.description)}</small></div><span class="ic-method-logo ${esc(m.logoClass)}" aria-hidden="true">${esc(m.logo)}</span></div></button>`).join('');
+ modal('Elegir método de práctica',`
+  <div class="ic-demo-step">PASO 2 DE 2 · ACTIVACIÓN DE ${esc(plan)}</div>
+  <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT-DEMO</strong></p>
+  <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
+  <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia de práctica.</p></div>
+  <div class="modal-note"><strong>SOLO DEMO.</strong> Las referencias no son direcciones blockchain ni cuentas bancarias. No envíes criptomonedas, rublos ni datos bancarios.</div>
+  <p>La solicitud se enviará una sola vez al profesor cuando pulses «Enviar solicitud de activación».</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
-  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una activación pendiente de revisión.');return;}
-  const amountInput=$('#planActivationAmount');
-  const inputText=amountInput?.value?.trim()||'';
-  const inputAmount=Number(inputText);
-  const amount=num(inputAmount);
-  if(!inputText || !Number.isFinite(inputAmount) || amount!==inputAmount || amount<cfg.min || amount>100000){
-   err(`Escribe una cantidad entre ${money(cfg.min)} y ${money(100000)} de práctica, con un máximo de dos decimales.`);return;
-  }
+  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
+  const key=modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod;
+  if(!key||!methods[key]){err('Selecciona un método de práctica antes de enviar la solicitud.');return;}
   planSubmitBusy=true;confirmBtn.disabled=true;
   try{
    await ensureStudentFirebaseSession();
+   // La solicitud existente de Firebase conserva su estructura original:
+   // no se alteran reglas, aprobación, saldos ni rendimientos.
    planSubmitId=await requestVirtualPlanActivation(session,plan,alias,amount);
-   record('plan_requested',`Solicitó invertir ${amount.toFixed(2)} USDT-DEMO para activar ${plan}`,'planes');
-   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT de práctica</b></div><p>El profesor ha recibido una única solicitud de activación. El plan no se activa hasta que la apruebe.</p><p class="tiny">No se genera saldo libre ni transferencia de criptomonedas.</p>`);
+   record('plan_requested',`Solicitó activar ${plan} por ${amount.toFixed(2)} USDT-DEMO. Método visual: ${methods[key].title}`,'planes');
+   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT-DEMO</b><p>Método seleccionado: ${esc(methods[key].title)}</p></div><p>El profesor recibió una única solicitud de activación. El plan no se activa hasta su aprobación.</p><p class="tiny">Operación exclusivamente simulada, sin fondos reales.</p>`);
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
- },'Invertir y solicitar activación · DEMO');
- const amountInput=$('#planActivationAmount');
- const amountLabel=$('#walletPlanAmount');
- amountInput?.addEventListener('input',()=>{
-  const a=Number(amountInput.value);
-  if(amountLabel)amountLabel.textContent=Number.isFinite(a)&&a>=0?money(a):'—';
- });
+ },'Enviar solicitud de activación');
+ const details=modalContent.querySelector('#icMethodDetail');
+ modalContent.querySelectorAll('.ic-method-choice').forEach(button=>button.addEventListener('click',()=>{
+  modalContent.querySelectorAll('.ic-method-choice').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
+  const method=methods[button.dataset.icMethod];
+  if(!method||!details)return;
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>DEMO</b></div><div class="ic-method-head" style="margin:8px 0 10px"><small>Referencia de práctica (no acepta pagos)</small><span class="ic-method-logo ${esc(method.logoClass)}" aria-hidden="true">${esc(method.logo)}</span></div><div class="ic-demo-copy-row"><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small>Referencia de aula, no una dirección de envío. No se requiere pegarla ni enviar fondos.</small>`;
+  details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
+   const feedback=details.querySelector('#icMethodCopyFeedback');
+   try{await navigator.clipboard.writeText(method.reference);if(feedback)feedback.textContent='Referencia DEMO copiada.';}
+   catch{if(feedback)feedback.textContent='Puedes seleccionar y copiar la referencia manualmente.';}
+  });
+ }));
 }
 
 function renderPlanActivationRequests(){
@@ -772,7 +807,7 @@ $$('.side-link').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.vie
 });
 $$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
 $$('[data-document]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.document;record('document','Consultó '+name,'documentos');modal(name,`<p>${esc(docs[name]||'Documento no disponible.')}</p>`);}));
-$('#sideInvest').addEventListener('click',startPlanInvestment);$('#actionDeposit').addEventListener('click',startPlanInvestment);$('#startDeposit').addEventListener('click',startPlanInvestment);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
+$('#sideInvest').addEventListener('click',()=>{closeMobileNav();startPlanInvestment();});$('#actionDeposit').addEventListener('click',startPlanInvestment);$('#startDeposit').addEventListener('click',startPlanInvestment);$('#actionWithdraw').addEventListener('click',withdrawal);$('#withdrawInMovements').addEventListener('click',withdrawal);
 $('#newReferralActivity').addEventListener('click',referralActivity);
 $('#copyRef').addEventListener('click',async()=>{record('referral','Consultó identificador del programa','referidos');try{await navigator.clipboard.writeText($('#refCode').textContent.trim());modal('Identificador de asociado','Copiado al portapapeles.');}catch{modal('Identificador de asociado',esc($('#refCode').textContent));}});
 // Soporte Telegram: solo se confirma al recibir una respuesta exitosa del servidor.
