@@ -168,7 +168,7 @@ function initMobileNav(){
  window.matchMedia('(min-width:751px)').addEventListener('change',closeMobileNav);
 }
 initMobileNav();
-function modal(title,html,callback=null,button='Confirmar'){modalTitle.textContent=title;modalContent.innerHTML=html;onConfirm=callback;confirmBtn.classList.toggle('hidden',!callback);confirmBtn.textContent=button;confirmBtn.disabled=false;overlay.classList.remove('hidden');}
+function modal(title,html,callback=null,button='Confirmar'){modalTitle.textContent=title;modalTitle.classList.remove('ic-confirmation-modal-title');modalContent.innerHTML=html;onConfirm=callback;confirmBtn.classList.toggle('hidden',!callback);confirmBtn.textContent=button;confirmBtn.disabled=false;overlay.classList.remove('hidden');}
 function close(){overlay.classList.add('hidden');onConfirm=null;}
 function err(text){const e=$('#modalError');if(e){e.textContent=text;e.hidden=false;}}
 function tx(name,amount,status,kind){const seq=++account.seq;account.ledger.unshift({name,amount:num(amount),status,kind,ref:'IC-'+String(Date.now()).slice(-6)+String(seq).padStart(2,'0'),date:new Date().toLocaleDateString('es-ES')});account.ledger=account.ledger.slice(0,100);save();render();}
@@ -495,7 +495,10 @@ function openDemoPaymentMethods(plan,amount){
    planSubmitId=await requestVirtualPlanActivation(session,plan,alias,amount);
    const displayedAmount=key==='rub'?formatRub(rubAmount):money(amount)+' USDT-DEMO';
    record('plan_requested',`Solicitó activar ${plan} por ${amount.toFixed(2)} USDT-DEMO. Método visual: ${methods[key].title}; equivalencia visual: ${displayedAmount}`,'planes');
-   modal('Solicitud enviada para revisión',`<div class="notice"><b>${esc(plan)} · ${money(amount)} USDT-DEMO</b><p>Método seleccionado: ${esc(methods[key].title)}</p><p>Importe mostrado: ${esc(displayedAmount)}</p></div><p>El profesor recibió una única solicitud de activación. El plan no se activa hasta su aprobación.</p><p class="tiny">Conversión fija para el ejercicio: 1 USDT-DEMO = 95 ₽ DEMO. No es un tipo de cambio real ni se reciben fondos.</p>`);
+   modal('Solicitud enviada para revisión',`<div class="ic-confirmation"><div class="ic-confirmation-brand"><span class="ic-confirmation-bars" aria-hidden="true">▂ ▅ █</span><strong>INVEST CAPITAL</strong></div><div class="ic-confirmation-success"><span class="ic-confirmation-check" aria-hidden="true">✓</span><span>Solicitud enviada para revisión</span></div><div class="ic-confirmation-details"><div><span aria-hidden="true">▰</span><span>${esc(plan)}: <b>${money(amount)} USDT</b></span></div><div><span aria-hidden="true">◇</span><span>Método seleccionado: <b>${esc(methods[key].title)}</b></span></div><div><span aria-hidden="true">◉</span><span>Importe mostrado: <b>${esc(key==='rub'?displayedAmount:money(amount)+' USDT')}</b></span></div></div><p class="ic-confirmation-message"><strong>Nuestro equipo de especialistas está revisando su solicitud.</strong> Recibirá una notificación cuando finalice el proceso de evaluación.</p><p class="ic-confirmation-conversion">⇄ &nbsp; Conversión fija para el ejercicio: <strong>1 USDT = 95 ₽</strong></p><p class="ic-confirmation-foot">Operación simulada</p></div>`);
+   // Mantener la marca y el título dentro de la nueva tarjeta de confirmación.
+   const confirmationTitle=document.querySelector('#actionModal #modalTitle');
+   if(confirmationTitle)confirmationTitle.classList.add('ic-confirmation-modal-title');
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
  },'Enviado');
