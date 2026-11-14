@@ -31,7 +31,9 @@ export async function studentStart(profile){
  const {auth,db,Auth,Store}=f;
  let user=await authUser(auth,Auth);
  if(!user) throw new Error('Tu sesión de alumno ha terminado. Vuelve a iniciar sesión desde la portada.');
- if(!user.isAnonymous && !user.providerData.some(p=>p.providerId==='password')) throw new Error('Hay una sesión de profesor u otra cuenta activa en esta pestaña. Inicia sesión como alumno desde la portada.');
+ const token=await user.getIdTokenResult();
+ if(user.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase())throw new Error('La cuenta administradora debe acceder desde su consola privada.');
+ if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Inicia sesión con el correo y contraseña del alumno desde la portada.');
  if(email&&user.email&&user.email.toLowerCase()!==email) throw new Error('La sesión de Firebase corresponde a otro alumno. Inicia sesión con la cuenta correcta.');
  const ref=Store.doc(db,'sessions',user.uid);
  const snap=await Store.getDoc(ref);

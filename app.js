@@ -1,4 +1,4 @@
-import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=93';
+import {studentStart,logStudent,watchStage,firebaseEnabled,getFirebase,classroomCode,linkClassroomMember,getClassroomLink,recordClassroomContribution,watchClassroomRewards,watchVirtualCreditRequests,requestVirtualWithdrawal,watchVirtualWithdrawalRequests,requestVirtualPlanActivation,watchVirtualPlanRequests,saveVirtualEarningsSummary,watchStudentTeacherSettings} from './backend.js?v=128';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
@@ -983,7 +983,10 @@ async function ensureStudentFirebaseSession(){
  const user=f.auth.currentUser;
  if(!user)throw new Error('Tu sesión de alumno terminó. Inicia sesión desde la portada para continuar.');
  if(storedAuthUid&&user.uid!==storedAuthUid)throw new Error('Firebase tiene otra cuenta activa en esta pestaña. Vuelve a entrar como alumno desde la portada.');
- if(user.providerData?.some(p=>p.providerId==='google.com'))throw new Error('Esta pestaña tiene una cuenta de profesor. Entra con la cuenta de alumno para invertir de forma de práctica.');
+ const token=await user.getIdTokenResult();
+ const {ADMIN_EMAIL}=await import('./firebase-config.js');
+ if(user.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase())throw new Error('La cuenta administradora debe acceder desde su consola privada.');
+ if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Entra con el correo y contraseña del alumno desde la portada para sincronizar esta cuenta.');
  if(sessionReady&&session.mode==='cloud'&&session.uid===user.uid)return session;
  session=await studentStart(profile);
  if(session.mode!=='cloud')throw new Error('No se pudo establecer la sesión de Firebase.');
@@ -1002,7 +1005,7 @@ async function ensureStudentFirebaseSession(){
   }
  }catch(e){
   console.error('No se pudo iniciar la sesión del alumno',e);
-  connectionFailure=e;sessionReady=false;
+  connectionFailure=e;sessionReady=false;reportSyncFailure('Inicio de sesión',e);
   $('#syncStatus').textContent=explainFirebaseIssue(e);
   $('#refLinkStatus').textContent='La sesión de Firebase necesita revisión. Puedes iniciar sesión nuevamente desde la portada.';
  }
