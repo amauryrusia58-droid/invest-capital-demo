@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Invest Capital — Plataforma Institucional de Inversión Digital</title>
+  <title>Invest Capital — Plataforma Institucional de Gestión de Activos Digitales</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -17,9 +17,9 @@
             display: ['Plus Jakarta Sans', 'sans-serif'],
           },
           colors: {
-            obsidian: '#090A0F',
-            surface: '#11131C',
-            surfaceElevated: '#171A26',
+            obsidian: '#06070B',
+            surface: '#0E1018',
+            surfaceElevated: '#151824',
             accent: '#7C3AED',
             accentHover: '#6D28D9',
             accentLight: '#A78BFA',
@@ -30,7 +30,7 @@
   </script>
   <style>
     body {
-      background-color: #090A0F;
+      background-color: #06070B;
       color: #F8FAFC;
       font-family: 'Inter', sans-serif;
       overflow-x: hidden;
@@ -38,29 +38,43 @@
 
     .bg-institutional {
       background-image:
-        radial-gradient(circle at 75% 18%, rgba(124, 58, 237, 0.14) 0%, transparent 45%),
-        radial-gradient(circle at 15% 65%, rgba(79, 70, 229, 0.08) 0%, transparent 40%),
-        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+        radial-gradient(circle at 78% 15%, rgba(124, 58, 237, 0.16) 0%, transparent 48%),
+        radial-gradient(circle at 12% 55%, rgba(59, 130, 246, 0.08) 0%, transparent 42%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
     }
 
     .glass-card {
-      background: rgba(17, 19, 28, 0.72);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: linear-gradient(180deg, rgba(20, 23, 34, 0.85) 0%, rgba(12, 14, 22, 0.92) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
     }
 
     .glass-card-hover {
-      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+    }
+
+    .glass-card-hover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0.25), transparent 60%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
     }
 
     .glass-card-hover:hover {
-      transform: translateY(-4px);
-      border-color: rgba(167, 139, 250, 0.35);
-      box-shadow: 0 24px 48px -12px rgba(124, 58, 237, 0.18);
+      transform: translateY(-5px);
+      border-color: rgba(167, 139, 250, 0.4);
+      box-shadow: 0 30px 60px -15px rgba(124, 58, 237, 0.22);
     }
 
     input[type="range"] {
@@ -76,26 +90,26 @@
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: #FFFFFF;
       border: 3px solid #7C3AED;
       cursor: pointer;
-      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
+      box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.22);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
     input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.3);
+      transform: scale(1.12);
+      box-shadow: 0 0 0 7px rgba(124, 58, 237, 0.35);
     }
 
     .tabular-nums {
       font-variant-numeric: tabular-nums;
     }
 
-    /* Estilos de Modales de Autenticación (Integrados con la estética institucional) */
+    /* Modales de Autenticación */
     .hidden { display: none !important; }
 
     .overlay {
@@ -105,9 +119,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(6, 7, 12, 0.85);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(4, 5, 9, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       padding: 16px;
       overflow-y: auto;
     }
@@ -116,12 +130,12 @@
       width: min(100%, 540px);
       max-height: 90vh;
       overflow-y: auto;
-      background: #11131C;
+      background: #0E1018;
       color: #F8FAFC;
-      border: 1px solid rgba(167, 139, 250, 0.28);
-      border-radius: 18px;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 20px;
       padding: 28px;
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
     }
 
     .login-dialog { width: min(100%, 450px); }
@@ -140,10 +154,10 @@
     .text-input {
       display: block;
       width: 100%;
-      min-height: 43px;
-      padding: 10px 13px;
+      min-height: 44px;
+      padding: 10px 14px;
       border-radius: 10px;
-      background: #090A0F;
+      background: #06070B;
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: #FFFFFF;
       font-size: 14px;
@@ -165,7 +179,7 @@
       transition: all 0.2s ease;
     }
     .btn:hover { background: rgba(255, 255, 255, 0.1); }
-    .btn-primary { background: #7C3AED; border-color: #8B5CF6; box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.5); }
+    .btn-primary { background: #7C3AED; border-color: #8B5CF6; box-shadow: 0 8px 24px -6px rgba(124, 58, 237, 0.55); }
     .btn-primary:hover { background: #6D28D9; }
     .btn-soft { background: rgba(255, 255, 255, 0.04); color: #CBD5E1; }
 
@@ -208,12 +222,32 @@
 </head>
 <body class="bg-institutional antialiased selection:bg-violet-600 selection:text-white">
 
+  <!-- Barra Superior de Cotizaciones Institucionales -->
+  <div class="border-b border-white/[0.06] bg-[#040508] text-[11px] text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-between overflow-x-auto whitespace-nowrap gap-6">
+      <div class="flex items-center gap-6 tabular-nums">
+        <span class="inline-flex items-center gap-1.5 text-slate-300 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          MERCADOS ACTIVOS
+        </span>
+        <span>BTC/USDT <strong class="text-white font-semibold ml-1">$94,280.50</strong> <span class="text-emerald-400 ml-0.5">+2.41%</span></span>
+        <span>ETH/USDT <strong class="text-white font-semibold ml-1">$3,412.15</strong> <span class="text-emerald-400 ml-0.5">+1.85%</span></span>
+        <span class="hidden sm:inline">SOL/USDT <strong class="text-white font-semibold ml-1">$218.40</strong> <span class="text-emerald-400 ml-0.5">+3.12%</span></span>
+      </div>
+      <div class="hidden md:flex items-center gap-4 text-slate-500">
+        <span>Ejecución Algorítmica 24/7</span>
+        <span>•</span>
+        <span class="text-slate-300">Liquidez Institucional</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Barra de Navegación Institucional -->
-  <header class="sticky top-0 z-40 border-b border-white/[0.07] bg-[#090A0F]/85 backdrop-blur-xl">
+  <header class="sticky top-0 z-40 border-b border-white/[0.07] bg-[#06070B]/85 backdrop-blur-xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      <a href="#inicio" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 p-[1px] shadow-lg shadow-violet-950/50">
-          <div class="w-full h-full bg-[#0F111A] rounded-[11px] flex items-center justify-center">
+      <a href="#inicio" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-700 p-[1px] shadow-lg shadow-violet-950/60">
+          <div class="w-full h-full bg-[#0B0D14] rounded-[11px] flex items-center justify-center">
             <svg class="w-5 h-5 text-violet-400" viewBox="0 0 24 24" fill="none">
               <path d="M4 17V13M9 17V9M14 17V11M19 17V5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
               <path d="M3 12C8 12 13 9.5 19 5" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round"/>
@@ -222,16 +256,16 @@
         </div>
         <div class="leading-none">
           <span class="font-display font-extrabold text-lg tracking-tight text-white block">INVEST</span>
-          <span class="font-display font-bold text-xs tracking-[0.2em] text-violet-400 block mt-0.5">CAPITAL</span>
+          <span class="font-display font-bold text-xs tracking-[0.22em] text-violet-400 block mt-0.5">CAPITAL</span>
         </div>
       </a>
 
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
         <a href="#inicio" class="text-white relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-violet-500 after:rounded-full">Inicio</a>
-        <a href="#planes" class="hover:text-white transition-colors">Planes</a>
-        <a href="#como-funciona" class="hover:text-white transition-colors">Cómo Funciona</a>
+        <a href="#planes" class="hover:text-white transition-colors">Portafolios</a>
+        <a href="#como-funciona" class="hover:text-white transition-colors">Infraestructura</a>
         <a href="panel.html" class="hover:text-white transition-colors">Panel</a>
-        <a href="app.html" class="hover:text-white transition-colors">App</a>
+        <a href="app.html" class="hover:text-white transition-colors">Terminal</a>
         <a href="#contacto" class="hover:text-white transition-colors">Contacto</a>
       </nav>
 
@@ -249,7 +283,7 @@
           Acceder
         </button>
 
-        <button type="button" id="openRegister" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/20 transition-all cursor-pointer">
+        <button type="button" id="openRegister" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/25 transition-all cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/>
           </svg>
@@ -259,40 +293,40 @@
     </div>
   </header>
 
-  <!-- Sección Hero Institucional + Simulador Interactivo -->
-  <section id="inicio" class="relative pt-14 pb-20 lg:pt-20 lg:pb-24">
+  <!-- Sección Hero Institucional + Calculadora de Rendimiento -->
+  <section id="inicio" class="relative pt-14 pb-20 lg:pt-20 lg:pb-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+      <div class="grid lg:grid-cols-12 gap-12 lg:gap-12 items-center">
 
         <!-- Columna Izquierda -->
         <div class="lg:col-span-6 space-y-7">
-          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 text-violet-300 text-xs font-medium">
+          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Gestión algorítmica de activos digitales • 24/7
+            Gestión cuantitativa de activos digitales • Operación 24/7
           </div>
 
           <div class="space-y-4">
-            <h1 class="font-display font-extrabold text-4xl sm:text-5xl lg:text-[3.4rem] tracking-tight text-white leading-[1.08]">
+            <h1 class="font-display font-extrabold text-4xl sm:text-5xl lg:text-[3.65rem] tracking-tight text-white leading-[1.06]">
               INVEST <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-300 to-indigo-400">CAPITAL</span>
             </h1>
-            <h2 class="font-display font-semibold text-xl sm:text-2xl text-slate-200">
-              Plataforma de inversión digital
+            <h2 class="font-display font-semibold text-xl sm:text-2xl text-slate-200 tracking-tight">
+              Infraestructura institucional de inversión digital
             </h2>
           </div>
 
-          <p class="text-slate-400 text-base sm:text-lg leading-relaxed max-w-xl border-l-2 border-violet-500/60 pl-4">
-            Haz crecer tu capital con estrategias cuantitativas y gestión automatizada en el mercado de activos digitales, con liquidez programada y transparencia operativa.
+          <p class="text-slate-300 text-base sm:text-lg leading-relaxed max-w-xl border-l-2 border-violet-500 pl-4">
+            Optimiza el crecimiento de tu patrimonio mediante estrategias algorítmicas automatizadas en el mercado de activos digitales, con liquidez programada y total transparencia operativa.
           </p>
 
-          <div class="flex flex-wrap items-center gap-4 pt-1">
-            <button type="button" id="startBtn" class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-sm sm:text-base font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-xl shadow-violet-600/25 transition-all cursor-pointer">
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            <button type="button" id="startBtn" class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-sm sm:text-base font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-xl shadow-violet-600/30 transition-all cursor-pointer">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/>
               </svg>
               Crear Cuenta
             </button>
 
-            <button type="button" id="heroLogin" class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-sm sm:text-base font-medium text-slate-200 border border-white/12 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all cursor-pointer">
+            <button type="button" id="heroLogin" class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-sm sm:text-base font-medium text-slate-200 border border-white/15 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/25 transition-all cursor-pointer">
               <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
               </svg>
@@ -300,7 +334,7 @@
             </button>
           </div>
 
-          <div class="grid grid-cols-3 gap-6 pt-4 border-t border-white/[0.07] max-w-lg">
+          <div class="grid grid-cols-3 gap-6 pt-6 border-t border-white/[0.08] max-w-lg">
             <div>
               <p class="font-display font-bold text-xl sm:text-2xl text-white tabular-nums">30 Días</p>
               <p class="text-xs text-slate-400 mt-0.5">Ciclo de contrato</p>
@@ -311,27 +345,27 @@
             </div>
             <div>
               <p class="font-display font-bold text-xl sm:text-2xl text-white tabular-nums">USDT / BTC</p>
-              <p class="text-xs text-slate-400 mt-0.5">Depósitos y retiros</p>
+              <p class="text-xs text-slate-400 mt-0.5">Liquidez directa</p>
             </div>
           </div>
         </div>
 
-        <!-- Columna Derecha: Simulador Interactivo -->
+        <!-- Columna Derecha: Calculadora de Rendimiento -->
         <div class="lg:col-span-6">
-          <div class="glass-card rounded-2xl p-6 sm:p-7 relative overflow-hidden">
-            <div class="flex items-center justify-between pb-5 border-b border-white/[0.07]">
+          <div class="glass-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+            <div class="flex items-center justify-between pb-5 border-b border-white/[0.08]">
               <div>
-                <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Simulador de Rendimiento</span>
-                <h3 class="font-display font-bold text-lg text-white mt-0.5">Proyección a 30 días</h3>
+                <span class="text-xs font-semibold uppercase tracking-wider text-violet-400">Calculadora de Rendimiento</span>
+                <h3 class="font-display font-bold text-lg text-white mt-0.5">Proyección de capital a 30 días</h3>
               </div>
-              <span id="sim-plan-badge" class="px-3 py-1 rounded-lg text-xs font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">
+              <span id="sim-plan-badge" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">
                 Plan Élite • 5.0% / día
               </span>
             </div>
 
             <div class="mt-6 space-y-3">
               <div class="flex items-baseline justify-between">
-                <label for="investment-slider" class="text-sm text-slate-400">Capital a invertir (USD)</label>
+                <label for="investment-slider" class="text-sm text-slate-300 font-medium">Capital a invertir (USD)</label>
                 <div class="font-display font-extrabold text-3xl text-white tabular-nums">
                   $<span id="sim-amount">1,000</span> <span class="text-xs font-normal text-slate-400">USD</span>
                 </div>
@@ -339,23 +373,23 @@
 
               <input id="investment-slider" type="range" min="100" max="5000" step="50" value="1000" oninput="updateSimulator(this.value)" />
 
-              <div class="grid grid-cols-4 gap-2 pt-1">
-                <button type="button" onclick="setSimulatorAmount(100)" class="quick-amt py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-500/40 hover:text-white transition-all tabular-nums">$100</button>
-                <button type="button" onclick="setSimulatorAmount(300)" class="quick-amt py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-500/40 hover:text-white transition-all tabular-nums">$300</button>
-                <button type="button" onclick="setSimulatorAmount(500)" class="quick-amt py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-500/40 hover:text-white transition-all tabular-nums">$500</button>
-                <button type="button" onclick="setSimulatorAmount(1000)" class="quick-amt py-1.5 rounded-lg text-xs font-medium border border-violet-500/50 bg-violet-500/15 text-white transition-all tabular-nums">$1,000</button>
+              <div class="grid grid-cols-4 gap-2 pt-1.5">
+                <button type="button" onclick="setSimulatorAmount(100)" class="quick-amt py-2 rounded-lg text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-500/50 hover:text-white transition-all tabular-nums">$100</button>
+                <button type="button" onclick="setSimulatorAmount(300)" class="quick-amt py-2 rounded-lg text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-500/50 hover:text-white transition-all tabular-nums">$300</button>
+                <button type="button" onclick="setSimulatorAmount(500)" class="quick-amt py-2 rounded-lg text-xs font-semibold border border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-500/50 hover:text-white transition-all tabular-nums">$500</button>
+                <button type="button" onclick="setSimulatorAmount(1000)" class="quick-amt py-2 rounded-lg text-xs font-semibold border border-violet-500/50 bg-violet-500/15 text-white transition-all tabular-nums">$1,000</button>
               </div>
             </div>
 
-            <div class="mt-6 rounded-xl bg-[#0B0D14] border border-white/[0.06] p-4">
+            <div class="mt-6 rounded-xl bg-[#07080D] border border-white/[0.07] p-4">
               <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span>Curva de capital acumulado</span>
-                <span class="text-emerald-400 font-medium tabular-nums" id="sim-roi-label">+150% retorno neto</span>
+                <span>Curva de crecimiento de capital</span>
+                <span class="text-emerald-400 font-semibold tabular-nums" id="sim-roi-label">+150% retorno neto</span>
               </div>
               <svg class="w-full h-28 overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.32" />
+                    <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.35" />
                     <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.0" />
                   </linearGradient>
                 </defs>
@@ -364,7 +398,7 @@
                 <line x1="0" y1="85" x2="400" y2="85" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4 4" />
                 <path id="sim-chart-area" d="M0,88 C120,82 240,52 400,14 L400,100 L0,100 Z" fill="url(#chartFill)" />
                 <path id="sim-chart-line" d="M0,88 C120,82 240,52 400,14" fill="none" stroke="#A78BFA" stroke-width="2.5" stroke-linecap="round" />
-                <circle id="sim-chart-dot" cx="400" cy="14" r="4" fill="#FFFFFF" stroke="#7C3AED" stroke-width="2.5" />
+                <circle id="sim-chart-dot" cx="400" cy="14" r="4.5" fill="#FFFFFF" stroke="#7C3AED" stroke-width="2.5" />
               </svg>
               <div class="flex justify-between text-[11px] text-slate-500 mt-1 tabular-nums">
                 <span>Día 1</span>
@@ -374,23 +408,23 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-5">
-              <div class="rounded-xl bg-white/[0.02] border border-white/[0.07] p-3.5">
+            <div class="grid grid-cols-2 gap-3.5 mt-5">
+              <div class="rounded-xl bg-white/[0.025] border border-white/[0.08] p-3.5">
                 <span class="text-xs text-slate-400 block">Ganancia Diaria</span>
                 <span id="sim-daily" class="font-display font-bold text-lg sm:text-xl text-white tabular-nums mt-0.5 block">$50.00 USD</span>
               </div>
-              <div class="rounded-xl bg-violet-500/[0.08] border border-violet-500/25 p-3.5">
+              <div class="rounded-xl bg-violet-500/[0.1] border border-violet-500/30 p-3.5">
                 <span class="text-xs text-violet-300 block">Retorno Total (30d)</span>
                 <span id="sim-total" class="font-display font-bold text-lg sm:text-xl text-emerald-400 tabular-nums mt-0.5 block">$2,500.00 USD</span>
               </div>
             </div>
 
-            <div class="mt-5 pt-4 border-t border-white/[0.07] flex items-center justify-between text-xs text-slate-400">
+            <div class="mt-5 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs text-slate-400">
               <span>Mercados operados:</span>
-              <div class="flex items-center gap-3">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-slate-300 font-medium"><span class="w-2 h-2 rounded-full bg-amber-400"></span> BTC</span>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-slate-300 font-medium"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> ETH</span>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-slate-300 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> USDT</span>
+              <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-200 font-medium"><span class="w-2 h-2 rounded-full bg-amber-400"></span> BTC</span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-200 font-medium"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> ETH</span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-200 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> USDT</span>
               </div>
             </div>
           </div>
@@ -401,35 +435,35 @@
   </section>
 
   <!-- Franja de Pilares Operativos -->
-  <section id="como-funciona" class="border-y border-white/[0.07] bg-[#0D0F17]/90 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
+  <section id="como-funciona" class="border-y border-white/[0.07] bg-[#090B11]/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 lg:gap-4 lg:divide-x lg:divide-white/[0.08]">
         <div class="flex items-center gap-3.5 lg:px-4 first:lg:pl-0">
-          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
           </div>
           <div><h3 class="text-sm font-semibold text-white leading-tight">Seguro y Confiable</h3><p class="text-xs text-slate-400 mt-0.5">Custodia encriptada</p></div>
         </div>
         <div class="flex items-center gap-3.5 lg:px-4">
-          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
           </div>
           <div><h3 class="text-sm font-semibold text-white leading-tight">Rentabilidad Atractiva</h3><p class="text-xs text-slate-400 mt-0.5">Hasta 5.0% diario</p></div>
         </div>
         <div class="flex items-center gap-3.5 lg:px-4">
-          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
           </div>
           <div><h3 class="text-sm font-semibold text-white leading-tight">Programa de Referidos</h3><p class="text-xs text-slate-400 mt-0.5">Comisiones directas</p></div>
         </div>
         <div class="flex items-center gap-3.5 lg:px-4">
-          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
           </div>
           <div><h3 class="text-sm font-semibold text-white leading-tight">Retiros Programados</h3><p class="text-xs text-slate-400 mt-0.5">Pagos automatizados</p></div>
         </div>
         <div class="flex items-center gap-3.5 lg:px-4 col-span-2 sm:col-span-1">
-          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
           </div>
           <div><h3 class="text-sm font-semibold text-white leading-tight">Soporte 24/7</h3><p class="text-xs text-slate-400 mt-0.5">Atención dedicada</p></div>
@@ -439,15 +473,15 @@
   </section>
 
   <!-- Sección Planes de Inversión -->
-  <section id="planes" class="py-20 lg:py-24 relative">
+  <section id="planes" class="py-20 lg:py-28 relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-2xl mx-auto mb-14">
-        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Portafolios Gestionados</span>
-        <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-white mt-2">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">Portafolios Gestionados</span>
+        <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-white mt-2.5">
           Planes de Inversión
         </h2>
-        <p class="text-slate-400 text-sm sm:text-base mt-3">
-          Elige el plan que mejor se adapte a tus objetivos financieros con rendimiento diario fijo y ciclo de 30 días.
+        <p class="text-slate-300 text-sm sm:text-base mt-3.5">
+          Selecciona el portafolio que mejor se adapte a tus objetivos financieros con rendimiento diario fijo y ciclo de 30 días.
         </p>
       </div>
 
@@ -462,12 +496,12 @@
               </div>
               <h3 class="font-display font-bold text-lg text-white">Plan Básico</h3>
             </div>
-            <div class="mt-6 pb-6 border-b border-white/[0.07]">
+            <div class="mt-6 pb-6 border-b border-white/[0.08]">
               <div class="flex items-baseline gap-1.5">
                 <span class="font-display font-extrabold text-4xl text-white tabular-nums">$100</span>
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">USD</span>
               </div>
-              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.07] text-xs font-medium text-slate-200 w-full justify-center">
+              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-xs font-medium text-slate-200 w-full justify-center">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Rentabilidad: <strong class="text-white">3.0% diario</strong>
               </div>
             </div>
@@ -491,12 +525,12 @@
               </div>
               <h3 class="font-display font-bold text-lg text-white">Plan Avanzado</h3>
             </div>
-            <div class="mt-6 pb-6 border-b border-white/[0.07]">
+            <div class="mt-6 pb-6 border-b border-white/[0.08]">
               <div class="flex items-baseline gap-1.5">
                 <span class="font-display font-extrabold text-4xl text-white tabular-nums">$300</span>
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">USD</span>
               </div>
-              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.07] text-xs font-medium text-slate-200 w-full justify-center">
+              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-xs font-medium text-slate-200 w-full justify-center">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Rentabilidad: <strong class="text-white">3.5% diario</strong>
               </div>
             </div>
@@ -520,12 +554,12 @@
               </div>
               <h3 class="font-display font-bold text-lg text-white">Plan Premium</h3>
             </div>
-            <div class="mt-6 pb-6 border-b border-white/[0.07]">
+            <div class="mt-6 pb-6 border-b border-white/[0.08]">
               <div class="flex items-baseline gap-1.5">
                 <span class="font-display font-extrabold text-4xl text-white tabular-nums">$500</span>
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">USD</span>
               </div>
-              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.07] text-xs font-medium text-slate-200 w-full justify-center">
+              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-xs font-medium text-slate-200 w-full justify-center">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Rentabilidad: <strong class="text-white">4.0% diario</strong>
               </div>
             </div>
@@ -541,7 +575,7 @@
         </div>
 
         <!-- Plan Élite -->
-        <div class="glass-card glass-card-hover rounded-2xl p-6 flex flex-col justify-between relative border-violet-500/50 bg-gradient-to-b from-violet-950/30 to-[#11131C]/90">
+        <div class="glass-card glass-card-hover rounded-2xl p-6 flex flex-col justify-between relative border-violet-500/60 bg-gradient-to-b from-violet-950/35 to-[#0E1018]/95 shadow-2xl shadow-violet-950/30">
           <div class="absolute -top-3 right-5">
             <span class="px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide uppercase bg-violet-600 text-white shadow-lg shadow-violet-950">Más Popular</span>
           </div>
@@ -552,12 +586,12 @@
               </div>
               <h3 class="font-display font-bold text-lg text-white">Plan Élite</h3>
             </div>
-            <div class="mt-6 pb-6 border-b border-white/[0.09]">
+            <div class="mt-6 pb-6 border-b border-white/[0.1]">
               <div class="flex items-baseline gap-1.5">
                 <span class="font-display font-extrabold text-4xl text-white tabular-nums">$1,000</span>
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">USD</span>
               </div>
-              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/15 border border-violet-500/30 text-xs font-medium text-violet-200 w-full justify-center">
+              <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/15 border border-violet-500/35 text-xs font-medium text-violet-200 w-full justify-center">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Rentabilidad: <strong class="text-white">5.0% diario</strong>
               </div>
             </div>
@@ -567,7 +601,7 @@
               <li class="flex items-center justify-between"><span class="text-slate-400">Retorno total final</span><span class="text-emerald-400 font-semibold tabular-nums">$2,500.00 USD</span></li>
             </ul>
           </div>
-          <button type="button" data-public-plan="Magnate Supremo" class="mt-7 w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer">
+          <button type="button" data-public-plan="Magnate Supremo" class="mt-7 w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
             Invertir Ahora <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
           </button>
         </div>
@@ -577,7 +611,7 @@
   </section>
 
   <!-- Footer -->
-  <footer id="contacto" class="border-t border-white/[0.07] bg-[#07080C] py-10">
+  <footer id="contacto" class="border-t border-white/[0.07] bg-[#040508] py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
       <div class="flex items-center gap-2.5">
         <span class="font-display font-bold text-slate-300 tracking-wide">INVEST CAPITAL</span>
@@ -585,14 +619,14 @@
         <span>© 2026 Todos los derechos reservados.</span>
       </div>
       <div class="flex items-center gap-6">
-        <a href="#planes" class="hover:text-slate-300 transition-colors">Términos</a>
+        <a href="#planes" class="hover:text-slate-300 transition-colors">Términos y Condiciones</a>
         <a href="admin.html" class="hover:text-slate-300 transition-colors">Panel Admin</a>
         <a href="https://t.me/" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">Soporte Telegram</a>
       </div>
     </div>
   </footer>
 
-  <!-- Modal de Registro (Conectado a landing.js) -->
+  <!-- Modal de Registro -->
   <div aria-labelledby="consentTitle" aria-modal="true" class="overlay hidden" id="consent" role="dialog">
     <form class="dialog register-dialog auth-dialog" id="registrationForm" novalidate="">
       <p class="dialog-kicker">INVEST CAPITAL · REGISTRO</p>
@@ -602,8 +636,7 @@
 
       <div aria-live="polite" class="ic-existing-session hidden" id="existingSessionNotice" role="status">
         <strong>Este navegador conserva una sesión iniciada</strong>
-        <p>Cuenta activa: <span id="existingSessionEmail"></span>. Aunque no hayas abierto Invest Capital recientemente, Firebase puede mantener tu sesión anterior en este navegador.</p>
-        <p>Para crear otra cuenta, cierra primero esta sesión. No se borrará la cuenta anterior ni su historial.</p>
+        <p>Cuenta activa: <span id="existingSessionEmail"></span>. Puedes mantener tu sesión actual o cerrarla para registrar una cuenta nueva.</p>
         <div class="ic-existing-session-actions">
           <button class="btn btn-soft" id="changeStudentAccount" type="button">Cerrar sesión y registrar otra cuenta</button>
           <button class="auth-link hidden" id="continueCurrentAccount" type="button">Continuar con mi cuenta</button>
@@ -635,7 +668,7 @@
       </div>
 
       <div class="legacy-upgrade hidden" id="legacyUpgradeRow">
-        <label><input id="legacyUpgrade" type="checkbox" /> Ya tengo una cuenta previa en este navegador: conservar mis actividades y mi código de referido al crear contraseña.</label>
+        <label><input id="legacyUpgrade" type="checkbox" /> Ya tengo una cuenta previa en este navegador: conservar mis operaciones y mi código de referido al crear contraseña.</label>
       </div>
 
       <div class="dialog-actions">
@@ -648,7 +681,7 @@
     </form>
   </div>
 
-  <!-- Modal de Inicio de Sesión (Conectado a landing.js) -->
+  <!-- Modal de Inicio de Sesión -->
   <div aria-labelledby="loginTitle" aria-modal="true" class="overlay hidden" id="loginOverlay" role="dialog">
     <form class="dialog auth-dialog login-dialog" id="loginForm" novalidate="">
       <p class="dialog-kicker">INVEST CAPITAL · ACCESO</p>
@@ -673,14 +706,13 @@
 
       <p aria-live="polite" class="form-error" id="loginError" role="status"></p>
       <p class="switch-auth">¿No tienes una cuenta? <button class="auth-link" id="goRegister" type="button">Registrarse</button></p>
-      <p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
     </form>
   </div>
 
   <!-- Disparador auxiliar requerido por landing.js -->
   <button class="hidden" id="bottomBtn" type="button">Crear cuenta</button>
 
-  <!-- Lógica del Simulador -->
+  <!-- Lógica de la Calculadora -->
   <script>
     function formatUSD(num) {
       return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
