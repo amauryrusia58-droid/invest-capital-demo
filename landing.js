@@ -110,7 +110,6 @@ reg.addEventListener('submit',async e=>{
  if(password.length<8){regError.textContent='La contraseña debe tener al menos 8 caracteres.';return;}
  if(password!==confirm){regError.textContent='Las dos contraseñas no coinciden.';return;}
  if(referral && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referral)){regError.textContent='El código debe comenzar por IC- y ser el código completo de Firebase.';return;}
- if(!$('academicConsent').checked){regError.textContent='Acepta las condiciones académicas para crear tu cuenta.';return;}
  if(!firebaseEnabled){regError.textContent='Primero debes configurar Firebase; el registro con contraseña no funciona sin conexión.';return;}
  busy=true;const btn=$('acceptBtn');btn.disabled=true;btn.textContent='Creando cuenta…';
  try{

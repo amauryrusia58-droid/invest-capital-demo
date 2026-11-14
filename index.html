@@ -605,9 +605,9 @@
     }
 
     function getPlanForAmount(amount) {
-      if (amount &gt;= 1000) return { name: 'Plan Élite', rate: 5.0 };
-      if (amount &gt;= 500)  return { name: 'Plan Premium', rate: 4.0 };
-      if (amount &gt;= 300)  return { name: 'Plan Avanzado', rate: 3.5 };
+      if (amount >= 1000) return { name: 'Plan Élite', rate: 5.0 };
+      if (amount >= 500)  return { name: 'Plan Premium', rate: 4.0 };
+      if (amount >= 300)  return { name: 'Plan Avanzado', rate: 3.5 };
       return { name: 'Plan Básico', rate: 3.0 };
     }
 
@@ -664,7 +664,6 @@
 <div class="registration-field full"><label class="field-label" for="studentReferral">Código de referido <span class="field-optional">(opcional)</span></label><input autocomplete="off" class="text-input" id="studentReferral" maxlength="72" name="studentReferral" placeholder="IC-…" spellcheck="false"/><p class="tiny">Introduce el código de tu compañero si recibiste una invitación del aula.</p></div>
 </div>
 <div class="legacy-upgrade hidden" id="legacyUpgradeRow"><label><input id="legacyUpgrade" type="checkbox"/> Ya tengo una cuenta de práctica en este navegador: conservar mis actividades y mi código de referido al crear contraseña.</label></div>
-<div class="registration-consent"><input id="academicConsent" required="" type="checkbox"/><label for="academicConsent">Acepto participar en un <strong>ejercicio académico de inversión simulada</strong>, sin depósitos ni dinero reales. El profesor podrá ver mis datos de registro, mi actividad y vínculos de compañeros. Mi nombre y correo se enviarán al servicio externo FormSubmit para avisar del alta; mi contraseña nunca se enviará a ese servicio.</label></div>
 <div class="dialog-actions"><button class="btn btn-soft" id="cancelBtn" type="button">Cancelar</button><button class="btn btn-primary" id="acceptBtn" type="submit">Crear cuenta</button></div>
 <p aria-live="polite" class="form-error" id="consentError"></p>
 <p class="switch-auth">¿Ya tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesión</button></p>
@@ -682,21 +681,5 @@
 <p class="switch-auth">¿No tienes una cuenta? <button class="auth-link" id="goRegister" type="button">Registrarse</button></p>
 <p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
 </form>
-</div><button class="hidden" id="bottomBtn" type="button">Crear cuenta</button><script>
-// Reparación: selección de planes en la portada; conserva el flujo de registro existente.
-document.querySelectorAll('[data-public-plan]').forEach(function(button){
-  button.addEventListener('click', function(){
-    var plan=button.getAttribute('data-public-plan');
-    if(!plan)return;
-    sessionStorage.setItem('ic_selected_plan',plan);
-    var dialog=document.getElementById('consent');
-    if(dialog){
-      document.getElementById('loginOverlay')?.classList.add('hidden');
-      dialog.classList.remove('hidden');
-      var hint=document.getElementById('selectedPlanReg');
-      if(hint){hint.textContent='Plan elegido: '+plan+'. Completa tu registro para continuar.';hint.classList.remove('hidden');}
-    }
-  });
-});
-</script><script src="landing.js?v=93" type="module"></script><script>document.getElementById('heroLogin')?.addEventListener('click',()=>document.getElementById('openApp').click());</script><script>updateSimulator(1000);</script></body>
+</div><button class="hidden" id="bottomBtn" type="button">Crear cuenta</button><script src="landing.js?v=94" type="module"></script><script>document.getElementById('heroLogin')?.addEventListener('click',()=>document.getElementById('openApp').click());</script><script>if(document.getElementById("sim-amount")) updateSimulator(1000);</script></body>
 </html>
