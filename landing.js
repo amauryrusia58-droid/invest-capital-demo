@@ -187,6 +187,24 @@ async function sincronizarBienvenidaBrevo(user) {
   }
 }
 
+// Para cuentas existentes: una solicitud automática como máximo cada 24 horas por cuenta.
+async function solicitarVerificacionPendiente(f, user) {
+  if (!user || user.isAnonymous) return;
+  await user.reload();
+  if (user.emailVerified) return;
+  const key = 'ic_verificacion_enviada_' + user.uid;
+  const ultimoEnvio = Number(localStorage.getItem(key) || 0);
+  if (Date.now() - ultimoEnvio < 24 * 60 * 60 * 1000) return;
+  try {
+    await f.Auth.sendEmailVerification(user);
+    localStorage.setItem(key, String(Date.now()));
+    console.info('Firebase: verificación enviada al correo de la cuenta.');
+  } catch (error) {
+    // No impedir el acceso por problemas temporales de envío o límites de Firebase.
+    console.warn('Firebase: no se pudo enviar la verificación.', error?.code || error);
+  }
+}
+
 login.addEventListener('submit',async e=>{
  e.preventDefault();if(busy)return;loginError.textContent='';
  const email=$('loginEmail').value.trim().toLowerCase(),password=$('loginPassword').value;
@@ -203,7 +221,8 @@ login.addEventListener('submit',async e=>{
   if(!name)throw new Error('No se encontró un perfil de alumno para esta cuenta. Contacta al profesor.');
   // El referido ya está asociado a su UID en Firestore, no vuelve a elegirse al entrar.
   setStudentLocals(name,email,'',cred.user.uid);
- await sincronizarBienvenidaBrevo(cred.user);
+  await solicitarVerificacionPendiente(f, cred.user);
+  await sincronizarBienvenidaBrevo(cred.user);
   location.href=planDestination();
  }catch(e){loginError.textContent=errText(e);}
  finally{busy=false;btn.disabled=false;btn.textContent='Entrar a mi cuenta';}
