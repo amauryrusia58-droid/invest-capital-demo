@@ -145,6 +145,44 @@ reg.addEventListener('submit',async e=>{
  }catch(e){regError.textContent=errText(e);}
  finally{busy=false;btn.textContent='Crear cuenta';btn.disabled=!$('existingSessionNotice').classList.contains('hidden');}
 });
+const BREVO_WORKER_URL =
+  'https://investcapital-brevo.investcapital8310.workers.dev/registro-brevo';
+
+async function sincronizarBienvenidaBrevo(user) {
+  if (!user || user.isAnonymous) return false;
+
+  try {
+    await user.reload();
+
+    if (!user.emailVerified) {
+      console.log('Brevo: pendiente de verificar el correo.');
+      return false;
+    }
+
+    const token = await user.getIdToken(true);
+
+    const respuesta = await fetch(BREVO_WORKER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!respuesta.ok) {
+      console.warn('Brevo: error HTTP', respuesta.status);
+      return false;
+    }
+
+    console.log('Brevo: contacto sincronizado.');
+    return true;
+  } catch (error) {
+    console.warn('Brevo: sincronización pendiente.', error);
+    return false;
+  }
+}
+
 login.addEventListener('submit',async e=>{
  e.preventDefault();if(busy)return;loginError.textContent='';
  const email=$('loginEmail').value.trim().toLowerCase(),password=$('loginPassword').value;
@@ -161,6 +199,7 @@ login.addEventListener('submit',async e=>{
   if(!name)throw new Error('No se encontró un perfil de alumno para esta cuenta. Contacta al profesor.');
   // El referido ya está asociado a su UID en Firestore, no vuelve a elegirse al entrar.
   setStudentLocals(name,email,'',cred.user.uid);
+ await sincronizarBienvenidaBrevo(cred.user);
   location.href=planDestination();
  }catch(e){loginError.textContent=errText(e);}
  finally{busy=false;btn.disabled=false;btn.textContent='Entrar a mi cuenta';}
