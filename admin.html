@@ -57,6 +57,20 @@
   padding: 5px 11px;
   box-shadow: 0 0 0 1px rgba(121,173,255,.13);
 }
+
+/* Ficha del alumno: resumen de planes aprobados (solo simulación). */
+.ic-student-plans{margin:18px 0;padding:17px;border:1px solid #8055ae;border-radius:16px;background:linear-gradient(135deg,#24153c,#130f22)}
+.ic-student-plans h3{margin:0 0 13px;color:#f3eaff;font-size:1.06rem}
+.ic-student-plans-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:13px}
+.ic-student-plans-stat{padding:12px;border-radius:12px;border:1px solid #684789;background:#1b1230;min-width:0}
+.ic-student-plans-stat small{display:block;color:#cbb7e1;font-size:.76rem;margin-bottom:5px}
+.ic-student-plans-stat strong{color:#fff;font-size:1.15rem;overflow-wrap:anywhere}
+.ic-student-plans-scroll{overflow-x:auto}
+.ic-student-plans-table{width:100%;border-collapse:collapse;min-width:610px;font-size:.84rem}
+.ic-student-plans-table th,.ic-student-plans-table td{padding:10px 9px;text-align:left;border-bottom:1px solid #4a335e;vertical-align:top}
+.ic-student-plans-table th{color:#d6b9f5;font-weight:700}
+.ic-student-plans-table td{color:#f1e8fb}
+.ic-student-plans>.tiny{margin-top:12px;color:#c4b2d6;line-height:1.45}
 </style></head>
 <body><main class="admin-layout">
  <header class="admin-header"><div><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><p class="tiny">CONSOLA DE SEGUIMIENTO · ACCESO RESTRINGIDO</p></div><div class="inline-controls"><span id="adminIdentity" class="tiny">No conectado</span><button class="btn btn-soft hidden" id="logoutAdmin">Salir</button><a class="btn btn-soft" href="index.html">Ir a portada</a></div></header>
@@ -110,4 +124,4 @@
   <div class="pane" style="margin-top:18px"><div class="pane-head"><div><h2>Red de compañeros</h2><p class="muted">Relaciones entre sesiones; las bonificaciones mostradas son exclusivamente del ejercicio.</p></div><strong id="linksCount">0 vínculos</strong></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Alumno vinculado</th><th>Nivel 1</th><th>Nivel 2</th><th>Nivel 3</th></tr></thead><tbody id="linksRows"><tr><td colspan="4">Todavía no hay vínculos.</td></tr></tbody></table></div></div>
   <p class="tiny" style="margin-top:25px">Las métricas de eventos son simuladas; no representan dinero real. Los saldos del alumno se guardan localmente en su navegador y no se muestran aquí como balances verificados.</p><p class="tiny" style="margin-top:8px">Invest Capital · Panel del profesor. Los alumnos autorizan registrar su identificador, datos de contacto opcionales y acciones del ejercicio; no se capturan contraseñas, texto libre ni información de pago.</p>
  </section>
-</main><script type="module" src="admin.js?v=95"></script></body></html>
+</main><script type="module" src="admin.js?v=96"></script></body></html>

@@ -30,6 +30,51 @@ function countDescendants(uid){
  const first=children(uid);const second=first.flatMap(children);const third=second.flatMap(children);
  return [new Set(first).size,new Set(second).size,new Set(third).size];
 }
+// Resumen informativo de planes aprobados del alumno; no acredita pagos reales.
+function planCurrency(r){
+ const raw=String(r.currency||'').trim().toUpperCase();
+ if(raw==='RUB'||raw==='RUB-DEMO'||raw==='₽')return 'RUB';
+ if(raw==='USDT'||raw==='USDT-DEMO'||raw==='USDT-BEP20'||raw==='USDT-TRC20')return 'USDT';
+ return raw||'No registrada';
+}
+function planMethod(r){
+ const raw=String(r.paymentMethod||r.payment_method||r.method||r.network||'').trim();
+ if(!raw)return 'No registrado';
+ const val=raw.toUpperCase();
+ if(val.includes('SBER'))return 'Sberbank';
+ if(val.includes('BEP20')||val.includes('BSC'))return 'USDT-BEP20';
+ if(val.includes('TRC20')||val.includes('TRON'))return 'USDT-TRC20';
+ return raw.slice(0,65);
+}
+function renderStudentPlans(container,uid){
+ const section=addText('section','','ic-student-plans');
+ section.append(addText('h3','Planes del alumno · Registro de práctica'));
+ const rows=planRequests.filter(r=>r.studentUid===uid&&r.status==='approved');
+ const pending=planRequests.filter(r=>r.studentUid===uid&&r.status==='pending');
+ const totals=new Map();
+ for(const r of rows){const cur=planCurrency(r),amt=Number(r.amount);if(Number.isFinite(amt)&&amt>=0)totals.set(cur,(totals.get(cur)||0)+amt);}
+ const summary=addText('div','','ic-student-plans-stats');
+ const count=addText('div','','ic-student-plans-stat');count.append(addText('small','Planes aprobados'),addText('strong',String(rows.length)));summary.append(count);
+ const wait=addText('div','','ic-student-plans-stat');wait.append(addText('small','Solicitudes pendientes'),addText('strong',String(pending.length)));summary.append(wait);
+ for(const [cur,amount] of totals){const el=addText('div','','ic-student-plans-stat');el.append(addText('small','Capital aprobado · '+cur),addText('strong',Number(amount).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+cur));summary.append(el);}
+ section.append(summary);
+ if(!rows.length){section.append(addText('p','No constan planes aprobados en los registros disponibles.','muted'));}
+ else{
+  const scroll=addText('div','','ic-student-plans-scroll'),table=addText('table','','ic-student-plans-table');
+  const head=document.createElement('thead'),tr=document.createElement('tr');
+  for(const name of ['Plan','Importe','Moneda','Método','Aprobación','Estado registrado'])tr.append(addText('th',name));
+  head.append(tr);table.append(head);
+  const body=document.createElement('tbody');
+  for(const r of [...rows].sort((a,b)=>(date(b.decisionAt)?.getTime()||date(b.createdAt)?.getTime()||0)-(date(a.decisionAt)?.getTime()||date(a.createdAt)?.getTime()||0))){
+   const row=document.createElement('tr');const amount=Number(r.amount);
+   const values=[r.plan||'No indicado',Number.isFinite(amount)?amount.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'—',planCurrency(r),planMethod(r),shortDate(r.decisionAt||r.createdAt),'Aprobado'];
+   for(const value of values)row.append(addText('td',String(value)));body.append(row);
+  }
+  table.append(body);scroll.append(table);section.append(scroll);
+ }
+ section.append(addText('p','Se muestran solicitudes aprobadas registradas en Firebase (hasta las últimas 200 consultadas). «Aprobado» no confirma que el ciclo siga vigente; la vigencia se comprobará con los datos del alumno. Los importes son de práctica y no representan fondos reales.','tiny'));
+ container.append(section);
+}
 function renderStudentSummary(){
  const container=$('#studentSummary');container.replaceChildren();
  const s=sessions.find(x=>x.id===selectedId);if(!s){container.append(addText('p','Selecciona un alumno para consultar los datos disponibles.','muted'));return;}
@@ -43,6 +88,7 @@ function renderStudentSummary(){
  for(const [type,label] of titles){const matching=events.filter(e=>e.type===type);const amounts=matching.map(eventAmount).filter(v=>v!==null&&Number.isFinite(v));const val=amounts.length?money(amounts.reduce((a,b)=>a+b,0)):'—';
  const item=addText('div','','admin-metric');item.append(addText('small',label),addText('strong',val),addText('span',`${matching.length} evento(s) registrado(s)`,'tiny'));metrics.append(item);}
  container.append(metrics);
+ renderStudentPlans(container,s.id);
  const approved=withdrawalRequests.filter(w=>w.studentUid===s.id&&w.status==='approved');
  const approvedTotal=approved.reduce((sum,w)=>sum+(Number(w.amount)||0),0);
  const withdrawInfo=addText('p',`Retiros de práctica aprobados en Firebase: ${approved.length} operación(es), ${money(approvedTotal)} en total. Este importe debe permanecer descontado tras recargar el panel del alumno.`, 'tiny');
@@ -156,7 +202,7 @@ function watch(){
  const {db,Store}=firebase;
  offSessions();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();
     offCreditRequests=watchAdminVirtualCreditRequests(firebase,rows=>{creditRequests=rows;renderAdminCreditRequests();},e=>{$('#approvalsMessage').textContent='Error de permisos o conexión al leer solicitudes: '+e.message;});
-    offPlanRequests=watchAdminVirtualPlanRequests(firebase,rows=>{planRequests=rows;renderAdminPlanRequests();},e=>{$('#planApprovalsMessage').textContent='No se pudieron leer activaciones: '+e.message;});
+    offPlanRequests=watchAdminVirtualPlanRequests(firebase,rows=>{planRequests=rows;renderAdminPlanRequests();if(selectedId)renderStudentSummary();},e=>{$('#planApprovalsMessage').textContent='No se pudieron leer activaciones: '+e.message;});
  offWithdrawalRequests=watchAdminVirtualWithdrawalRequests(firebase,rows=>{withdrawalRequests=rows;renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Error de permisos o conexión al leer retiros de práctica: '+e.message;});
  offEarningSummaries=watchAdminVirtualEarningsSummaries(firebase,rows=>{earningSummaries=Object.fromEntries(rows.map(r=>[r.id,r]));renderAdminWithdrawalRequests();if(selectedId)renderStudentSummary();},e=>{$('#withdrawalApprovalsMessage').textContent='Resumen de ganancias sin sincronizar: '+e.message;});
  offLinks=Store.onSnapshot(Store.collection(db,'referralLinks'),snap=>{linksMap={};snap.docs.forEach(d=>linksMap[d.id]=d.data().inviterUid);renderLinks();refreshStudents();if(selectedId){showSelectedProfile();renderStudentSummary();}},err=>console.warn('No se pudo listar la red del aula',err));
