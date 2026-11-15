@@ -4,7 +4,7 @@ const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
 try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||''),referralCode:String(p.referralCode||'')};}catch{}
 if(localStorage.getItem('ic_v3_consent')!=='yes'||!alias)location.replace('index.html');
-const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],perfil:['Mi perfil','Datos personales y método de retiro de práctica'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
+const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],perfil:['Mi perfil','Datos personales y preferencias de cuenta'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
 const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20},Platinum:{min:1500,rate:.085,weeks:24},Signature:{min:3000,rate:.10,weeks:28}};
 const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
 // Guardar la elección por cuenta, no solo por pestaña, evita perder el plan
@@ -28,14 +28,14 @@ function showChosenPlanBanner(){
  const name=currentChosenPlan();
  box.classList.toggle('hidden',!name);if(!name)return;
  const p=plans[name],btn=$('#selectedPlanAction'),message=$('#selectedPlanMessage');
- $('#selectedPlanTitle').textContent=`${name} · ${money(p.min)} en USDT de práctica`;
+ $('#selectedPlanTitle').textContent=`${name} · ${money(p.min)} USDT`;
  const active=activePositions().some(x=>x.plan===name&&remainingPrincipal(x)>0);
  const pending=planActivationRequests.find(x=>x.plan===name&&x.status==='pending')||(planSubmitId?{plan:name,status:'pending'}:null);
  const rejected=planActivationRequests.filter(x=>x.plan===name&&x.status==='rejected').length>0;
  btn.classList.toggle('ic-plan-active-button',active);
- if(active){message.textContent='Este plan está activado en tu cartera de práctica. El importe está asignado únicamente a este plan.';btn.textContent='Plan activado';btn.disabled=true;btn.onclick=null;return;}
+ if(active){message.textContent='Este plan aparece activado en tu cartera. El importe está asignado únicamente a este plan.';btn.textContent='Plan activado';btn.disabled=true;btn.onclick=null;return;}
  if(pending){message.textContent='Tu simulación de envío está pendiente de revisión. No se ha acreditado saldo libre ni activado otro plan.';btn.textContent='Pendiente de revisión';btn.disabled=true;btn.onclick=null;return;}
- message.textContent=`Para activar este plan debes invertir ${money(p.min)} de práctica mediante la cartera de práctica USDT. No se envía dinero real.`+(rejected?' La última solicitud fue rechazada; puedes repetir el ejercicio.':'');
+ message.textContent=`Para activar este plan en el entorno de prueba, registra una solicitud por ${money(p.min)} USDT. No requiere enviar fondos reales.`+(rejected?' La última solicitud fue rechazada; puedes repetir el ejercicio.':'');
  btn.textContent=rejected?'Volver a invertir':'Invertir para activar';btn.disabled=planSubmitBusy;btn.onclick=()=>openPlanWallet(name);
 }
 
@@ -181,7 +181,7 @@ function icSetupProfile(){
    const f=await getFirebase(),user=f?.auth?.currentUser;
    if(!user||!sessionReady||session.uid!==user.uid)throw Error('Sesión no válida.');
    await f.Store.setDoc(f.Store.doc(f.db,'studentProfiles',user.uid),{firstName:firstName.slice(0,60),lastName:lastName.slice(0,60),phone:phone.slice(0,30),withdrawalMethod,withdrawalReference:withdrawalMethod?withdrawalReference:'',updatedAt:f.Store.serverTimestamp()},{merge:true});
-   icProfileStatus('Cambios guardados en Firebase.');record('profile','Actualizó sus datos de práctica','perfil');
+   icProfileStatus('Cambios guardados en Firebase.');record('profile','Actualizó su información de perfil','perfil');
   }catch(error){icProfileStatus('No se pudo guardar en Firebase: '+error.message+'. Si aparece permission-denied, hay que revisar las reglas de acceso sin desactivar la seguridad.',true);}
   finally{btn.disabled=false;}
  });
@@ -322,12 +322,12 @@ function withdrawalStatus(){
  const anchor=lockAnchor();
  if(!anchor)return {days:30,open:false,reason:'El ciclo de 30 días comenzará al activarse un plan. Los retiros anticipados de bonificaciones pueden solicitarse antes.'};
  const remaining=Math.max(0,30-elapsedDays(anchor));
- return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para completar el ciclo. Puedes solicitar antes tus ganancias de práctica disponibles, sujetas a aprobación.`:'Ciclo completado. Los retiros de práctica siguen sujetos a aprobación.'};
+ return {days:remaining,open:remaining===0,reason:remaining>0?`Faltan ${remaining} día${remaining===1?'':'s'} para completar el ciclo. Puedes solicitar antes tus ganancias disponibles, sujetas a revisión.`:'Ciclo completado. Las solicitudes de retiro siguen sujetas a revisión.'};
 }
 function renderWithdrawalStatus(){
  const w=withdrawalStatus();
  for(const id of ['actionWithdraw','withdrawInMovements'])$('#'+id).textContent='Retiro';
- $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?`Retiro de práctica pendiente de revisión. ${w.days} día(s) del ciclo restantes.`:w.reason;
+ $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?`Solicitud de retiro pendiente de revisión. ${w.days} día(s) del ciclo restantes.`:w.reason;
  $('#earningDays').textContent=String(w.days);
  const detail=$('#teacherTestStatus');if(detail){detail.hidden=!(testSettings.plan||testSettings.extraDays||testSettings.bonus);detail.textContent=`ESCENARIO DOCENTE · Plan: ${testSettings.plan||'Sin asignación docente'} · ${testSettings.extraDays} día(s) adicionales · ${money(testSettings.bonus)} de ganancia de práctica. Retiros aprobados acumulados: ${money(approvedWithdrawalTotal())}. Solo simulación.`;}
 }
@@ -440,8 +440,8 @@ function drawPortfolioChart(pos, invested, profit){
   if(!conf||d>=conf.weeks*7)return sum;
   return sum+(projected(p.amount,p.plan,d+1,p.rate).profit-projected(p.amount,p.plan,d,p.rate).profit);
  },0));
- caption.textContent=`Capital asignado: ${money(invested)} · rendimiento simulado hasta hoy: ${money(profit)} · día ${maxElapsed} desde la primera posición`;
- legend.textContent=`Línea continua: cálculo hasta hoy · Línea discontinua: proyección de práctica de ${chartProjectionDays} días · Próximo incremento estimado: ${money(dailyEstimated)} (mañana).`;
+ caption.textContent=`Capital asignado: ${money(invested)} · rendimiento estimado: ${money(profit)} · día ${maxElapsed} desde la primera posición`;
+ legend.textContent=`Línea continua: cálculo hasta hoy · Línea discontinua: proyección a ${chartProjectionDays} días · Próximo incremento estimado: ${money(dailyEstimated)} (mañana).`;
 }
 function renderDailyEstimate(){
  const amountEl=$('#icDailyAmount'),detailEl=$('#icDailyDetail');
@@ -462,12 +462,12 @@ function render(){const invested=principal(),profit=gain(),value=total(),pos=act
   // el valor calculado desde el navegador es provisional. Evitar el destello
   // de $5,100/$0 y su posterior sustitución sin explicación.
   const balancesConfirmed=teacherSettingsReady&&withdrawalHistoryReady;
-  $('#totalVal').textContent=balancesConfirmed?money(value):syncDisplay('Sincronizando…');$('#investedVal').textContent=teacherSettingsReady?money(invested):syncDisplay('Sincronizando…');$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):syncDisplay('Sincronizando…');$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):syncDisplay('Sincronizando…');$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):syncDisplay('Verificando…');$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):syncDisplay('Verificando…');$('#earningYield').textContent=balancesConfirmed?money(gain()):syncDisplay('Sincronizando…');$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Ganancias de práctica disponibles para solicitar · mínimo 50':'Aún no alcanza el mínimo de 50 USDT-DEMO';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
+  $('#totalVal').textContent=balancesConfirmed?money(value):syncDisplay('Sincronizando…');$('#investedVal').textContent=teacherSettingsReady?money(invested):syncDisplay('Sincronizando…');$('#gainVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):syncDisplay('Sincronizando…');$('#availableVal').textContent=money(withdrawable());$('#historyGeneratedVal').textContent=teacherSettingsReady?money(historicalEarnedTotal()):syncDisplay('Sincronizando…');$('#historyWithdrawnVal').textContent=withdrawalHistoryReady?money(approvedWithdrawalTotal()):syncDisplay('Verificando…');$('#historyAvailableVal').textContent=earningsSynced()?money(withdrawable()):syncDisplay('Verificando…');$('#earningYield').textContent=balancesConfirmed?money(gain()):syncDisplay('Sincronizando…');$('#earningReferrals').textContent=money(referralAvailable());$('#totalDelta').textContent=account.ledger.length?`${account.ledger.length} movimientos registrados`:'Sin movimientos registrados';$('#activeCountVal').textContent=pos.length+' posiciones activas';$('#availabilityStatus').textContent=withdrawalAuditConflict?'Saldo retenido para conciliar los retiros con Firebase':!earningsSynced()?'Sincronizando retiros y ganancias con Firebase…':hasPendingWithdrawal()?'Solicitud de retiro pendiente de revisión':withdrawable()>=MIN_WITHDRAW_DEMO?'Disponible para solicitar · mínimo 50 USDT':'Aún no alcanza el mínimo de 50 USDT';$('#withdrawalAuditStatus').textContent=withdrawalAuditStatus();
   const notices=['','Actualización de resultados: las posiciones reflejan un nuevo periodo de rendimiento.','Comunicado operativo: los retiros están sujetos a validaciones adicionales.','Comunicado operativo: las solicitudes de retiro están temporalmente suspendidas.'];const note=$('#scenarioNotice');note.classList.toggle('hidden',!stage);note.classList.toggle('negative',stage>=2);note.textContent=notices[stage]||'';
   $('#onboardingNotice').classList.toggle('hidden',account.ledger.length>0);
   $('#portfolioTotalVal').textContent=balancesConfirmed?money(invested+profit):syncDisplay('Sincronizando…');$('#portfolioCountVal').textContent=String(pos.length);$('#portfolioInvestedVal').textContent=teacherSettingsReady?money(invested):syncDisplay('Sincronizando…');$('#portfolioGainVal').textContent=balancesConfirmed?money(profit):syncDisplay('Sincronizando…');
   $('#positionRows').innerHTML=pos.length?pos.map(p=>`<tr><td>${esc(p.plan)}</td><td>${money(remainingPrincipal(p))}</td><td>${money(positionProfit(p))}</td><td>${Math.min(elapsedDays(legacyStart(p)),plans[p.plan].weeks*7)}</td><td>${esc(p.date)}</td><td><span class="tag">Activa</span></td></tr>`).join(''):'<tr><td colspan="6">Aún no tienes posiciones.</td></tr>';
-  $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT · DEMO</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
+  $('#assetRows').innerHTML=pos.length?pos.map(p=>`<div class="asset-row"><span class="asset-logo">◈</span><span><b>${esc(p.plan)}</b><small>USDT</small></span><span class="asset-amount">${money(remainingPrincipal(p))}<small class="up">${positionProfit(p)>0?`+ ${money(positionProfit(p))}`:'Sin variación'}</small></span></div>`).join(''):'<p class="muted empty-state">No tienes activos asignados.</p>';
   drawPortfolioChart(pos,invested,profit);
   $('#supportStatus').textContent=stage===3?'Servicio limitado: solicitudes de retiro suspendidas.':stage===2?'Volumen elevado de consultas; tiempos de respuesta ampliados.':'Los canales de atención están operativos.';
   $('#refCount').textContent=String(account.referrals.length);$('#refCommission').textContent=money(account.referrals.reduce((sum,r)=>sum+r.commission,0));
@@ -488,10 +488,10 @@ function choosePlan(plan){
 function openPlanWallet(plan){
  const cfg=plans[plan];if(!cfg)return;
  if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){
-  modal('Pendiente de revisión','<div class="notice">Ya existe una solicitud de activación pendiente. Espera la decisión del profesor.</div>');return;
+  modal('Pendiente de revisión','<div class="notice">Ya existe una solicitud de activación pendiente de revisión.</div>');return;
  }
  if(planActivationRequests.some(r=>r.status==='approved'&&r.plan===plan)){
-  modal('Plan ya aprobado','<p>El profesor ya aprobó este plan de práctica. Comprueba su activación en tu cartera.</p>');return;
+  modal('Plan ya aprobado','<p>La administración ya aprobó este plan. Comprueba su activación en tu cartera.</p>');return;
  }
  const amount=num(cfg.min); // El importe se determina exclusivamente por el plan elegido.
  openDemoPaymentMethods(plan,amount); // Abrir directamente métodos, sin pantalla redundante.
@@ -540,12 +540,12 @@ function openDemoPaymentMethods(plan,amount){
     <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta.</p></div>
    </div>
   </div>
-  <p class="ic-payment-disclosure">Operación simulada</p>
+  <p class="ic-payment-disclosure">Operación de demostración · No transfieras fondos reales.</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
   const key=modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod;
-  if(!key||!methods[key]){err('Selecciona un método de práctica antes de enviar la solicitud.');return;}
+  if(!key||!methods[key]){err('Selecciona un método antes de enviar la solicitud.');return;}
   if(key==='rub' && modalContent.dataset.icCopiedMethod!==key){err('Copia primero la referencia del método elegido antes de pulsar «Enviado».');confirmBtn.disabled=true;return;}
   planSubmitBusy=true;confirmBtn.disabled=true;
   try{
@@ -758,7 +758,7 @@ function renderWithdrawalRequests(){
  box.replaceChildren();
  const ordered=[...withdrawalRequests].sort((a,b)=>(timestampMs(b.createdAt)||0)-(timestampMs(a.createdAt)||0));
  const pending=ordered.filter(r=>r.status==='pending');
- const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro de práctica'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
+ const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
  box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Simulación educativa: ninguna aprobación transfiere dinero ni criptomonedas.'}));
  if(!ordered.length){box.append(Object.assign(document.createElement('p'),{className:'muted',textContent:'Todavía no hay solicitudes de retiro.'}));return;}
  for(const r of ordered.slice(0,8)){
@@ -803,13 +803,13 @@ function onWithdrawalRequests(rows){
    account.reviewedWithdrawalIds[r.id]='approved';
    account.pendingWithdrawalRequestId='';
    // El balance ya está descontado por approvedWithdrawalTotal() en Firebase.
-   tx('Retiro de práctica aprobado por el profesor',-amount,'Aprobado','withdraw');
+   tx('Retiro aprobado por administración',-amount,'Aprobado','withdraw');
    record('withdraw_approved',`Retiro virtual aprobado por ${amount.toFixed(2)} USDT`,'movimientos');
   }else{
    account.reviewedWithdrawalIds[r.id]='rejected';
    // Un rechazo no reinicia los días ya transcurridos.
    account.pendingWithdrawalRequestId='';
-   tx('Retiro de práctica rechazado por el profesor',0,'Rechazado','withdraw');
+   tx('Retiro rechazado por administración',0,'Rechazado','withdraw');
    record('withdraw_rejected',`Retiro virtual rechazado de ${num(r.amount).toFixed(2)} USDT`,'movimientos');
   }
   changed=true;
@@ -822,23 +822,23 @@ function onWithdrawalRequests(rows){
  render();
 }
 function withdrawal(){
- record('withdraw_open','Consultó retiro de práctica de ganancias','movimientos');
+ record('withdraw_open','Consultó la sección de retiros','movimientos');
  const w=withdrawalStatus();
- if(!earningsSynced()){modal('Retiro no disponible',`<p>${esc(withdrawalAuditStatus())}</p><p>Para evitar un retiro de práctica duplicado, no se pueden crear solicitudes hasta completar la comprobación.</p>`);return;}
+ if(!earningsSynced()){modal('Retiro no disponible',`<p>${esc(withdrawalAuditStatus())}</p><p>Para evitar una solicitud duplicada, no se pueden crear solicitudes hasta completar la comprobación.</p>`);return;}
  if(hasPendingWithdrawal()){
-  modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro de práctica pendiente. El profesor recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
+  modal('Pendiente de revisión',`<div class="notice">Ya tienes una solicitud de retiro pendiente. Administración recibirá el aviso aunque el ciclo tenga ${w.days} día(s) restantes.</div>`);return;
  }
  if(stage===3){modal('Escenario suspendido','<div class="notice negative">La clase está en un escenario de retiros suspendidos.</div>');return;}
  const cap=withdrawable();
  if(cap<MIN_WITHDRAW_DEMO){
   modal('Aún no tienes ganancias disponibles',`<p>Hoy no alcanzas el mínimo de 50 USDT-DEMO para solicitar un retiro.</p><p>Rendimiento sin retirar: <b>${money(gain())}</b> · Bonificaciones disponibles: <b>${money(referralAvailable())}</b>.</p><p class="tiny">El ciclo tiene ${w.days} día(s) restantes, pero no impide solicitar bonificaciones o ganancias en cuanto se acumulen.</p>`);return;
  }
- modal('Solicitar retiro anticipado · DEMO',`
+ modal('Solicitar retiro anticipado',`
   <div class="modal-note"><strong>SIMULACIÓN EDUCATIVA</strong>. No se transfiere dinero ni USDT real.</div>
   <p>Rendimiento virtual no retirado: <b>${money(gain())}</b></p>
   <p>Bonificaciones de referidos: <b>${money(referralAvailable())}</b></p>
   <p>Ganancia disponible: <strong>${money(cap)} de práctica</strong></p>
-  <div class="notice">${w.days} día(s) del ciclo restantes. Puedes solicitar ahora un retiro de práctica anticipado. <b>El profesor decide si lo aprueba o rechaza.</b></div>
+  <div class="notice">${w.days} día(s) del ciclo restantes. Puedes solicitar ahora un retiro anticipado. <b>La administración revisará tu solicitud.</b></div>
   <label class="field-label" for="amountValue">Importe de ganancias de práctica (USDT-DEMO)</label>
   <input id="amountValue" class="plain-input" type="number" step="0.01" min="50" max="${cap}" value="${Math.max(50,Math.min(100,cap))}">
   <p id="modalError" class="form-error" hidden></p>
@@ -855,9 +855,9 @@ function withdrawal(){
    account.pendingWithdrawalRequestId=id;save();
    record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT de práctica con ${w.days} días pendientes`,'movimientos');
    render();
-   modal('Solicitud pendiente',`<div class="notice"><strong>${money(n)} USDT-DEMO · Pendiente de revisión</strong></div><p>El profesor recibió la solicitud aun faltando ${w.days} día(s) del ciclo. Al aprobarla, se descontará de las ganancias de práctica disponibles; si la rechaza, conservarás la cantidad y el contador seguirá avanzando.</p>`);
+   modal('Solicitud pendiente',`<div class="notice"><strong>${money(n)} USDT-DEMO · Pendiente de revisión</strong></div><p>La administración recibió la solicitud aun faltando ${w.days} día(s) del ciclo. Al aprobarla, se descontará de las ganancias disponibles; si la rechaza, conservarás la cantidad y el contador seguirá avanzando.</p>`);
   }catch(e){err('No se pudo enviar a Firebase: '+e.message);confirmBtn.disabled=false;}
- },'Enviar solicitud al profesor');
+ },'Enviar solicitud');
 }
 // Una aportación realizada en el aula notifica a las cuentas antecesoras (hasta 3 niveles).
 // La comisión se calcula desde ese movimiento, no desde formularios manuales.
@@ -883,7 +883,7 @@ async function applyClassroomCode(code){
    $('#refLinkStatus').textContent='Vinculado al código '+classroomCode(current);
    return;
  }
- if(!code){$('#refLinkStatus').textContent='Tu cuenta todavía no está vinculada a otro alumno.';return;}
+ if(!code){$('#refLinkStatus').textContent='Tu cuenta todavía no está vinculada a otro usuario.';return;}
  await linkClassroomMember(session,code);
  $('#refLinkStatus').textContent='Vínculo confirmado con '+code;
  record('referral_link','Se vinculó a la cuenta de un compañero: '+code,'referidos');
@@ -896,7 +896,7 @@ function onClassroomRewards(rows){
   const commission=num(item.amount*referralRates[level]);
   account.referralCreditedIds[item.id]=true;
   account.cash=num(account.cash+commission);
-  account.referrals.unshift({alias:String(item.sourceTag||'Alumno del aula'),level,amount:num(item.amount),commission,createdAt:Date.now(),eventId:item.id});
+  account.referrals.unshift({alias:String(item.sourceTag||'Usuario vinculado'),level,amount:num(item.amount),commission,createdAt:Date.now(),eventId:item.id});
   account.referrals=account.referrals.slice(0,100);
   tx('Bonificación virtual de red · nivel '+level,commission,'Registrada','referral');
   record('referral_credit',`Bonificación virtual automática de ${commission.toFixed(2)} USDT en nivel ${level}`,'referidos');
@@ -908,7 +908,7 @@ function onClassroomRewards(rows){
 function referralActivity(){
  if(session.mode==='cloud'){
    record('referral_open','Abrió vínculo de compañero','referidos');
-   modal('Vincular compañero',`<p>Introduce el código IC- que te dio otro alumno durante la actividad del aula. Solo puedes elegirlo una vez.</p><label class="field-label" for="classroomRefInput">Código de compañero</label><input class="plain-input" id="classroomRefInput" spellcheck="false" maxlength="72" placeholder="IC-…"><p id="modalError" class="form-error" hidden></p>`,async()=>{
+   modal('Vincular compañero',`<p>Introduce el código de vinculación proporcionado por otro usuario. Solo puedes elegirlo una vez.</p><label class="field-label" for="classroomRefInput">Código de compañero</label><input class="plain-input" id="classroomRefInput" spellcheck="false" maxlength="72" placeholder="IC-…"><p id="modalError" class="form-error" hidden></p>`,async()=>{
      const code=$('#classroomRefInput').value.trim();confirmBtn.disabled=true;
      try{await applyClassroomCode(code);modal('Asociación registrada','<p>El vínculo del aula quedó guardado en Firebase.</p>');}
      catch(e){err('No se pudo asociar: '+e.message);confirmBtn.disabled=false;}
@@ -955,7 +955,7 @@ $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.go
   chartProjectionDays=Number(b.dataset.projectionDays);
   $$('[data-period]').forEach(a=>a.classList.toggle('active',a===b));
   render();
-  record('chart',`Consultó proyección de práctica de ${chartProjectionDays} días`);
+  record('chart',`Consultó proyección a ${chartProjectionDays} días`);
  });
 });
 $$('[data-plan]').forEach(b=>b.addEventListener('click',()=>planSelect(b.dataset.plan)));
@@ -980,7 +980,7 @@ $('#sendSupport').addEventListener('click',async()=>{
   await ensureStudentFirebaseSession();
   const firebase=await getFirebase();
   const user=firebase?.auth?.currentUser;
-  if(!user)throw new Error('Debes iniciar sesión como alumno.');
+  if(!user)throw new Error('Debes iniciar sesión para continuar.');
   const idToken=await user.getIdToken();
   const response=await fetch(SUPPORT_WORKER_URL,{
    method:'POST',
@@ -1067,12 +1067,12 @@ async function ensureStudentFirebaseSession(){
  const f=await getFirebase();if(!f)throw new Error('Firebase no está disponible.');
  await f.auth.authStateReady();
  const user=f.auth.currentUser;
- if(!user)throw new Error('Tu sesión de alumno terminó. Inicia sesión desde la portada para continuar.');
- if(storedAuthUid&&user.uid!==storedAuthUid)throw new Error('Firebase tiene otra cuenta activa en esta pestaña. Vuelve a entrar como alumno desde la portada.');
+ if(!user)throw new Error('Tu sesión ha terminado. Inicia sesión desde la portada para continuar.');
+ if(storedAuthUid&&user.uid!==storedAuthUid)throw new Error('Firebase tiene otra cuenta activa en esta pestaña. Vuelve a entrar con tu cuenta desde la portada.');
  const token=await user.getIdTokenResult();
  const {ADMIN_EMAIL}=await import('./firebase-config.js');
  if(user.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase())throw new Error('La cuenta administradora debe acceder desde su consola privada.');
- if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Entra con el correo y contraseña del alumno desde la portada para sincronizar esta cuenta.');
+ if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Entra con tu correo y contraseña desde la portada para sincronizar esta cuenta.');
  if(sessionReady&&session.mode==='cloud'&&session.uid===user.uid)return session;
  session=await studentStart(profile);
  if(session.mode!=='cloud')throw new Error('No se pudo establecer la sesión de Firebase.');
@@ -1090,7 +1090,7 @@ async function ensureStudentFirebaseSession(){
    history.replaceState(null,'',location.pathname);
   }
  }catch(e){
-  console.error('No se pudo iniciar la sesión del alumno',e);
+  console.error('No se pudo iniciar la sesión',e);
   connectionFailure=e;sessionReady=false;reportSyncFailure('Inicio de sesión',e);
   $('#syncStatus').textContent=explainFirebaseIssue(e);
   $('#refLinkStatus').textContent='La sesión de Firebase necesita revisión. Puedes iniciar sesión nuevamente desde la portada.';
