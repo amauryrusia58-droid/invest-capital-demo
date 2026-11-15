@@ -2,6 +2,7 @@ import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCre
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 let offTeacherSettings=()=>{},teacherSelectedUid='',teacherSettings={extraDays:0,bonus:0,plan:''};
+let offStudentProfile=()=>{},studentProfileData=null,icProfileLoadState='idle';
 let firebase=null,sessions=[],selectedId=null,events=[],offSessions=()=>{},offEvents=()=>{},offScenario=()=>{},offLinks=()=>{},offCreditRequests=()=>{},offWithdrawalRequests=()=>{},offPlanRequests=()=>{},offEarningSummaries=()=>{},earningSummaries={},linksMap={},creditRequests=[],withdrawalRequests=[],planRequests=[],stage=0;
 const date=x=>x?.toDate?x.toDate():null;
 const money=n=>Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
@@ -96,6 +97,7 @@ function renderStudentSummary(){
  const estimate=earningSummaries[selectedId];
  if(estimate){const metrics2=addText('div','','admin-event-metrics');for(const [label,amount] of [['Rendimiento de práctica pendiente',estimate.unpaidPlanYield],['Bonos por referidos pendientes',estimate.referralAvailable],['Ganancia disponible · declarada',estimate.availableToRequest],['Días para el ciclo',estimate.daysRemaining]]){const el=addText('div','','admin-metric');el.append(addText('small',label),addText('strong',label==='Días para el ciclo'?String(amount):money(amount)));metrics2.append(el);}container.append(metrics2);container.append(addText('p','Resumen enviado desde el navegador del alumno; no es un saldo verificado en servidor ni prueba de pago. Actualizado: '+shortDate(estimate.updatedAt),'tiny'));}
  const note=addText('p','Los importes de eventos pueden ser parciales; el resumen de ganancias, si aparece, es informativo y fue calculado por el navegador del alumno, NO un saldo auditado ni comprobación de fondos. Todo es de práctica.','admin-summary-note');container.append(note);
+ icRenderPremium();
 }
 
 
@@ -195,7 +197,7 @@ function renderAdminWithdrawalRequests(){
 const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'—';};
 function setError(s){$('#loginError').textContent=s;}
 function teacherReady(f){
- firebase=f;$('#adminGate').classList.add('hidden');$('#adminContent').classList.remove('hidden');$('#logoutAdmin').classList.remove('hidden');
+ firebase=f;$('#adminGate').classList.add('hidden');$('#adminContent').classList.remove('hidden');$('#logoutAdmin').classList.remove('hidden');$('#icSidebar').classList.remove('hidden');
  $('#adminIdentity').textContent=f.auth.currentUser.email;watch();
 }
 function watch(){
@@ -273,12 +275,18 @@ function refreshStudents(){
  $('#exportStudents').disabled=!visible.length;
  if(!visible.length){list.append(addText('p',sessions.length?'No hay alumnos que coincidan con el filtro.':'Todavía no hay sesiones registradas.','muted'));return;}
  visible.forEach(s=>{
-   const b=document.createElement('button');b.className='admin-item'+(s.id===selectedId?' active':'');
-   const d=document.createElement('div'),name=document.createElement('b'),meta=document.createElement('div'),last=document.createElement('small');
-   name.textContent=s.alias||'Alumno sin nombre';meta.className='tiny';meta.textContent=(s.view||'resumen')+' · '+(s.lastAction||'Acceso al panel');
-   d.append(name,meta);last.textContent=shortDate(s.lastSeen);b.append(d,last);b.addEventListener('click',()=>select(s.id));list.append(b);
+   const b=document.createElement('button');b.type='button';b.className='admin-item'+(s.id===selectedId?' active':'');
+   b.setAttribute('aria-label','Ver ficha de '+(s.alias||'alumno'));
+   const avatar=addText('span','','ic-list-avatar');avatar.innerHTML='<svg class="ic-icon" aria-hidden="true"><use href="#ic-person"></use></svg>';
+   const info=addText('span','','ic-list-info');
+   info.append(addText('b',s.alias||'Alumno sin nombre'),addText('small','ID: '+String(s.id).slice(0,11)));
+   const isRecent=!!(date(s.lastSeen)&&Date.now()-date(s.lastSeen).getTime()<300000);
+   const status=addText('span',isRecent?'Reciente':'Sin actividad','ic-list-status'+(isRecent?' ic-online':''));
+   b.append(avatar,info,status);b.addEventListener('click',()=>select(s.id));list.append(b);
  });
- if(selectedId&&!sessions.find(s=>s.id===selectedId)){selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#studentProfile').textContent='';$('#withdrawCount').textContent='0';renderStudentSummary();}
+ $('#icRosterCount').textContent=String(sessions.length);
+ icRenderPremium();
+ if(selectedId&&!sessions.find(s=>s.id===selectedId)){offStudentProfile();offStudentProfile=()=>{};studentProfileData=null;icProfileLoadState='idle';selectedId=null;events=[];offEvents();$('#selectedStudent').textContent='Selecciona un alumno';$('#studentProfile').textContent='';$('#withdrawCount').textContent='0';renderStudentSummary();}
 }
 
 function studentName(uid){return sessions.find(s=>s.id===uid)?.alias||'Alumno '+String(uid).slice(0,6);}
@@ -303,7 +311,7 @@ function renderLinks(){
 
 function select(uid){
  if($('#teacherStudent')){$('#teacherStudent').value=uid;teacherSelectedUid=uid;loadTeacherStudent();}
- selectedId=uid;events=[];offEvents();$('#withdrawCount').textContent='0';$('#eventTypeFilter').value='all';
+ offStudentProfile();offStudentProfile=()=>{};studentProfileData=null;icProfileLoadState='loading';selectedId=uid;events=[];offEvents();icRenderActivityPreview();icWatchStudentProfile(uid);$('#withdrawCount').textContent='0';$('#eventTypeFilter').value='all';
  const s=sessions.find(x=>x.id===uid);$('#selectedStudent').textContent=s?.alias||uid;showSelectedProfile();
  refreshStudents();renderStudentSummary();$('#eventResults').textContent='Cargando eventos…';$('#activityRows').innerHTML='<tr><td colspan="3">Cargando actividad…</td></tr>';
  $('#exportCsv').disabled=true;
@@ -316,6 +324,7 @@ function renderEvents(){
  const table=$('#activityRows');table.replaceChildren();const visible=filteredEvents();$('#exportCsv').disabled=!visible.length;
  $('#withdrawCount').textContent=String(events.filter(x=>x.type==='withdraw_attempt').length);
  $('#eventResults').textContent=`Mostrando ${visible.length} de ${events.length} eventos cargados (hasta 200)`;
+ icRenderActivityPreview();
  if(!visible.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent=events.length?'No hay acciones de este tipo.':'Este alumno aún no tiene acciones registradas.';tr.append(td);table.append(tr);return;}
  for(const e of visible){const tr=document.createElement('tr');for(const text of [shortDate(e.createdAt),String(e.view||'—'),String(e.label||'—')]){const td=document.createElement('td');td.textContent=text;tr.append(td);}table.append(tr);}
 }
@@ -345,9 +354,119 @@ $('#loginAdmin').addEventListener('click',async()=>{
  try{teacherReady(await adminLogin());}catch(e){setError('Acceso no autorizado o error de inicio de sesión: '+e.message);}
  finally{b.disabled=false;b.textContent='Acceder con Google';}
 });
-$('#logoutAdmin').addEventListener('click',async()=>{offTeacherSettings();offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
+$('#logoutAdmin').addEventListener('click',async()=>{offTeacherSettings();offStudentProfile();offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();if(firebase)await firebase.Auth.signOut(firebase.auth);location.reload();});
 (async()=>{
  if(!firebaseEnabled){setError('El seguimiento remoto todavía no está activado. Configura Firebase siguiendo INSTRUCCIONES.md.');return;}
  try{const f=await adminCurrent();if(f)teacherReady(f);}catch(e){setError('No se pudo comprobar la sesión: '+e.message);}
 })();
-window.addEventListener('pagehide',()=>{offTeacherSettings();offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();});
+window.addEventListener('pagehide',()=>{offTeacherSettings();offStudentProfile();offSessions();offEvents();offScenario();offLinks();offCreditRequests();offWithdrawalRequests();offPlanRequests();offEarningSummaries();});
+
+
+// === Invest Capital · Teacher premium panel — only reads studentProfiles/{uid}. ===
+// Firestore access uses the already signed-in teacher; no new auth or write permissions.
+const icText=(selector,value)=>{const el=$(selector);if(el)el.textContent=value==null?'—':String(value);};
+const icIsRecent=s=>!!(date(s?.lastSeen)&&Date.now()-date(s.lastSeen).getTime()<300000);
+const icMoney=n=>n!==null&&n!==undefined&&n!==''&&Number.isFinite(Number(n))?Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT-DEMO':'—';
+function icWatchStudentProfile(uid){
+ icText('#icProfileStatus','Consultando el perfil del alumno en Firebase…');
+ const f=firebase;if(!f||!uid)return;
+ offStudentProfile=f.Store.onSnapshot(f.Store.doc(f.db,'studentProfiles',uid),snapshot=>{
+  if(selectedId!==uid)return;
+  studentProfileData=snapshot.exists()?snapshot.data():null;icProfileLoadState='loaded';
+  icRenderPremium();
+ },err=>{
+  if(selectedId!==uid)return;
+  studentProfileData=null;icProfileLoadState='error';icRenderPremium();
+  icText('#icProfileStatus','Error al consultar el perfil: '+err.message);
+ });
+}
+function icRenderPremium(){
+ const s=sessions.find(x=>x.id===selectedId);
+ if(!s){
+  for(const key of ['icKpiPlans','icKpiCapital','icKpiEarnings','icKpiAvailable','icProfileName','icProfileLast','icProfileEmail','icProfilePhone','icProfileMethod','icProfileReference','icProfileDate'])icText('#'+key,'—');
+  icText('#icSelectedId','Sin seleccionar');icText('#icSelectedStatus','—');
+  icText('#icProfileStatus','Selecciona un alumno para consultar su perfil registrado.');
+  $('#icCopyReference').disabled=true;
+  $('#icSelectedStatus').classList.remove('ic-online');
+  return;
+ }
+ $('#icSelectedId').textContent='ID: '+String(s.id).slice(0,11);
+ $('#icSelectedId').title=s.id;
+ const active=icIsRecent(s);
+ $('#icSelectedStatus').textContent=active?'Reciente':'Sin actividad';
+ $('#icSelectedStatus').classList.toggle('ic-online',active);
+ const approved=planRequests.filter(r=>r.studentUid===selectedId&&r.status==='approved');
+ icText('#icKpiPlans',String(approved.length));
+ const currs=new Set(approved.map(planCurrency));
+ const amounts=approved.map(r=>Number(r.amount));
+ const valid=amounts.every(x=>Number.isFinite(x)&&x>=0);
+ icText('#icKpiCapital',!approved.length?'Sin registros':!valid||currs.size>1?'Varias monedas':(amounts.reduce((a,b)=>a+b,0).toLocaleString('es-ES',{maximumFractionDigits:2})+' '+(currs.values().next().value||'DEMO')));
+ const report=earningSummaries[selectedId];
+ icText('#icKpiEarnings',report&&report.grossPlanYield!=null?icMoney(report.grossPlanYield):'Sin datos');
+ icText('#icKpiAvailable',report&&report.availableToRequest!=null?icMoney(report.availableToRequest):'Sin datos');
+ const p=studentProfileData;
+ icText('#icProfileName',p?.firstName||'No registrado');
+ icText('#icProfileLast',p?.lastName||'No registrado');
+ icText('#icProfileEmail',s.email||'No disponible');
+ icText('#icProfilePhone',p?.phone||'No registrado');
+ icText('#icProfileMethod',({'sber':'Sberbank','bep20':'USDT BEP20','trc20':'USDT TRC20','':'No elegido'})[p?.withdrawalMethod??'']||'No registrado');
+ // Preserve EXACT reference text from Firestore, without formatting or truncation.
+ const reference=p&&typeof p.withdrawalReference==='string'?p.withdrawalReference:'';
+ icText('#icProfileReference',reference||'No registrada');
+ $('#icCopyReference').disabled=!reference;
+ icText('#icProfileDate',p?.updatedAt?shortDate(p.updatedAt):'Sin registro');
+ icText('#icProfileStatus',icProfileLoadState==='loading'?'Consultando el perfil del alumno en Firebase…':icProfileLoadState==='error'?'No se pudo consultar el perfil.':p?'Datos sincronizados desde Firebase · Solo lectura':'Todavía no ha guardado un perfil de práctica.');
+ icRenderSelectedPlans();icRenderSelectedReferrals();icRenderSelectedWithdrawals();
+}
+function icRenderSelectedPlans(){
+ const box=$('#icSelectedPlans');if(!box)return;box.replaceChildren();
+ if(!selectedId){box.append(addText('p','Selecciona un alumno.','muted'));return;}
+ renderStudentPlans(box,selectedId);
+}
+function icRenderSelectedReferrals(){
+ const box=$('#icSelectedReferrals');if(!box)return;box.replaceChildren();
+ if(!selectedId){box.append(addText('p','Selecciona un alumno.','muted'));return;}
+ const [a,b,c]=countDescendants(selectedId);
+ const panel=addText('div','','ic-single-module');
+ const counters=addText('div','','admin-event-metrics');
+ for(const [label,val] of [['Nivel 1',a],['Nivel 2',b],['Nivel 3',c]]){
+  const item=addText('div','','admin-metric');item.append(addText('small',label),addText('strong',String(val)));counters.append(item);
+ }
+ panel.append(counters,addText('p',linksMap[selectedId]?'Alumno vinculado a: '+studentName(linksMap[selectedId]):'No hay vínculo anterior registrado para esta cuenta.','tiny'));
+ box.append(panel);
+}
+function icRenderSelectedWithdrawals(){
+ const box=$('#icSelectedWithdrawals');if(!box)return;box.replaceChildren();
+ if(!selectedId){box.append(addText('p','Selecciona un alumno.','muted'));return;}
+ const rows=withdrawalRequests.filter(w=>w.studentUid===selectedId).slice().sort((a,b)=>(date(b.createdAt)?.getTime()||0)-(date(a.createdAt)?.getTime()||0));
+ const module=addText('div','','ic-single-module');
+ module.append(addText('p',`${rows.length} solicitud(es) de retiro de práctica registradas en Firebase.`,'tiny'));
+ if(rows.length){
+  const wrap=addText('div','','ic-table-viewport'),table=addText('table','','ic-premium-table');
+  const head=document.createElement('thead'),tr=document.createElement('tr');for(const t of ['Fecha','Importe','Estado'])tr.append(addText('th',t));head.append(tr);table.append(head);
+  const body=document.createElement('tbody');for(const w of rows){const r=document.createElement('tr');for(const value of [shortDate(w.createdAt),icMoney(w.amount),w.status==='approved'?'Aprobada':w.status==='rejected'?'Rechazada':'Pendiente'])r.append(addText('td',value));body.append(r);}table.append(body);wrap.append(table);module.append(wrap);
+ }else module.append(addText('p','Sin retiros de práctica registrados.','muted'));
+ box.append(module);
+}
+function icRenderActivityPreview(){
+ const body=$('#icActivityPreview');if(!body)return;body.replaceChildren();
+ const rows=events.slice(0,4);if(!selectedId||!rows.length){const tr=document.createElement('tr'),td=addText('td',selectedId?'Todavía no hay acciones registradas.':'Selecciona un alumno para consultar su actividad.');td.colSpan=3;tr.append(td);body.append(tr);return;}
+ for(const item of rows){const tr=document.createElement('tr');for(const value of [shortDate(item.createdAt),String(item.view||'—'),String(item.label||'—')])tr.append(addText('td',value));body.append(tr);}
+}
+function icSwitchTab(key){
+ $$('.ic-tab').forEach(b=>{const selected=b.dataset.icTab===key;b.classList.toggle('active',selected);b.setAttribute('aria-selected',String(selected));});
+ $$('[data-ic-panel]').forEach(el=>el.classList.toggle('hidden',el.dataset.icPanel!==key));
+}
+$$('[data-ic-tab]').forEach(btn=>btn.addEventListener('click',()=>icSwitchTab(btn.dataset.icTab)));
+$$('[data-open-tab]').forEach(btn=>btn.addEventListener('click',()=>icSwitchTab(btn.dataset.openTab)));
+$$('[data-ic-nav]').forEach(btn=>btn.addEventListener('click',()=>{
+ $$('[data-ic-nav]').forEach(el=>el.classList.toggle('active',el===btn));
+ if(btn.dataset.icNav==='icRoster'){icSwitchTab('resumen');}
+ document.getElementById(btn.dataset.icNav)?.scrollIntoView({behavior:'smooth',block:'start'});
+}));
+$('#icCopyReference').addEventListener('click',async()=>{
+ const reference=studentProfileData?.withdrawalReference;
+ if(typeof reference!=='string'||!reference)return;
+ try{await navigator.clipboard.writeText(reference);icText('#icCopiedNote','Referencia copiada.');}
+ catch(e){icText('#icCopiedNote','No se pudo copiar automáticamente; selecciona el texto de la referencia.');}
+});
