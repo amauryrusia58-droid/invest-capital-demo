@@ -4,7 +4,7 @@ const alias=(localStorage.getItem('ic_v3_alias')||'').trim();
 let profile={name:alias,email:'',group:''};
 try{let p=JSON.parse(localStorage.getItem('ic_v3_profile')||'null');if(p?.name===alias)profile={name:alias,email:String(p.email||''),group:String(p.group||''),referralCode:String(p.referralCode||'')};}catch{}
 if(localStorage.getItem('ic_v3_consent')!=='yes'||!alias)location.replace('index.html');
-const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
+const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],planes:['Planes de inversión','Condiciones y oportunidades de gestión'],calculadora:['Calculadora de rendimientos','Proyección de capital según plan y días'],cartera:['Mi cartera','Posiciones y distribución de activos'],movimientos:['Historial de movimientos','Operaciones registradas en tu cuenta'],referidos:['Programa de asociados','Información de tu red de asociados'],documentos:['Centro documental','Información corporativa y condiciones'],perfil:['Mi perfil','Datos personales y método de retiro de práctica'],soporte:['Centro de atención','Gestión de solicitudes y consultas']};
 const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20},Platinum:{min:1500,rate:.085,weeks:24},Signature:{min:3000,rate:.10,weeks:28}};
 const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
 // Guardar la elección por cuenta, no solo por pestaña, evita perder el plan
@@ -145,7 +145,49 @@ function showFirebaseIssue(error){
 function save(){localStorage.setItem(STORE,JSON.stringify(account));}
 function record(type,label,which=view){if(!firebaseEnabled)return;pending.push({type,label,view:which});void flush();}
 async function flush(){if(!sessionReady||sending||session.mode!=='cloud')return;sending=true;try{while(pending.length){const a=pending[0];await logStudent(session,a.type,a.label,a.view);pending.shift();}$('#syncStatus').textContent='Actividad conectada';}catch(e){console.warn('Acciones pendientes de conexión',e);$('#syncStatus').textContent='Sincronización pendiente';}finally{sending=false;}}
-function setView(v){if(!titles[v])return;closeMobileNav();view=v;$$('.workspace-section').forEach(x=>x.classList.toggle('active',x.dataset.section===v));$$('.side-link').forEach(x=>{x.classList.toggle('active',x.dataset.view===v);x.setAttribute('aria-current',x.dataset.view===v?'page':'false');});$('#viewTitle').textContent=titles[v][0];$('#viewSubtitle').textContent=titles[v][1];record('section','Abrió '+titles[v][0],v);window.scrollTo({top:0,behavior:'smooth'});}
+
+// Perfil del alumno: solo referencias inventadas, asociadas al UID de Firebase.
+const icProfileIds={first:'#icProfileFirst',last:'#icProfileLast',email:'#icProfileEmail',phone:'#icProfilePhone',method:'#icProfileMethod',reference:'#icProfileReference'};
+let icProfileLoaded=false;
+function icProfileStatus(message,isError=false){const el=$('#icProfileStatus');if(el){el.textContent=message;el.classList.toggle('ic-profile-error',isError);}}
+function icUpdateReferenceState(){const method=$(icProfileIds.method).value,field=$(icProfileIds.reference);field.disabled=!method;field.required=!!method;if(!method)field.value='';field.placeholder=method==='sber'?'DEMO-TARJETA-001':'DEMO-WALLET-001';}
+async function icLoadProfile(){
+ try{
+  const f=await getFirebase();const user=f?.auth?.currentUser;
+  if(!user||!sessionReady||session.uid!==user.uid)throw Error('Inicia sesión para consultar tu perfil.');
+  const snap=await f.Store.getDoc(f.Store.doc(f.db,'sessions',user.uid));
+  const p=snap.exists()?snap.data().studentProfile||{}:{};
+  const pieces=String(profile.name||alias).trim().split(/\s+/);
+  $(icProfileIds.first).value=p.firstName||pieces[0]||'';
+  $(icProfileIds.last).value=p.lastName||pieces.slice(1).join(' ')||'';
+  $(icProfileIds.email).value=user.email||profile.email||'';
+  $(icProfileIds.phone).value=p.phone||'';
+  $(icProfileIds.method).value=['sber','bep20','trc20'].includes(p.withdrawalMethod)?p.withdrawalMethod:'';
+  $(icProfileIds.reference).value=p.withdrawalReference||'';
+  icUpdateReferenceState();icProfileLoaded=true;icProfileStatus('Datos cargados desde Firebase.');
+ }catch(e){icProfileLoaded=false;icProfileStatus('No se pudo cargar el perfil: '+e.message,true);}
+}
+function icSetupProfile(){
+ const form=$('#icProfileForm');if(!form)return;
+ $(icProfileIds.method).addEventListener('change',icUpdateReferenceState);
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();const btn=$('#icProfileSave');if(!icProfileLoaded){icProfileStatus('Espera a que se cargue el perfil desde Firebase.',true);return;}
+  const firstName=$(icProfileIds.first).value.trim(),lastName=$(icProfileIds.last).value.trim(),phone=$(icProfileIds.phone).value.trim(),withdrawalMethod=$(icProfileIds.method).value,withdrawalReference=$(icProfileIds.reference).value.trim();
+  if(!firstName||!lastName){icProfileStatus('Introduce nombre y apellido.',true);return;}
+  if(withdrawalMethod&&!/^DEMO-[A-Za-z0-9_-]{3,70}$/i.test(withdrawalReference)){icProfileStatus('La referencia debe ser inventada, comenzar por DEMO- y contener al menos 3 caracteres adicionales.',true);return;}
+  if(!withdrawalMethod&&withdrawalReference){icProfileStatus('Selecciona primero un método.',true);return;}
+  btn.disabled=true;icProfileStatus('Guardando en Firebase…');
+  try{
+   const f=await getFirebase(),user=f?.auth?.currentUser;
+   if(!user||!sessionReady||session.uid!==user.uid)throw Error('Sesión no válida.');
+   await f.Store.updateDoc(f.Store.doc(f.db,'sessions',user.uid),{studentProfile:{firstName:firstName.slice(0,60),lastName:lastName.slice(0,60),phone:phone.slice(0,30),withdrawalMethod,withdrawalReference:withdrawalMethod?withdrawalReference:''},lastSeen:f.Store.serverTimestamp()});
+   icProfileStatus('Cambios guardados en Firebase.');record('profile','Actualizó sus datos de práctica','perfil');
+  }catch(error){icProfileStatus('No se pudo guardar: '+error.message+'. Comprueba los permisos de Firestore.',true);}
+  finally{btn.disabled=false;}
+ });
+}
+
+function setView(v){if(!titles[v])return;closeMobileNav();view=v;$$('.workspace-section').forEach(x=>x.classList.toggle('active',x.dataset.section===v));$$('.side-link').forEach(x=>{x.classList.toggle('active',x.dataset.view===v);x.setAttribute('aria-current',x.dataset.view===v?'page':'false');});$('#viewTitle').textContent=titles[v][0];$('#viewSubtitle').textContent=titles[v][1];if(v==='perfil')void icLoadProfile();record('section','Abrió '+titles[v][0],v);window.scrollTo({top:0,behavior:'smooth'});}
 function closeMobileNav(){
  document.body.classList.remove('ic-mobile-menu-open');
  const toggle=document.getElementById('icMobileNavToggle');
@@ -960,7 +1002,7 @@ async function loadSupportReplies(){
 for(const btn of document.querySelectorAll('.side-link'))if(btn.dataset.view==='soporte')btn.addEventListener('click',()=>void loadSupportReplies());
 setInterval(()=>{if(view==='soporte')void loadSupportReplies()},20000);
 const exit=document.createElement('button');exit.className='btn btn-soft';exit.textContent='Cerrar sesión';exit.style.marginTop='12px';exit.addEventListener('click',async()=>{record('exit','Cerró sesión');await flush();try{const f=await getFirebase();if(f?.auth.currentUser)await f.Auth.signOut(f.auth);}catch{}localStorage.removeItem('ic_v3_alias');localStorage.removeItem('ic_v3_profile');localStorage.removeItem('ic_v3_consent');localStorage.removeItem('ic_v3_auth_uid');location.replace('index.html?login=1');});$('.side-foot').append(exit);
-$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
+icSetupProfile();$('#userAlias').textContent=alias;$('#refCode').textContent='Conectando…';render();renderCreditRequests();renderWithdrawalRequests();renderPlanActivationRequests();showChosenPlanBanner();
 async function attachStudentListeners(){
  unsubscribe();unsubscribeRewards();unsubscribeCredits();unsubscribeWithdrawals();unsubscribePlanRequests();unsubscribeTeacherSettings();
  teacherSettingsReady=false;withdrawalHistoryReady=false;syncFailureMessage='';

@@ -395,3 +395,22 @@ html{scroll-behavior:smooth}
 .ic-crypto-strip img{aspect-ratio:716/51;}
 @media (max-width:650px){.ic-market-visual{gap:6px;margin-top:8px;margin-bottom:26px}.ic-market-caption{font-size:10px;line-height:1.5}.ic-market-caption-note{margin-left:0;width:100%;font-size:10px}.ic-market-banner{border-radius:12px}.ic-candles-banner img{min-height:130px;object-fit:cover}.ic-mining-banner img{min-height:92px;object-fit:cover}.ic-crypto-strip img{min-height:42px;object-fit:cover}}
 @media(prefers-reduced-motion:reduce){.ic-market-banner img{animation:none;}}
+
+/* V13.1 · Perfil de práctica del alumno */
+.ic-profile-wrap{max-width:900px;margin:0 auto;padding:clamp(18px,3vw,30px);border-color:#8655b4;background:linear-gradient(145deg,#231335,#100a1d)}
+.ic-profile-heading{display:flex;align-items:center;gap:16px;margin-bottom:25px}
+.ic-profile-heading h2{font-size:clamp(25px,3vw,33px);margin:0 0 5px}
+.ic-profile-avatar{display:grid;place-items:center;flex:0 0 64px;width:64px;height:64px;border-radius:50%;border:1px solid #c78dff;background:linear-gradient(135deg,#9c44db,#4c207e);font-size:37px;color:#fff}
+.ic-profile-panel{padding:clamp(15px,2.5vw,23px);margin:16px 0;border:1px solid #8052a3;border-radius:17px;background:linear-gradient(145deg,#30183f,#1b112b)}
+.ic-profile-panel h3{margin:0 0 19px;color:#f5e6ff;font-size:20px}
+.ic-profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.ic-profile-full{grid-column:1/-1}
+.ic-profile-panel label{display:block;font-size:14px;color:#eee0f6;font-weight:700}
+.ic-profile-panel .plain-input{display:block;margin-top:9px;min-height:48px;border-color:#9969bf;background:#1b1028}
+.ic-profile-panel input[readonly]{opacity:.75;cursor:default}
+.ic-profile-panel small{display:block;color:#c2aacf;font-size:11px;line-height:1.5;margin-top:7px;font-weight:400}
+#icProfileReferenceWrap{display:block;margin-top:18px}
+.ic-profile-save{width:100%;font-size:16px;min-height:52px}
+.ic-profile-status{min-height:20px;color:#c9b1e5;font-size:13px;line-height:1.5}
+.ic-profile-error{color:#ffb8c5}
+@media(max-width:600px){.ic-profile-fields{grid-template-columns:1fr}.ic-profile-full{grid-column:auto}.ic-profile-avatar{width:50px;height:50px;flex-basis:50px;font-size:28px}}
