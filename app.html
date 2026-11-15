@@ -14,7 +14,7 @@
 @media(max-width:1050px){.ic-history-grid{grid-template-columns:1fr}.ic-history-label{min-height:0}.ic-history-item{padding:18px}.ic-history-pane{padding:19px!important}}
 @media(max-width:460px){.ic-history-head p{font-size:15px}.ic-history-label{font-size:16px}.ic-history-number{font-size:30px}.ic-history-item p{font-size:15px}}
 
-/* V9.4 — verde únicamente para retiros aprobados; demás estados intactos. */
+/* V9.4 — verde únicamente para retiros de práctica aprobados; demás estados intactos. */
 .tag.ic-withdrawal-approved {
   display: inline-flex;
   align-items: center;
@@ -67,13 +67,14 @@
  .dash-main{min-width:0!important}
 }
 @media(prefers-reduced-motion:reduce){.dash-layout>.sidebar,.ic-mobile-nav-scrim{transition:none!important}}
-
+/* Referencia académica: no es una cartera real. */
 .ic-demo-copy-row{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;margin:9px 0 12px}
 .ic-demo-copy-value{flex:1;min-width:195px;padding:12px 13px;border:1px dashed #b787db;border-radius:10px;background:#150d20;color:#f2ddff;font-weight:750;overflow-wrap:anywhere;font-size:13px}
 .ic-demo-copy-btn{padding:10px 14px;min-height:42px;border:1px solid #c090ee;border-radius:10px;background:#67418e;color:#fff;font-weight:750}
 .ic-demo-reference-input{margin-top:7px!important}
 .ic-demo-copy-feedback{min-height:18px;font-size:13px;line-height:1.5;color:#dbbdf1;margin:5px 0 8px}
 
+/* V10.1 — Opciones de pago exclusivamente visuales, sin cuentas reales. */
 .ic-demo-step{font-size:12px;letter-spacing:.1em;font-weight:800;color:#efc78e;margin:5px 0 15px}
 .ic-fixed-plan{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:16px;border:1px solid #9b6abd;border-radius:14px;background:linear-gradient(120deg,#392052,#23132e);margin:12px 0 18px}
 .ic-fixed-plan span{font-size:14px;color:#dac8e5}.ic-fixed-plan strong{text-align:right;color:#fff;font-size:16px}
@@ -95,6 +96,7 @@
 .ic-conversion-display small{font-size:12px;line-height:1.5;color:#e0c8ef}
 @media(max-width:550px){.ic-method-grid{grid-template-columns:1fr}.ic-method-choice{min-height:0}.ic-fixed-plan{grid-template-columns:1fr;gap:5px}.ic-fixed-plan strong{text-align:left}}
 
+/* V10.6: emblema Sber estilizado, rotulado como DEMO, y formato legible. */
 .ic-sber-logo{display:inline-flex;align-items:center;justify-content:center;width:43px;height:43px;flex:0 0 43px;border-radius:50%;background:linear-gradient(145deg,#0a9c70,#05654c);border:1px solid #62d7a5;box-shadow:0 2px 12px #0004}
 .ic-sber-logo svg{width:30px;height:30px;display:block}
 .ic-sber-card{border:1px solid #47c697;border-radius:14px;padding:15px;background:linear-gradient(125deg,#075e4b,#089975 75%,#127d9b);color:#fff;margin:10px 0 4px;box-shadow:0 8px 20px #0003}
@@ -104,9 +106,12 @@
 .ic-sber-card-demo{display:inline-block;background:rgba(255,255,255,.2);border:1px solid #ffffff90;border-radius:7px;padding:3px 8px;font-size:11px;letter-spacing:.12em}
 .ic-wallet-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
 
+
+/* V11.1 — isotipo Tether para BEP20 y TRC20; nombre de red visible. */
 .ic-tether-logo{width:43px;height:43px;flex:0 0 43px;display:inline-flex;align-items:center;justify-content:center;background:#168769;border:1px solid #72d4b2;border-radius:50%;box-shadow:0 2px 12px #0004}
 .ic-tether-logo svg{display:block;width:29px;height:29px}
 
+/* V11.2 — logos independientes de moneda (Tether) y red (BNB / TRON). */
 .ic-crypto-symbols{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
 .ic-network-logo{width:35px;height:35px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .ic-network-logo svg{display:block;width:26px;height:26px}
@@ -114,6 +119,7 @@
 .ic-network-logo.tron{background:#D7092D;border:1px solid #ed5b6f}
 @media(max-width:550px){.ic-crypto-symbols{gap:7px}}
 
+/* V11.3 — tarjetas visuales coherentes para ambas redes USDT. */
 .ic-usdt-card{padding:17px 17px 15px;margin:10px 0 4px;border:1px solid #51c5aa;border-radius:15px;color:#fff;background:linear-gradient(125deg,#075348,#118671 65%,#175b80);box-shadow:0 8px 20px #0003;min-width:0}
 .ic-usdt-card-tron{border-color:#b468d5;background:linear-gradient(125deg,#40214f,#712b63 68%,#9a2845)}
 .ic-usdt-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0}
@@ -126,6 +132,7 @@
 .ic-method-detail .ic-demo-copy-feedback{font-size:13px;line-height:1.5;min-height:0;margin:6px 0}
 @media(max-width:550px){.ic-usdt-card{padding:13px}.ic-usdt-card-heading .ic-crypto-symbols{transform:scale(.78);transform-origin:top right;gap:2px}.ic-usdt-card-reference{font-size:15px}}
 
+/* V11.4 — Estética premium del selector de métodos; conserva la simulación. */
 #actionModal .dialog:has(.ic-payment-brand){width:min(94vw,790px);max-height:92dvh;overflow:auto;background:radial-gradient(circle at 12% 0%,#4b1a70 0%,transparent 38%),linear-gradient(150deg,#190c2b,#10091f 76%);border:1px solid #c06aff;border-radius:25px;box-shadow:0 0 42px #8f25f255,inset 0 0 24px #5e1e9120;padding:clamp(20px,3vw,34px)}
 #actionModal .dialog:has(.ic-payment-brand) .dialog-kicker{display:none}
 #actionModal .dialog:has(.ic-payment-brand) #modalTitle{text-align:center;font-size:clamp(23px,3.3vw,34px);margin:12px 0 25px;color:#fff;letter-spacing:-.03em}
@@ -153,6 +160,7 @@
 #actionModal .dialog:has(.ic-payment-brand) #modalContent{order:2}
 #actionModal .dialog:has(.ic-payment-brand) .dialog-actions{order:3}
 
+/* V12.0 — Boceto aprobado: tarjetas verticales premium de referencia. */
 #actionModal .dialog:has(.ic-payment-brand){width:min(96vw,860px)}
 #actionModal .dialog:has(.ic-payment-brand) .ic-method-grid{display:grid;grid-template-columns:1fr;gap:14px;margin:16px 0}
 #actionModal .dialog:has(.ic-payment-brand) .ic-method-choice.ic-showcase-choice{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;text-align:left;gap:22px;min-height:158px;padding:19px 21px;border:2px solid #bc48ff;border-radius:23px;background:linear-gradient(115deg,#2d123f,#1b0c2e 85%);box-shadow:0 0 15px #ae36f733;max-width:100%;overflow:hidden}
@@ -167,4 +175,149 @@
 .ic-showcase-head .ic-network-logo{width:30px;height:30px}
 .ic-showcase-main>small{color:#d7c4e7;font-size:13px!important}
 .ic-showcase-brand{color:#d08bff;font-size:15px;letter-spacing:.02em}
-.ic-showcase-reference{display:block;max-width:100%;border:1px solid #c185ee;border-radius:
+.ic-showcase-reference{display:block;max-width:100%;border:1px solid #c185ee;border-radius:11px;background:#261238;padding:10px 12px;font-size:clamp(11px,1.8vw,16px);font-weight:800;letter-spacing:.015em;color:#fff;overflow-wrap:anywhere;user-select:text}
+.ic-showcase-label{display:block;text-align:center;border:1px solid #c55bff;background:linear-gradient(90deg,#50216e,#682486,#50216e);border-radius:100px;padding:5px;color:white;font-size:14px;font-weight:800;margin-top:3px}
+.ic-showcase-warning{font-size:12px;color:#e4c5fa;line-height:1.5;margin:12px 0}
+.ic-class-code-label{display:block;flex-basis:100%;font-size:12px;color:#d8b5ed}
+#actionModal .dialog:has(.ic-payment-brand) .ic-method-choice[aria-pressed="true"]{box-shadow:0 0 0 2px #e4b4ff,0 0 24px #aa46ff88}
+@media(max-width:550px){#actionModal .dialog:has(.ic-payment-brand) .ic-method-choice.ic-showcase-choice{padding:12px;gap:10px;min-height:140px;border-radius:16px}.ic-showcase-symbol{width:48px;min-width:48px;min-height:90px}.ic-showcase-symbol .ic-network-logo,.ic-showcase-symbol .ic-sber-logo{width:40px;height:40px;flex-basis:40px}.ic-showcase-symbol .ic-network-logo svg,.ic-showcase-symbol .ic-sber-logo svg{width:26px;height:26px}.ic-showcase-head>strong{font-size:17px}.ic-showcase-head>span{transform:scale(.76);transform-origin:right center}.ic-showcase-main>small{font-size:11px!important}.ic-showcase-brand{font-size:12px}.ic-showcase-reference{font-size:10px;padding:9px 7px}.ic-showcase-label{font-size:12px}}
+
+
+/* V12.2 — Ventana de confirmación aprobada; solo estilos visuales. */
+#actionModal .dialog:has(.ic-confirmation){width:min(94vw,830px);max-height:92dvh;overflow:auto;background:radial-gradient(circle at 10% 0%,#4b126e88,transparent 46%),linear-gradient(145deg,#1b092e,#10071e 82%);border:2px solid #b85aff;border-radius:27px;box-shadow:0 0 35px #ae31f955;padding:clamp(18px,3vw,35px);color:#fff}
+#actionModal .dialog:has(.ic-confirmation) .dialog-kicker{display:none}
+#actionModal .dialog:has(.ic-confirmation) #modalTitle{display:none}
+#actionModal .dialog:has(.ic-confirmation) #modalContent{color:#fff}
+.ic-confirmation-brand{display:flex;align-items:center;justify-content:center;gap:13px;margin:0 0 22px;font:italic 800 clamp(23px,4vw,42px)/1.1 Georgia,serif;letter-spacing:.035em;color:#f7e8ff;text-shadow:0 0 15px #a54aff88;text-align:center}
+.ic-confirmation-bars{font:800 32px/1 sans-serif;color:#c47aff;letter-spacing:-.18em}
+.ic-confirmation-success{display:flex;align-items:center;justify-content:center;gap:17px;font-size:clamp(21px,3vw,31px);font-weight:800;margin:15px 0 25px;text-align:center;line-height:1.2}
+.ic-confirmation-check{width:55px;height:55px;flex:0 0 55px;border:3px solid #bb64ff;border-radius:50%;display:grid;place-items:center;font-size:36px;box-shadow:0 0 20px #b22cff77}
+.ic-confirmation-details{border:2px solid #a83ff4;border-radius:20px;padding:12px 22px;background:linear-gradient(125deg,#29103e,#170b2c);box-shadow:0 0 14px #ad30f933}
+.ic-confirmation-details>div{display:flex;align-items:center;gap:17px;padding:12px 4px;font-size:clamp(15px,2vw,20px);border-bottom:1px solid #ffffff20}
+.ic-confirmation-details>div:last-child{border:0}
+.ic-confirmation-details>div>span:first-child{font-size:24px;color:#d3a3ff;min-width:28px;text-align:center}
+.ic-confirmation-message{font-size:clamp(15px,1.9vw,19px);line-height:1.55;margin:24px 10px 18px}
+.ic-confirmation-conversion{border:1px solid #b85aff;border-radius:100px;background:linear-gradient(100deg,#461463,#321047);text-align:center;padding:13px 18px;font-size:clamp(14px,1.8vw,18px);box-shadow:0 0 13px #b638ff66}
+.ic-confirmation-foot{text-align:center;color:#c5a9d3;font-size:12px;font-style:italic;margin:25px 0 0}
+#actionModal .dialog:has(.ic-confirmation) .dialog-actions{margin-top:0;justify-content:flex-end}
+#actionModal .dialog:has(.ic-confirmation) #closeModal{background:linear-gradient(110deg,#b73dff,#6e19b9);border:1px solid #ca7aff;color:white;min-width:150px;border-radius:14px;font-size:17px;font-weight:700;padding:12px 20px;box-shadow:0 0 15px #a82df855}
+@media(max-width:550px){.ic-confirmation-brand{gap:8px}.ic-confirmation-bars{font-size:22px}.ic-confirmation-success{gap:9px}.ic-confirmation-check{width:40px;height:40px;flex-basis:40px;font-size:27px}.ic-confirmation-details{padding:7px 10px}.ic-confirmation-details>div{gap:9px}.ic-confirmation-message{margin:18px 4px}.ic-confirmation-conversion{border-radius:15px}.ic-confirmation-foot{margin:18px 0 5px}}
+
+/* V12.3: pie discreto debajo de los botones en ambos cuadros. */
+#actionModal .dialog:has(.ic-confirmation) #modalTitle,
+#actionModal .dialog:has(.ic-confirmation) .dialog-kicker{display:none!important}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-foot,
+#actionModal .dialog:has(.ic-payment-brand) .ic-payment-disclosure{display:none!important}
+#actionModal .dialog:has(.ic-confirmation)::after,
+#actionModal .dialog:has(.ic-payment-brand)::after{content:'Operación simulada';display:block;text-align:center;color:#baa9c8;font-size:10px;font-style:italic;letter-spacing:.025em;margin-top:9px;opacity:.85}
+#actionModal .dialog:has(.ic-confirmation){display:flex;flex-direction:column}
+#actionModal .dialog:has(.ic-confirmation) .dialog-actions{order:3}
+#actionModal .dialog:has(.ic-confirmation)::after{order:4}
+#actionModal .dialog:has(.ic-payment-brand)::after{order:4}
+
+
+/* V12.7: un único logotipo vectorial integrado, sin imagen externa ni fondo blanco. */
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-brand{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;margin:0 auto 20px;padding:0;background:transparent;border:0;box-shadow:none;width:100%;max-width:460px;text-shadow:0 0 18px #ae57ff66}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-mark{width:95px;height:59px;display:block;filter:drop-shadow(0 0 9px #a448ff88)}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-wordmark{font:italic 800 clamp(25px,4.2vw,42px)/1.1 Georgia,serif;letter-spacing:.035em;color:#f5eaff;white-space:nowrap}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-swoosh{display:block;width:min(86%,340px);height:23px;margin-top:1px;filter:drop-shadow(0 0 6px #b854ff99)}
+@media(max-width:550px){#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-mark{width:75px;height:48px}#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-wordmark{font-size:clamp(22px,6vw,31px)}#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-swoosh{width:85%;height:18px}}
+</style></head><body class="dash-body"><div class="dash-layout"><div class="ic-mobile-nav-scrim" id="icMobileNavScrim" aria-hidden="true"></div><aside class="sidebar" id="icMobileSidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><button type="button" id="icMobileNavToggle" class="ic-mobile-nav-toggle" aria-expanded="false" aria-controls="icMobileSidebar" aria-label="Abrir menú de navegación">☰ Menú</button><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
+<div id="selectedPlanBanner" class="ic-selected-plan-banner hidden" role="status" aria-live="polite">
+  <div><small>PLAN ELEGIDO · SIMULACIÓN EDUCATIVA / USDT-DEMO</small><strong id="selectedPlanTitle"></strong><p id="selectedPlanMessage"></p></div>
+  <button id="selectedPlanAction" class="btn btn-primary" type="button">Continuar con mi plan</button>
+</div>
+<section class="workspace-section active" data-section="resumen">
+ <div class="stat-grid">
+  <div class="stat"><small>Saldo total de mi cuenta</small><strong id="totalVal">$0.00</strong><div class="delta" id="totalDelta">Sin movimientos registrados</div></div>
+  <div class="stat"><small>Capital asignado</small><strong id="investedVal">$0.00</strong><div class="delta" id="activeCountVal">0 posiciones activas</div></div>
+  <div class="stat"><small>Ganancias históricas · DEMO</small><strong id="gainVal">$0.00</strong><div class="delta">Rendimientos y bonos de práctica acumulados, sin descontar retiros</div></div>
+  <div class="stat"><small>Ganancias disponibles para retiro · DEMO</small><strong id="availableVal">$0.00</strong><div class="delta" id="availabilityStatus">Ganancias simuladas + bonos por referidos; excluye capital</div></div>
+ </div>
+ <section class="pane ic-history-pane" aria-labelledby="ic-history-title" style="margin-bottom:18px">
+   <div class="ic-history-head">
+     <span class="ic-history-eyebrow">RESUMEN DE PRÁCTICA · USDT-DEMO</span>
+     <h2 id="ic-history-title">Historial de ganancias</h2>
+     <p>Consulta cuánto se ha generado, cuánto se ha retirado con aprobación y cuánto queda disponible en esta cuenta de simulación.</p>
+   </div>
+   <div class="ic-history-grid">
+     <div class="ic-history-item">
+       <span class="ic-history-label">Total de ganancias generadas</span>
+       <strong class="ic-history-number" id="historyGeneratedVal">$0.00</strong>
+       <p>Incluye los rendimientos simulados, las bonificaciones por referidos y los ajustes de prueba. No disminuye al retirar.</p>
+     </div>
+     <div class="ic-history-item">
+       <span class="ic-history-label">Total de retiros aprobados</span>
+       <strong class="ic-history-number" id="historyWithdrawnVal">Verificando…</strong>
+       <p>Suma los retiros de práctica aprobados por el profesor y descontados del disponible.</p>
+     </div>
+     <div class="ic-history-item ic-history-available">
+       <span class="ic-history-label">Ganancias disponibles para retiro</span>
+       <strong class="ic-history-number" id="historyAvailableVal">Verificando…</strong>
+       <p>Importe que queda para solicitar. El retiro mínimo es 50 USDT de práctica y requiere aprobación.</p>
+     </div>
+   </div>
+   <p class="ic-history-footnote">Solo simulación educativa: ningún saldo o retiro representa fondos reales.</p>
+ </section>
+ <div class="pane" style="margin-bottom:16px"><h2>Desglose de ganancias de práctica</h2><p class="muted">Se calculan desde la activación del plan y las referencias registradas. No representan fondos ni pagos reales.</p><div class="admin-event-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px"><div class="stat"><small>Rendimiento pendiente de retirar</small><strong id="earningYield">$0.00</strong></div><div class="stat"><small>Bonos por referidos disponibles</small><strong id="earningReferrals">$0.00</strong></div><div class="stat"><small>Días para el ciclo de 30 días</small><strong id="earningDays">30</strong></div></div><p class="tiny" id="teacherTestStatus" hidden style="color:#dfbaff;font-weight:700"></p><p class="tiny" id="earningDisclaimer">Puedes solicitar un retiro de práctica anticipado siempre que tengas al menos 50 USDT de práctica de ganancias disponibles; la decisión será del profesor.</p><p class="tiny" id="withdrawalAuditStatus" role="status" aria-live="polite">Verificando aprobaciones y descuentos en Firebase…</p></div>
+ <div id="planActivationBox" class="pane credit-request-panel" aria-live="polite"><h2>Activaciones de planes</h2><p class="muted">Cargando solicitudes de práctica…</p></div>
+ <details class="pane" style="margin-bottom:16px"><summary>Historial de créditos anteriores (sistema antiguo)</summary><div id="creditRequestBox" class="credit-request-panel" aria-live="polite"><h2>Créditos virtuales anteriores</h2><p class="muted">Cargando registros antiguos…</p></div></details>
+ <div id="withdrawRequestBox" class="pane credit-request-panel" aria-live="polite"><h2>Solicitudes de retiro de práctica</h2><p class="muted">Cargando solicitudes…</p></div>
+ <div id="scenarioNotice" class="notice hidden" style="margin-bottom:17px" aria-live="polite"></div>
+ <div id="onboardingNotice" class="pane welcome-invest">
+  <div><span class="eyebrow">MI CUENTA</span><h2>Elige tu plan de práctica</h2><p class="muted">Elige un plan sin enviar solicitudes. Cuando estés listo, pulsa «Invertir» y confirma la cantidad en la cartera USDT de práctica.</p></div>
+  <button class="btn btn-primary" id="startDeposit">Invertir ↗</button>
+ </div>
+ <div class="content-grid"><div class="pane"><div class="pane-head"><h2>Evolución de mi cartera</h2><div class="chart-range"><button class="active" data-period="6M">6M</button><button data-period="12M">12M</button></div></div><p class="muted" id="chartCaption">Sin operaciones: la gráfica comenzará cuando abras una posición.</p><div class="chart-box"><svg viewBox="0 0 700 230" preserveAspectRatio="none" role="img" aria-label="Gráfico de evolución de cartera del alumno"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#9a62df" stop-opacity=".23"/><stop offset="1" stop-color="#9a62df" stop-opacity="0"/></linearGradient></defs><g stroke="#44314f" stroke-width="1"><line x1="0" y1="30" x2="700" y2="30"/><line x1="0" y1="90" x2="700" y2="90"/><line x1="0" y1="150" x2="700" y2="150"/><line x1="0" y1="210" x2="700" y2="210"/></g><path id="chartArea" d="M0 210 L700 210 L700 230 L0 230 Z" fill="url(#chartFill)"/><polyline id="chartLine" fill="none" stroke="#e3bd76" stroke-width="3" points="0,210 700,210"/></svg></div></div>
+ <div class="pane"><h2>Distribución de mis activos</h2><p class="muted">Composición de las posiciones que hayas abierto</p><div class="assets" id="assetRows"><p class="muted empty-state">No tienes activos asignados.</p></div><div class="action-panel"><button id="actionDeposit" class="btn btn-primary">Invertir</button><button id="actionWithdraw" class="btn btn-soft">Retiro</button><button class="btn btn-soft" data-goto="planes">Elegir un plan</button></div><p id="withdrawalCountdown" class="monthly-countdown" aria-live="polite">La primera aprobación virtual inicia el calendario de 30 días.</p></div></div>
+ <div class="pane" style="margin-top:17px"><div class="pane-head"><h2>Últimos movimientos</h2><button class="btn btn-soft" data-goto="movimientos">Ver todos ↗</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Concepto</th><th>Fecha</th><th>Importe</th><th>Estado</th></tr></thead><tbody id="recentRows"><tr><td colspan="4" class="muted">Todavía no hay movimientos.</td></tr></tbody></table></div></div>
+</section>
+
+<section class="workspace-section" data-section="planes"><h2 class="workspace-title">Planes disponibles</h2><p class="muted">Escenarios educativos con capital y tasas de práctica. Compara condiciones sin transferir dinero real.</p><div class="plans"><article class="plan-card"><span class="tier">ESSENTIAL</span><div class="rate">2,0 % <span>semanal declarado</span></div><p class="muted">Horizonte: 8 semanas</p><ul><li>Asignación inicial: $ 100</li><li>Revisión semanal</li><li>Liquidación al vencimiento</li></ul><button class="btn btn-soft" data-plan="Essential">Elegir plan</button></article><article class="plan-card"><span class="tier">ADVANCED</span><div class="rate">3,5 % <span>semanal declarado</span></div><p class="muted">Horizonte: 12 semanas</p><ul><li>Asignación inicial: $ 300</li><li>Seguimiento prioritario</li><li>Liquidación al vencimiento</li></ul><button class="btn btn-soft" data-plan="Advanced">Elegir plan</button></article><article class="plan-card"><span class="tier">PRIME</span><div class="rate">5,0 % <span>semanal declarado</span></div><p class="muted">Horizonte: 16 semanas</p><ul><li>Asignación inicial: $ 500</li><li>Informe de resultados</li><li>Liquidación al vencimiento</li></ul><button class="btn btn-soft" data-plan="Prime">Elegir plan</button></article><article class="plan-card featured"><span class="tier">MAGNATE SUPREMO</span><div class="rate">7,0 % <span>semanal declarado</span></div><p class="muted">Horizonte: 20 semanas</p><ul><li>Asignación inicial: $ 1.000</li><li>Estatus de élite</li><li>Liquidación al vencimiento</li></ul><button class="btn btn-primary" data-plan="Magnate Supremo">Elegir plan</button></article><article class="plan-card ic-added-plan"><span class="tier">PLATINUM · NUEVO</span><div class="rate">8,5 % <span>semanal hipotético</span></div><p class="muted">Horizonte: 24 semanas</p><ul><li>Capital virtual mínimo: 1.500 USDT</li><li>Simulación de exposición alta</li><li>Saldo no transferible a dinero real</li></ul><button class="btn btn-soft" data-plan="Platinum">Elegir plan</button></article><article class="plan-card ic-added-plan"><span class="tier">SIGNATURE · NUEVO</span><div class="rate">10,0 % <span>semanal hipotético</span></div><p class="muted">Horizonte: 28 semanas</p><ul><li>Capital virtual mínimo: 3.000 USDT</li><li>Simulación de exposición extrema</li><li>Saldo no transferible a dinero real</li></ul><button class="btn btn-soft" data-plan="Signature">Elegir plan</button></article></div><div class="pane calc-cta"><div><h2>Proyecta la evolución de tu capital</h2><p class="muted">Compara escenarios por plan, importe y días antes de realizar una asignación.</p></div><button class="btn btn-primary" data-goto="calculadora">Abrir calculadora ↗</button></div><div class="pane" style="margin-top:20px"><h2>Detalles de gestión</h2><p class="muted">Las tasas y resultados son datos de práctica del ejercicio académico, no ofertas ni expectativas de rendimiento real. Los porcentajes más elevados permiten estudiar el riesgo de propuestas insostenibles.</p></div></section>
+
+<section class="workspace-section" data-section="calculadora">
+ <div class="calculator-intro"><span class="eyebrow">PROYECCIONES</span><h2 class="workspace-title">Calculadora de rendimientos</h2><p class="muted">Selecciona el plan, el capital y los días para explorar su posible evolución.</p></div>
+ <div class="calculator-layout">
+  <div class="pane calculator-inputs">
+   <h2>Configurar proyección</h2>
+   <label class="field-label" for="calcPlan">Plan</label>
+   <select id="calcPlan" class="plain-input"><option value="Essential">Essential · 2,0 % semanal</option><option value="Advanced">Advanced · 3,5 % semanal</option><option value="Prime">Prime · 5,0 % semanal</option><option value="Magnate Supremo">Magnate Supremo · 7,0 % semanal</option><option value="Platinum">Platinum · 8,5 % semanal (de práctica)</option><option value="Signature">Signature · 10,0 % semanal (de práctica)</option></select>
+   <label class="field-label" for="calcCapital">Capital inicial (USDT)</label>
+   <input class="plain-input" type="number" id="calcCapital" min="0" max="1000000" step="0.01" inputmode="decimal" value="100">
+   <label class="field-label" for="calcDays">Duración (días)</label>
+   <input class="plain-input" type="number" id="calcDays" min="0" max="365" step="1" inputmode="numeric" value="30">
+   <div class="calc-quickdays" aria-label="Plazos de ejemplo"><button data-calc-days="7">7 días</button><button data-calc-days="30" class="active">30 días</button><button data-calc-days="90">90 días</button><button data-calc-days="180">180 días</button></div>
+   <p id="calcValidation" class="form-error" role="status" aria-live="polite"></p>
+  </div>
+  <div class="pane calculator-results" aria-live="polite">
+   <div class="calculator-result-top"><span>PROYECCIÓN DEL CAPITAL</span><span class="calc-label">USDT</span></div>
+   <span class="calc-big" id="calcTotal">$108.57</span>
+   <div class="calc-detail-grid"><div><small>Capital inicial</small><strong id="calcPrincipal">$100.00</strong></div><div><small>Rendimiento estimado</small><strong id="calcProfit">+$8.57</strong></div><div><small>Días calculados</small><strong id="calcEffectiveDays">30 días</strong></div><div><small>Tasa semanal usada</small><strong id="calcRate">2,0 %</strong></div></div>
+   <div class="calc-figure"><svg viewBox="0 0 560 150" preserveAspectRatio="none" role="img" aria-label="Proyección ilustrativa de rendimiento"><defs><linearGradient id="calcGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ad7ae4" stop-opacity=".32"/><stop offset="1" stop-color="#ad7ae4" stop-opacity="0"/></linearGradient></defs><path id="calcArea" fill="url(#calcGradient)" d="M0 130 L560 130 L560 150 L0 150Z"/><polyline id="calcLine" fill="none" stroke="#e8cb8e" stroke-width="3" points="0,130 560,130"/></svg></div>
+   <p class="calc-disclaimer">Cálculo hipotético de interés simple, sin reinversión. Las tasas son parte del escenario académico; no son ganancias reales ni garantizadas. El rendimiento mostrado se detiene al vencer cada plan.</p>
+  </div>
+ </div>
+</section>
+<section class="workspace-section" data-section="cartera"><h2 class="workspace-title">Mis posiciones</h2><div class="stat-grid"><div class="stat"><small>Valor total de mis posiciones</small><strong id="portfolioTotalVal">$0.00</strong></div><div class="stat"><small>Posiciones abiertas</small><strong id="portfolioCountVal">0</strong></div><div class="stat"><small>Capital asignado</small><strong id="portfolioInvestedVal">$0.00</strong></div><div class="stat"><small>Rendimiento mostrado</small><strong id="portfolioGainVal">$0.00</strong></div></div><div class="pane"><div class="pane-head"><h2>Detalle de posiciones</h2><button class="btn btn-soft" data-goto="planes">Explorar planes</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Plan</th><th>Capital</th><th>Rendimiento mostrado</th><th>Días</th><th>Inicio</th><th>Situación</th></tr></thead><tbody id="positionRows"><tr><td colspan="6" class="muted">Aún no tienes posiciones.</td></tr></tbody></table></div></div></section>
+<section class="workspace-section" data-section="movimientos"><h2 class="workspace-title">Movimientos y solicitudes</h2><div class="pane"><div class="pane-head"><h2>Historial de cuenta</h2><button class="btn btn-primary" id="withdrawInMovements">Retiro</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Movimiento</th><th>Referencia</th><th>Importe</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="fullRows"><tr><td colspan="5" class="muted">Todavía no hay movimientos.</td></tr></tbody></table></div></div></section>
+<section class="workspace-section" data-section="referidos"><h2 class="workspace-title">Programa de asociados</h2>
+ <div class="content-grid"><div class="pane"><h2>Mi red de asociados</h2><p class="muted">Identificador de tu cuenta para el programa de asociados.</p><div id="refCode" class="referral-code">IC-00000</div><div class="stat-grid referral-stat-grid"><div class="stat"><small>Operaciones registradas</small><strong id="refCount">0</strong></div><div class="stat"><small>Bonificaciones acumuladas</small><strong id="refCommission">$0.00</strong></div></div><div class="action-panel"><button id="copyRef" class="btn btn-soft">Copiar código</button><button id="newReferralActivity" class="btn btn-primary">Vincular código</button></div></div>
+ <p id="refLinkStatus" class="tiny" role="status">Conectando el programa de aula…</p><p class="tiny">Comparte el código únicamente con otros participantes de tu clase. Las comisiones son créditos virtuales para este ejercicio y no representan dinero real.</p><div class="pane"><h2>Comisiones por nivel</h2><p class="muted">Las bonificaciones de la red se calculan sobre las aportaciones virtuales registradas por otros alumnos vinculados.</p><div class="referral-tiers"><div><span>Nivel 1</span><strong>15 %</strong><small>Asociados directos</small></div><div><span>Nivel 2</span><strong>5 %</strong><small>Segunda generación</small></div><div><span>Nivel 3</span><strong>3 %</strong><small>Tercera generación</small></div></div><p class="tiny">Los códigos funcionan solo entre cuentas de alumnos dentro de la plataforma educativa. No existen pagos ni transferencias de comisiones reales.</p></div></div>
+ <div class="pane" style="margin-top:17px"><h2>Últimas operaciones de la red</h2><div class="table-scroll"><table class="data-table"><thead><tr><th>Asociado</th><th>Nivel</th><th>Aportación</th><th>Bonificación</th></tr></thead><tbody id="refRows"><tr><td colspan="4">Todavía no hay operaciones de la red.</td></tr></tbody></table></div></div>
+ </section>
+<section class="workspace-section" data-section="documentos"><h2 class="workspace-title">Centro documental</h2><div class="content-grid"><div class="pane"><h2>Información corporativa</h2><ul class="activity-list"><li>Resumen de servicios <button class="btn btn-soft" data-document="Resumen de servicios">Consultar</button></li><li>Metodología de resultados <button class="btn btn-soft" data-document="Metodología de resultados">Consultar</button></li><li>Estado de registros y autorizaciones <button class="btn btn-soft" data-document="Estado de registros y autorizaciones">Consultar</button></li><li>Condiciones de salida <button class="btn btn-soft" data-document="Condiciones de salida">Consultar</button></li></ul></div><div class="pane"><h2>Información disponible</h2><p class="muted">Los datos de desempeño provienen de reportes internos. Las cifras presentadas están sujetas a verificación documental y condiciones operativas.</p><p class="muted">Los materiales pueden contener información incompleta y están sujetos a revisión.</p></div></div></section>
+<section class="workspace-section" data-section="soporte"><h2 class="workspace-title">Centro de atención</h2><div class="content-grid"><div class="pane"><h2>Crear consulta</h2><label class="field-label" for="supportSubject">Motivo</label><select id="supportSubject" class="plain-input"><option>Estado de retiro</option><option>Condiciones de un plan</option><option>Información de la empresa</option><option>Programa de asociados</option></select><label class="field-label" for="supportText">Detalle de consulta</label><input id="supportText" class="plain-input" maxlength="130" placeholder="Escribe una consulta breve, sin información personal"><div class="action-panel"><button id="sendSupport" class="btn btn-primary">Enviar consulta</button></div></div><div class="pane"><h2>Estado del servicio</h2><p class="muted" id="supportStatus">Los canales de atención están operativos.</p><p class="muted">Horario de respuesta indicado: dentro de los siguientes tres días hábiles.</p></div></div></section>
+<footer class="site-footer" style="margin-top:45px"><span>© Invest Capital · Área personal</span><span>Entorno académico · No permite fondos reales</span></footer></main></div>
+<div id="actionModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-kicker">INVEST CAPITAL</div><h2 id="modalTitle">Detalle de operación</h2><div id="modalContent" class="muted"></div><div class="dialog-actions"><button id="closeModal" class="btn btn-soft">Cerrar</button><button id="confirmModal" class="btn btn-primary hidden">Confirmar</button></div></div></div>
+<script type="module" src="app.js?v=128-sesion"></script></body></html>
+
+<style>/* V12.4: compactación del detalle, sin alterar su lógica */
+.ic-demo-copy-feedback:empty{display:none!important}
+.ic-showcase-warning{font-size:12px!important;opacity:.75;margin:10px 0!important}
+</style>
+
+<style>
+/* V12.5: único aviso discreto en el pie del modal */
+#actionModal .dialog:has(.ic-payment-brand) .ic-payment-disclosure{display:block!important;text-align:right!important;font-size:11px!important;opacity:.8!important;margin:8px 12px 0!important;}
+#actionModal .dialog:has(.ic-payment-brand) .ic-showcase-warning{display:none!important;}
+</style>
