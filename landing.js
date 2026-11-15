@@ -138,6 +138,10 @@ reg.addEventListener('submit',async e=>{
    user=created.user;
   }
   await f.Auth.updateProfile(user,{displayName:actualName});
+  // Solicita verificación al correo del nuevo alumno antes de sincronizar con Brevo.
+  if (!user.emailVerified) {
+   await f.Auth.sendEmailVerification(user);
+  }
   setStudentLocals(actualName,email,actualReferral,user.uid);
   // Solo el nombre/correo del registro: jamás se transmiten contraseñas.
   await notifyRegistration(actualName,email,actualReferral);
