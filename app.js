@@ -519,22 +519,27 @@ function openDemoPaymentMethods(plan,amount){
  };
  const cards=Object.entries(methods).map(([key,m])=>{
   const isRub=key==='rub';
-  const visibleReference=isRub?m.reference:displayAddresses[key];
   return `<button type="button" class="ic-method-choice ic-showcase-choice" data-ic-method="${key}" aria-pressed="false">
-   <div class="ic-showcase-symbol">${methodMarks(key)}</div>
-   <div class="ic-showcase-main"><div class="ic-showcase-head"><strong>${esc(isRub?'SBERBANK':m.title)}</strong><span>${methodMarks(key)}</span></div>
-   <small>${esc(isRub?'Tarjeta bancaria':key==='bep20'?'BNB Smart Chain (BEP20)':'Tron Network (TRC20)')}</small>
-   <b class="ic-showcase-brand">INVEST CAPITAL</b>
-   <span class="ic-showcase-reference">${esc(visibleReference)}</span>
-   <span class="ic-showcase-label">Referencia visual</span></div>
+   <span class="ic-choice-logo">${methodMarks(key)}</span>
+   <span class="ic-choice-info"><strong>${esc(isRub?'SBERBANK':m.title)}</strong><small>${esc(isRub?'Tarjeta bancaria':m.description)}</small></span>
+   <span class="ic-choice-chevron" aria-hidden="true">›</span>
   </button>`;
  }).join('');
  modal('Métodos de referencia',`
   <div class="ic-payment-brand" aria-hidden="true"><span class="ic-payment-brand-bars">▂ ▅ █</span><strong>INVEST CAPITAL</strong></div>
-  <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT</strong></p>
-  <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe.</div>
-  <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
-  <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta.</p></div>
+  <div class="ic-invest-v2">
+   <p class="ic-demo-fixed-sum">Importe del plan: <strong>${money(amount)} USDT</strong></p>
+   <div class="ic-invest-picker" id="icInvestPicker">
+    <div class="ic-invest-section-title"><span class="ic-invest-step">01 / 02</span><div><h3>Selecciona un método</h3><p>Elige una de las tres opciones disponibles.</p></div></div>
+    <div class="ic-method-grid" role="group" aria-label="Métodos de pago de simulación">${cards}</div>
+   </div>
+   <div class="ic-invest-selected" id="icInvestSelected" hidden>
+    <div class="ic-invest-selected-top"><span class="ic-invest-step">02 / 02</span><button type="button" id="icChangeMethod" class="ic-invest-change">← Cambiar método</button></div>
+    <div class="ic-invest-selected-head" id="icInvestSelectedHead"></div>
+    <div class="ic-conversion-display" id="icMethodAmount" role="status" aria-live="polite">Selecciona una opción para ver su importe.</div>
+    <div id="icMethodDetail" class="ic-method-detail" aria-live="polite"><p>Selecciona un método para ver su referencia o tarjeta.</p></div>
+   </div>
+  </div>
   <p class="ic-payment-disclosure">Operación simulada</p>
   <p id="modalError" class="form-error" hidden></p>
  `,async()=>{
@@ -565,37 +570,63 @@ function openDemoPaymentMethods(plan,amount){
  modalContent.dataset.icCopiedMethod='';
  confirmBtn.disabled=true;
  const details=modalContent.querySelector('#icMethodDetail');
- modalContent.querySelectorAll('.ic-method-choice').forEach(button=>button.addEventListener('click',()=>{
+ const picker=modalContent.querySelector('#icInvestPicker');
+ const selected=modalContent.querySelector('#icInvestSelected');
+ const selectedHead=modalContent.querySelector('#icInvestSelectedHead');
+ const methodButtons=[...modalContent.querySelectorAll('.ic-method-choice')];
+ const amountDisplay=modalContent.querySelector('#icMethodAmount');
+ const changeMethod=modalContent.querySelector('#icChangeMethod');
+ changeMethod?.addEventListener('click',()=>{
   modalContent.dataset.icCopiedMethod='';
-  confirmBtn.disabled=button.dataset.icMethod==='rub';
-  modalContent.querySelectorAll('.ic-method-choice').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
-  const method=methods[button.dataset.icMethod];
+  confirmBtn.disabled=true;
+  methodButtons.forEach(other=>other.setAttribute('aria-pressed','false'));
+  if(picker)picker.hidden=false;
+  if(selected)selected.hidden=true;
+  const errorNode=modalContent.querySelector('#modalError');
+  if(errorNode){errorNode.textContent='';errorNode.hidden=true;}
+  methodButtons[0]?.focus();
+ });
+ methodButtons.forEach(button=>button.addEventListener('click',()=>{
+  const key=button.dataset.icMethod;
+  const method=methods[key];
   if(!method||!details)return;
-  const amountDisplay=modalContent.querySelector('#icMethodAmount');
+  modalContent.dataset.icCopiedMethod='';
+  // La condición de aprobación permanece intacta: Sberbank requiere copiar;
+  // en BEP20/TRC20 copiar es opcional, tal como en el formulario anterior.
+  confirmBtn.disabled=key==='rub';
+  methodButtons.forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
+  if(picker)picker.hidden=true;
+  if(selected)selected.hidden=false;
+  if(selectedHead)selectedHead.innerHTML=`<span class="ic-invest-selected-mark">${methodMarks(key)}</span><div><strong>${esc(method.title)}</strong><small>${esc(method.description)}</small></div>`;
   if(amountDisplay){
-   amountDisplay.innerHTML=button.dataset.icMethod==='rub'
+   amountDisplay.innerHTML=key==='rub'
     ?`<small>Equivalente en rublos de práctica</small><strong>${esc(formatRub(rubAmount))}</strong><small>${money(amount)} USDT × 95 ₽/USDT · tasa fija del ejercicio</small>`
     :`<small>Importe para ${esc(method.title)}</small><strong>${money(amount)} USDT</strong><small>Sin conversión de divisa</small>`;
   }
-  const key=button.dataset.icMethod;
   const isRub=key==='rub';
+  const visibleReference=isRub?method.reference:displayAddresses[key];
+  const copyButton='<button type="button" class="ic-invest-copy" id="icCopyMethodReference" aria-label="Copiar referencia seleccionada">Copiar</button>';
   const paymentCard=isRub
-    ?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Tarjeta Sberbank<br><small>TITULAR: INVEST CAPITAL</small></span>${sberMark}</div><div class="ic-sber-card-number">${esc(method.reference)}</div><span class="ic-sber-card-demo">REFERENCIA VISUAL</span></div>`
-    :`<div class="ic-usdt-card ${key==='trc20'?'ic-usdt-card-tron':'ic-usdt-card-bnb'}"><div class="ic-usdt-card-heading"><div><strong>USDT · ${key==='bep20'?'BEP20':'TRC20'}</strong><small>${key==='bep20'?'BNB SMART CHAIN':'RED TRON'} · INVEST CAPITAL</small></div>${methodMarks(key)}</div><div class="ic-usdt-card-reference">${esc(displayAddresses[key])}</div><span class="ic-usdt-card-caption">Referencia visual</span></div>`;
-  // Solo Sberbank conserva el bloque de código interno y el botón Copiar.
-  // Para BEP20 y TRC20 se presenta únicamente la tarjeta de referencia visual.
-  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}${isRub?`<div class="ic-demo-copy-row"><span class="ic-class-code-label">Código interno</span><code class="ic-demo-copy-value" id="icMethodReference">${esc(method.reference)}</code><button type="button" class="ic-demo-copy-btn" id="icCopyMethodReference">Copiar</button></div><p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status"></p><small class="ic-card-footnote">Número proporcionado para referencia visual.</small>`:''}`;
+   ?`<div class="ic-sber-card"><div class="ic-sber-card-heading"><span>Tarjeta Sberbank<br><small>TITULAR: INVEST CAPITAL</small></span>${sberMark}</div><div class="ic-sber-card-number ic-invest-reference"><span id="icMethodReference">${esc(visibleReference)}</span>${copyButton}</div><span class="ic-sber-card-demo">REFERENCIA VISUAL</span></div>`
+   :`<div class="ic-usdt-card ${key==='trc20'?'ic-usdt-card-tron':'ic-usdt-card-bnb'}"><div class="ic-usdt-card-heading"><div><strong>USDT · ${key==='bep20'?'BEP20':'TRC20'}</strong><small>${key==='bep20'?'BNB SMART CHAIN':'RED TRON'} · INVEST CAPITAL</small></div>${methodMarks(key)}</div><div class="ic-usdt-card-reference ic-invest-reference"><span id="icMethodReference">${esc(visibleReference)}</span>${copyButton}</div><span class="ic-usdt-card-caption">Referencia visual</span></div>`;
+  details.innerHTML=`<div class="ic-wallet-head"><span>${esc(method.title)}</span><b>INVEST CAPITAL</b></div>${paymentCard}<p class="ic-demo-copy-feedback" id="icMethodCopyFeedback" role="status" aria-live="polite"></p>${isRub?'<small class="ic-card-footnote">Número proporcionado para referencia visual.</small>':''}`;
   details.querySelector('#icCopyMethodReference')?.addEventListener('click',async()=>{
    const feedback=details.querySelector('#icMethodCopyFeedback');
-   try{
-    await navigator.clipboard.writeText(method.reference);
-    if(!modalContent.contains(details))return;
-    if(modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod!==button.dataset.icMethod)return;
-    modalContent.dataset.icCopiedMethod=button.dataset.icMethod;
+   let copied=false;
+   try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(visibleReference);copied=true;}}catch{}
+   if(!copied){
+    // Alternativa para navegadores que bloquean Clipboard API.
+    const tmp=document.createElement('textarea');tmp.value=visibleReference;tmp.setAttribute('readonly','');tmp.style.cssText='position:fixed;left:-9999px;top:0';
+    document.body.append(tmp);tmp.select();try{copied=document.execCommand('copy');}catch{}tmp.remove();
+   }
+   if(modalContent.querySelector('.ic-method-choice[aria-pressed="true"]')?.dataset.icMethod!==key)return;
+   if(copied){
+    modalContent.dataset.icCopiedMethod=key;
     confirmBtn.disabled=false;
-    if(feedback)feedback.textContent='Código interno copiado.';
-   }catch{if(feedback)feedback.textContent='No se pudo copiar. Comprueba los permisos del navegador e inténtalo otra vez.';}
+    if(feedback)feedback.textContent='Referencia copiada.';
+   }else if(feedback)feedback.textContent='No se pudo copiar. Selecciona la referencia o revisa los permisos del navegador.';
   });
+  selectedHead?.scrollIntoView({block:'nearest',behavior:'smooth'});
  }));
 }
 
