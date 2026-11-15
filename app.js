@@ -155,8 +155,8 @@ async function icLoadProfile(){
  try{
   const f=await getFirebase();const user=f?.auth?.currentUser;
   if(!user||!sessionReady||session.uid!==user.uid)throw Error('Inicia sesión para consultar tu perfil.');
-  const snap=await f.Store.getDoc(f.Store.doc(f.db,'sessions',user.uid));
-  const p=snap.exists()?snap.data().studentProfile||{}:{};
+  const snap=await f.Store.getDoc(f.Store.doc(f.db,'studentProfiles',user.uid));
+  const p=snap.exists()?snap.data()||{}:{};
   const pieces=String(profile.name||alias).trim().split(/\s+/);
   $(icProfileIds.first).value=p.firstName||pieces[0]||'';
   $(icProfileIds.last).value=p.lastName||pieces.slice(1).join(' ')||'';
@@ -180,7 +180,7 @@ function icSetupProfile(){
   try{
    const f=await getFirebase(),user=f?.auth?.currentUser;
    if(!user||!sessionReady||session.uid!==user.uid)throw Error('Sesión no válida.');
-   await f.Store.updateDoc(f.Store.doc(f.db,'sessions',user.uid),{studentProfile:{firstName:firstName.slice(0,60),lastName:lastName.slice(0,60),phone:phone.slice(0,30),withdrawalMethod,withdrawalReference:withdrawalMethod?withdrawalReference:''},lastSeen:f.Store.serverTimestamp()});
+   await f.Store.setDoc(f.Store.doc(f.db,'studentProfiles',user.uid),{firstName:firstName.slice(0,60),lastName:lastName.slice(0,60),phone:phone.slice(0,30),withdrawalMethod,withdrawalReference:withdrawalMethod?withdrawalReference:'',updatedAt:f.Store.serverTimestamp()},{merge:true});
    icProfileStatus('Cambios guardados en Firebase.');record('profile','Actualizó sus datos de práctica','perfil');
   }catch(error){icProfileStatus('No se pudo guardar en Firebase: '+error.message+'. Si aparece permission-denied, hay que revisar las reglas de acceso sin desactivar la seguridad.',true);}
   finally{btn.disabled=false;}
