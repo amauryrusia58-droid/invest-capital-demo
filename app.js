@@ -150,7 +150,7 @@ async function flush(){if(!sessionReady||sending||session.mode!=='cloud')return;
 const icProfileIds={first:'#icProfileFirst',last:'#icProfileLast',email:'#icProfileEmail',phone:'#icProfilePhone',method:'#icProfileMethod',reference:'#icProfileReference'};
 let icProfileLoaded=false;
 function icProfileStatus(message,isError=false){const el=$('#icProfileStatus');if(el){el.textContent=message;el.classList.toggle('ic-profile-error',isError);}}
-function icUpdateReferenceState(){const method=$(icProfileIds.method).value,field=$(icProfileIds.reference);field.disabled=!method;field.required=!!method;if(!method)field.value='';field.placeholder=method==='sber'?'DEMO-TARJETA-001':'DEMO-WALLET-001';}
+function icUpdateReferenceState(){const method=$(icProfileIds.method).value,field=$(icProfileIds.reference);field.disabled=!method;field.required=!!method;if(!method)field.value='';field.placeholder=method==='sber'?'Ej.: Tarjeta de Juan':'Ej.: Mi billetera principal';}
 async function icLoadProfile(){
  try{
   const f=await getFirebase();const user=f?.auth?.currentUser;
@@ -174,7 +174,7 @@ function icSetupProfile(){
   e.preventDefault();const btn=$('#icProfileSave');if(!icProfileLoaded){icProfileStatus('Espera a que se cargue el perfil desde Firebase.',true);return;}
   const firstName=$(icProfileIds.first).value.trim(),lastName=$(icProfileIds.last).value.trim(),phone=$(icProfileIds.phone).value.trim(),withdrawalMethod=$(icProfileIds.method).value,withdrawalReference=$(icProfileIds.reference).value.trim();
   if(!firstName||!lastName){icProfileStatus('Introduce nombre y apellido.',true);return;}
-  if(withdrawalMethod&&!/^DEMO-[A-Za-z0-9_-]{3,70}$/i.test(withdrawalReference)){icProfileStatus('La referencia debe ser inventada, comenzar por DEMO- y contener al menos 3 caracteres adicionales.',true);return;}
+  if(withdrawalMethod&&!withdrawalReference){icProfileStatus('Escribe una referencia para el método elegido.',true);return;}
   if(!withdrawalMethod&&withdrawalReference){icProfileStatus('Selecciona primero un método.',true);return;}
   btn.disabled=true;icProfileStatus('Guardando en Firebase…');
   try{
@@ -182,7 +182,7 @@ function icSetupProfile(){
    if(!user||!sessionReady||session.uid!==user.uid)throw Error('Sesión no válida.');
    await f.Store.updateDoc(f.Store.doc(f.db,'sessions',user.uid),{studentProfile:{firstName:firstName.slice(0,60),lastName:lastName.slice(0,60),phone:phone.slice(0,30),withdrawalMethod,withdrawalReference:withdrawalMethod?withdrawalReference:''},lastSeen:f.Store.serverTimestamp()});
    icProfileStatus('Cambios guardados en Firebase.');record('profile','Actualizó sus datos de práctica','perfil');
-  }catch(error){icProfileStatus('No se pudo guardar: '+error.message+'. Comprueba los permisos de Firestore.',true);}
+  }catch(error){icProfileStatus('No se pudo guardar en Firebase: '+error.message+'. Si aparece permission-denied, hay que revisar las reglas de acceso sin desactivar la seguridad.',true);}
   finally{btn.disabled=false;}
  });
 }
