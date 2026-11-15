@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Mi cuenta</title><link rel="stylesheet" href="styles.css?v=90"><style>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09070f"><title>Invest Capital | Mi cuenta</title><link rel="stylesheet" href="styles.css?v=127"><style>
 /* V9.1: historial de ganancias, legible en computadoras y móviles. */
 .ic-history-pane{padding:26px!important;border-color:#79549c!important}
 .ic-history-head h2{font-size:clamp(24px,2.3vw,30px);margin:7px 0 10px;color:#faf4ff}
@@ -219,9 +219,20 @@
 /* V12.6: logotipo original único, centrado, y limpieza de cabeceras anteriores. */
 #actionModal .dialog:has(.ic-confirmation) > .dialog-kicker,
 #actionModal .dialog:has(.ic-confirmation) > #modalTitle{display:none!important}
-#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-brand{margin:0 auto 22px;display:flex;justify-content:center;align-items:center;width:100%;max-width:440px;background:#fff;border:1px solid #eadcf5;border-radius:16px;padding:12px 20px;box-shadow:0 6px 28px #07020d66;text-shadow:none}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-brand{margin:0 auto 22px;display:flex;justify-content:center;align-items:center;width:100%;max-width:440px;background:transparent;border:0;border-radius:16px;padding:4px 10px;box-shadow:none;text-shadow:none}
 #actionModal .dialog:has(.ic-confirmation) .ic-confirmation-logo{display:block;width:100%;height:auto;max-height:112px;object-fit:contain}
 @media(max-width:550px){#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-brand{max-width:290px;padding:9px 12px;border-radius:12px}#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-logo{max-height:75px}}
+
+/* V12.7 — Resumen diario de práctica y confirmación sin recuadro blanco. */
+.ic-daily-estimate{display:flex;align-items:center;justify-content:space-between;gap:22px;margin:0 0 18px;padding:23px 26px;border:1px solid #9766bf;border-radius:19px;background:radial-gradient(circle at 92% 5%,#65388a66,transparent 45%),linear-gradient(125deg,#321d46,#170d26);box-shadow:0 14px 35px #0003}
+.ic-daily-copy{min-width:0;max-width:640px}.ic-daily-kicker{font-size:10px;font-weight:800;letter-spacing:1.3px;color:#d8b4f5}.ic-daily-copy h2{font-size:clamp(19px,2.3vw,25px);margin:9px 0;color:#fff}.ic-daily-copy p{font-size:12px;line-height:1.6;color:#cdbbdc;margin:0}.ic-daily-value{text-align:right;min-width:180px}.ic-daily-value strong{display:block;color:#f4d6ff;font-size:clamp(24px,3vw,34px);font-variant-numeric:tabular-nums;white-space:nowrap}.ic-daily-value small{display:block;color:#c9b3db;font-size:11px;margin-top:7px;line-height:1.5}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-brand{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:100%!important;gap:10px!important;flex-direction:column;margin:0 auto 18px!important}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-mark{display:block;width:60px;height:45px}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-wordmark{font:800 clamp(22px,4vw,31px)/1.2 Georgia,serif;color:#f8edff;letter-spacing:.065em;text-shadow:0 0 20px #a43df566}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-swoosh{width:180px;height:12px;display:block}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-conversion{font-size:12px;border-radius:12px;padding:10px 12px;box-shadow:none;opacity:.78}
+#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-message{color:#e2d3ed}
+@media(max-width:600px){.ic-daily-estimate{flex-direction:column;align-items:stretch;padding:19px}.ic-daily-value{text-align:left;min-width:0;border-top:1px solid #ffffff25;padding-top:12px}.ic-daily-value strong{white-space:normal}.ic-daily-copy h2{font-size:21px}#actionModal .dialog:has(.ic-confirmation) .ic-confirmation-wordmark{font-size:23px}}
 </style></head><body class="dash-body"><div class="dash-layout"><div class="ic-mobile-nav-scrim" id="icMobileNavScrim" aria-hidden="true"></div><aside class="sidebar" id="icMobileSidebar"><a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span></span><span>INVEST<span class="brand-highlight">CAPITAL</span></span></a><div class="sidebar-title">ÁREA PERSONAL</div><nav class="side-menu" aria-label="Secciones de la cuenta"><button class="side-link active" data-view="resumen"><span class="side-icon">◫</span>Resumen</button><button class="side-link" data-view="planes"><span class="side-icon">◈</span>Planes</button><button class="side-link" id="sideInvest"><span class="side-icon">↗</span>Invertir</button><button class="side-link" data-view="calculadora"><span class="side-icon">⌁</span>Calculadora</button><button class="side-link" data-view="cartera"><span class="side-icon">▤</span>Cartera</button><button class="side-link" data-view="movimientos"><span class="side-icon">⇄</span>Movimientos</button><button class="side-link" data-view="referidos"><span class="side-icon">♧</span>Referidos</button><button class="side-link" data-view="documentos"><span class="side-icon">▧</span>Documentación</button><button class="side-link" data-view="soporte"><span class="side-icon">◌</span>Soporte</button></nav><div class="side-foot">Cuenta de gestión<br><span id="syncStatus">Sesión local</span><br><a href="index.html">← Volver al inicio</a></div></aside><main class="dash-main"><button type="button" id="icMobileNavToggle" class="ic-mobile-nav-toggle" aria-expanded="false" aria-controls="icMobileSidebar" aria-label="Abrir menú de navegación">☰ Menú</button><header class="dash-top"><div><h1 id="viewTitle">Resumen de cuenta</h1><div class="dash-sub" id="viewSubtitle">Estado general de tu cartera</div></div><div class="user-chip">● <span id="userAlias">Cuenta personal</span></div></header>
 <div id="selectedPlanBanner" class="ic-selected-plan-banner hidden" role="status" aria-live="polite">
   <div><small>PLAN ELEGIDO · SIMULACIÓN EDUCATIVA / USDT-DEMO</small><strong id="selectedPlanTitle"></strong><p id="selectedPlanMessage"></p></div>
@@ -234,7 +245,11 @@
   <div class="stat"><small>Ganancias históricas · DEMO</small><strong id="gainVal">$0.00</strong><div class="delta">Rendimientos y bonos de práctica acumulados, sin descontar retiros</div></div>
   <div class="stat"><small>Ganancias disponibles para retiro · DEMO</small><strong id="availableVal">$0.00</strong><div class="delta" id="availabilityStatus">Ganancias simuladas + bonos por referidos; excluye capital</div></div>
  </div>
- <section class="pane ic-history-pane" aria-labelledby="ic-history-title" style="margin-bottom:18px">
+   <section class="ic-daily-estimate" aria-labelledby="icDailyTitle" aria-live="polite">
+    <div class="ic-daily-copy"><span class="ic-daily-kicker">PROYECCIÓN DE PRÁCTICA · USDT-DEMO</span><h2 id="icDailyTitle">Ganancia diaria estimada</h2><p>Estimación de interés simple de tus planes activos, calculada con sus tasas semanales. No incluye bonos por referidos.</p></div>
+    <div class="ic-daily-value"><strong id="icDailyAmount">Verificando…</strong><small id="icDailyDetail">Consultando posiciones activas</small></div>
+  </section>
+<section class="pane ic-history-pane" aria-labelledby="ic-history-title" style="margin-bottom:18px">
    <div class="ic-history-head">
      <span class="ic-history-eyebrow">RESUMEN DE PRÁCTICA · USDT-DEMO</span>
      <h2 id="ic-history-title">Historial de ganancias</h2>
@@ -309,7 +324,7 @@
 <section class="workspace-section" data-section="soporte"><h2 class="workspace-title">Centro de atención</h2><div class="content-grid"><div class="pane"><h2>Crear consulta</h2><label class="field-label" for="supportSubject">Motivo</label><select id="supportSubject" class="plain-input"><option>Estado de retiro</option><option>Condiciones de un plan</option><option>Información de la empresa</option><option>Programa de asociados</option></select><label class="field-label" for="supportText">Detalle de consulta</label><input id="supportText" class="plain-input" maxlength="130" placeholder="Escribe una consulta breve, sin información personal"><div class="action-panel"><button id="sendSupport" class="btn btn-primary">Enviar consulta</button></div></div><div class="pane"><h2>Estado del servicio</h2><p class="muted" id="supportStatus">Los canales de atención están operativos.</p><p class="muted">Horario de respuesta indicado: dentro de los siguientes tres días hábiles.</p></div></div></section>
 <footer class="site-footer" style="margin-top:45px"><span>© Invest Capital · Área personal</span><span>Entorno académico · No permite fondos reales</span></footer></main></div>
 <div id="actionModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-kicker">INVEST CAPITAL</div><h2 id="modalTitle">Detalle de operación</h2><div id="modalContent" class="muted"></div><div class="dialog-actions"><button id="closeModal" class="btn btn-soft">Cerrar</button><button id="confirmModal" class="btn btn-primary hidden">Confirmar</button></div></div></div>
-<script type="module" src="app.js?v=126"></script></body></html>
+<script type="module" src="app.js?v=127"></script></body></html>
 
 <style>/* V12.4: compactación del detalle, sin alterar su lógica */
 .ic-demo-copy-feedback:empty{display:none!important}
