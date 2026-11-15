@@ -10,7 +10,7 @@
 .ic-history-number{display:block;font-size:clamp(27px,2.5vw,36px);font-variant-numeric:tabular-nums;line-height:1.2;letter-spacing:-.5px;overflow-wrap:anywhere;margin:14px 0 12px;color:#fff}
 .ic-history-item p{font-size:15px;line-height:1.65;color:#d4c5e3;margin:0}
 .ic-history-available{border-color:#b285d7;background:linear-gradient(145deg,#3d2352,#241631)}
-.ic-history-footnote{font-size:14px;line-height:1.55;color:#bda9cb;margin:18px 0 0}
+.ic-history-footnote{font-size:14px;line-height:1.55;color:#a99ab5;font-weight:400;margin:18px 0 0}
 @media(max-width:1050px){.ic-history-grid{grid-template-columns:1fr}.ic-history-label{min-height:0}.ic-history-item{padding:18px}.ic-history-pane{padding:19px!important}}
 @media(max-width:460px){.ic-history-head p{font-size:15px}.ic-history-label{font-size:16px}.ic-history-number{font-size:30px}.ic-history-item p{font-size:15px}}
 
@@ -231,35 +231,35 @@
  <div class="stat-grid">
   <div class="stat"><small>Saldo total de mi cuenta</small><strong id="totalVal">$0.00</strong><div class="delta" id="totalDelta">Sin movimientos registrados</div></div>
   <div class="stat"><small>Capital asignado</small><strong id="investedVal">$0.00</strong><div class="delta" id="activeCountVal">0 posiciones activas</div></div>
-  <div class="stat"><small>Ganancias históricas · DEMO</small><strong id="gainVal">$0.00</strong><div class="delta">Rendimientos y bonos de práctica acumulados, sin descontar retiros</div></div>
-  <div class="stat"><small>Ganancias disponibles para retiro · DEMO</small><strong id="availableVal">$0.00</strong><div class="delta" id="availabilityStatus">Ganancias simuladas + bonos por referidos; excluye capital</div></div>
+  <div class="stat"><small>Resultados acumulados</small><strong id="gainVal">$0.00</strong><div class="delta">Rendimientos y bonos acumulados, sin descontar solicitudes aprobadas</div></div>
+  <div class="stat"><small>Disponible para solicitar</small><strong id="availableVal">$0.00</strong><div class="delta" id="availabilityStatus">Rendimientos y bonos por referidos; excluye capital</div></div>
  </div>
  <section class="pane ic-history-pane" aria-labelledby="ic-history-title" style="margin-bottom:18px">
    <div class="ic-history-head">
-     <span class="ic-history-eyebrow">RESUMEN DE PRÁCTICA · USDT-DEMO</span>
-     <h2 id="ic-history-title">Historial de ganancias</h2>
-     <p>Consulta cuánto se ha generado, cuánto se ha retirado con aprobación y cuánto queda disponible en esta cuenta de simulación.</p>
+     <span class="ic-history-eyebrow">RESUMEN DE CUENTA</span>
+     <h2 id="ic-history-title">Resumen de resultados</h2>
+     <p>Consulta los resultados acumulados, las solicitudes aprobadas y el importe disponible.</p>
    </div>
    <div class="ic-history-grid">
      <div class="ic-history-item">
        <span class="ic-history-label">Total de ganancias generadas</span>
        <strong class="ic-history-number" id="historyGeneratedVal">$0.00</strong>
-       <p>Incluye los rendimientos simulados, las bonificaciones por referidos y los ajustes de prueba. No disminuye al retirar.</p>
+       <p>Incluye los rendimientos, las bonificaciones por referidos y los ajustes acumulados. No disminuye al retirar.</p>
      </div>
      <div class="ic-history-item">
-       <span class="ic-history-label">Total de retiros aprobados</span>
+       <span class="ic-history-label">Solicitudes aprobadas</span>
        <strong class="ic-history-number" id="historyWithdrawnVal">Verificando…</strong>
-       <p>Suma los retiros de práctica aprobados por el profesor y descontados del disponible.</p>
+       <p>Total de solicitudes aprobadas y descontadas del disponible.</p>
      </div>
      <div class="ic-history-item ic-history-available">
-       <span class="ic-history-label">Ganancias disponibles para retiro</span>
+       <span class="ic-history-label">Disponible para solicitar</span>
        <strong class="ic-history-number" id="historyAvailableVal">Verificando…</strong>
-       <p>Importe que queda para solicitar. El retiro mínimo es 50 USDT de práctica y requiere aprobación.</p>
+       <p>Importe disponible para solicitar. Mínimo de 50 unidades; requiere aprobación.</p>
      </div>
    </div>
-   <p class="ic-history-footnote">Solo simulación educativa: ningún saldo o retiro representa fondos reales.</p>
+   <p class="ic-history-footnote">Entorno de práctica · Sin fondos reales</p>
  </section>
- <div class="pane" style="margin-bottom:16px"><h2>Desglose de ganancias de práctica</h2><p class="muted">Se calculan desde la activación del plan y las referencias registradas. No representan fondos ni pagos reales.</p><div class="admin-event-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px"><div class="stat"><small>Rendimiento pendiente de retirar</small><strong id="earningYield">$0.00</strong></div><div class="stat"><small>Bonos por referidos disponibles</small><strong id="earningReferrals">$0.00</strong></div><div class="stat"><small>Días para el ciclo de 30 días</small><strong id="earningDays">30</strong></div></div><p class="tiny" id="teacherTestStatus" hidden style="color:#dfbaff;font-weight:700"></p><p class="tiny" id="earningDisclaimer">Puedes solicitar un retiro de práctica anticipado siempre que tengas al menos 50 USDT de práctica de ganancias disponibles; la decisión será del profesor.</p><p class="tiny" id="withdrawalAuditStatus" role="status" aria-live="polite">Verificando aprobaciones y descuentos en Firebase…</p></div>
+ <div class="pane" style="margin-bottom:16px"><h2>Desglose de resultados</h2><p class="muted">Se calculan desde la activación del plan y las referencias registradas.</p><div class="admin-event-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px"><div class="stat"><small>Rendimiento pendiente de retirar</small><strong id="earningYield">$0.00</strong></div><div class="stat"><small>Bonos por referidos disponibles</small><strong id="earningReferrals">$0.00</strong></div><div class="stat"><small>Días para el ciclo de 30 días</small><strong id="earningDays">30</strong></div></div><p class="tiny" id="teacherTestStatus" hidden style="color:#dfbaff;font-weight:700"></p><p class="tiny" id="earningDisclaimer">Puedes presentar una solicitud a partir de 50 unidades disponibles; requiere aprobación.</p><p class="tiny" id="withdrawalAuditStatus" role="status" aria-live="polite">Verificando aprobaciones y descuentos en Firebase…</p></div>
  <div id="planActivationBox" class="pane credit-request-panel" aria-live="polite"><h2>Activaciones de planes</h2><p class="muted">Cargando solicitudes de práctica…</p></div>
  <details class="pane" style="margin-bottom:16px"><summary>Historial de créditos anteriores (sistema antiguo)</summary><div id="creditRequestBox" class="credit-request-panel" aria-live="polite"><h2>Créditos virtuales anteriores</h2><p class="muted">Cargando registros antiguos…</p></div></details>
  <div id="withdrawRequestBox" class="pane credit-request-panel" aria-live="polite"><h2>Solicitudes de retiro de práctica</h2><p class="muted">Cargando solicitudes…</p></div>
