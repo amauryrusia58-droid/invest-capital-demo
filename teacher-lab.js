@@ -1,4 +1,4 @@
-// Laboratorio del profesor: vista previa local. NO modifica datos de Firebase.
+// Laboratorio del administrador: vista previa local. NO modifica datos de Firebase.
 // Mantener las tasas del proyecto en consonancia con app.js.
 export const LAB_PLANS=Object.freeze({
   Essential:{amount:100,rate:.02,weeks:8},
@@ -63,7 +63,7 @@ export function initTeacherLab(){
   drawChart(data);
  }
  function reset(message){state={plan:$('labPlan').value,days:Number($('labDays').value)||0,bonus:Number($('labReferral').value)||0,paidYield:0,paidBonus:0};cleanPending();render();notice(message);}
- $('labPlan').addEventListener('change',()=>reset('Plan cambiado. Comienza una prueba nueva sin afectar cuentas de alumnos.'));
+ $('labPlan').addEventListener('change',()=>reset('Plan cambiado. Comienza una prueba nueva sin afectar cuentas de usuarios.'));
  $('labReferral').addEventListener('change',()=>{
   const n=Number($('labReferral').value);
   if(!Number.isFinite(n)||n<0||n>1000000){$('labReferral').value=String(state.bonus);notice('Introduce una bonificación ficticia entre 0 y 1.000.000.','error');return;}
@@ -101,7 +101,7 @@ export function initTeacherLab(){
  });
  $('labReset').addEventListener('click',()=>{
   $('labDays').value='0';$('labReferral').value='0';$('labWithdrawAmount').value='1';
-  state={plan:$('labPlan').value,days:0,bonus:0,paidYield:0,paidBonus:0};cleanPending();render();notice('Laboratorio reiniciado. No se modificó ningún registro de alumnos.');
+  state={plan:$('labPlan').value,days:0,bonus:0,paidYield:0,paidBonus:0};cleanPending();render();notice('Laboratorio reiniciado. No se modificó ningún registro de usuarios.');
  });
  render();
 }

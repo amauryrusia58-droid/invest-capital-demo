@@ -12,7 +12,7 @@ export async function getFirebase(){
    ]);
    const app=getApps().length?getApp():initializeApp(firebaseConfig);
    const auth=Auth.getAuth(app);
-   // Cuenta docente y alumno en distintas pestañas del mismo navegador.
+   // Cuenta administrador y usuario en distintas pestañas del mismo navegador.
    // Firebase por defecto usa persistencia LOCAL compartida, que sustituye
    // una cuenta al iniciar otra. SESSION separa el inicio de sesión por pestaña.
    // La primera migración puede requerir volver a iniciar sesión una vez.
@@ -30,11 +30,11 @@ export async function studentStart(profile){
  const f=await getFirebase();if(!f)return {mode:'local',uid:'local'};
  const {auth,db,Auth,Store}=f;
  let user=await authUser(auth,Auth);
- if(!user) throw new Error('Tu sesión de alumno ha terminado. Vuelve a iniciar sesión desde la portada.');
+ if(!user) throw new Error('Tu sesión de usuario ha terminado. Vuelve a iniciar sesión desde la portada.');
  const token=await user.getIdTokenResult();
  if(user.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase())throw new Error('La cuenta administradora debe acceder desde su consola privada.');
- if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Inicia sesión con el correo y contraseña del alumno desde la portada.');
- if(email&&user.email&&user.email.toLowerCase()!==email) throw new Error('La sesión de Firebase corresponde a otro alumno. Inicia sesión con la cuenta correcta.');
+ if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Inicia sesión con el correo y contraseña del usuario desde la portada.');
+ if(email&&user.email&&user.email.toLowerCase()!==email) throw new Error('La sesión de Firebase corresponde a otro usuario. Inicia sesión con la cuenta correcta.');
  const ref=Store.doc(db,'sessions',user.uid);
  const snap=await Store.getDoc(ref);
  const data={view:'resumen',lastAction:'Acceso al panel',lastSeen:Store.serverTimestamp()};
@@ -89,7 +89,7 @@ export async function getClassroomLink(session){
 export async function linkClassroomMember(session,code){
  if(session.mode!=='cloud')throw new Error('Necesitas Firebase para vincular cuentas del aula.');
  const inviterUid=uidFromCode(code);
- if(!inviterUid)throw new Error('El código debe comenzar por IC- y pertenecer a una cuenta de práctica.');
+ if(!inviterUid)throw new Error('El código debe comenzar por IC- y pertenecer a una cuenta.');
  if(inviterUid===session.uid)throw new Error('No puedes asociarte a tu propia cuenta.');
  const {db,Store,uid}=session;
  const ref=Store.doc(db,'referralLinks',uid);
@@ -120,7 +120,7 @@ export async function recordClassroomContribution(session,amount,reference){
  if(!ancestors.length)return false;
  const {db,Store,uid}=session;
  const n=Math.round(Number(amount)*100)/100;
- if(!(n>=1&&n<=100000))throw new Error('Importe de práctica fuera de rango.');
+ if(!(n>=1&&n<=100000))throw new Error('Importe fuera de rango.');
  const safeRef=String(reference).slice(0,35);
  const docId=uid+'_'+safeRef;
  await Store.setDoc(Store.doc(db,'virtualContributions',docId),{
@@ -150,7 +150,7 @@ export async function requestVirtualCredit(session, amount, studentAlias){
   throw new Error('Ya tienes una solicitud de capital ficticio pendiente de aprobación. No la envíes otra vez.');
  }
  const ref=await Store.addDoc(Store.collection(db,'virtualCreditRequests'),{
-  studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
+  studentUid:uid,studentAlias:String(studentAlias||'Usuario').trim().slice(0,60),
   amount:n,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
  });
  return ref.id;
@@ -181,12 +181,12 @@ export async function reviewVirtualCreditRequest(f,requestId,decision){
 
 // V6 · Peticiones de retirada de saldo exclusivamente ficticio.
 export async function requestVirtualWithdrawal(session, amount, studentAlias){
- if(session.mode!=='cloud')throw new Error('Necesitas conexión con Firebase para solicitar el retiro de práctica.');
+ if(session.mode!=='cloud')throw new Error('Necesitas conexión con Firebase para solicitar el retiro.');
  const n=Math.round(Number(amount)*100)/100;
  if(!Number.isFinite(n)||n<50||n>100000)throw new Error('El retiro mínimo es de 50 USDT ficticios.');
  const {db,Store,uid}=session;
  const ref=await Store.addDoc(Store.collection(db,'virtualWithdrawalRequests'),{
-  studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
+  studentUid:uid,studentAlias:String(studentAlias||'Usuario').trim().slice(0,60),
   amount:n,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
  });
  return ref.id;
@@ -218,7 +218,7 @@ export async function reviewVirtualWithdrawalRequest(f,requestId,decision){
 const CLASSROOM_PLAN_AMOUNTS={Essential:100,Advanced:300,Prime:500,'Magnate Supremo':1000,Platinum:1500,Signature:3000};
 export async function requestVirtualPlanActivation(session,plan,studentAlias,requestedAmount=CLASSROOM_PLAN_AMOUNTS[plan]){
  if(session.mode!=='cloud')throw new Error('Debes estar conectado a Firebase para este ejercicio.');
- if(!Object.hasOwn(CLASSROOM_PLAN_AMOUNTS,plan))throw new Error('Plan de práctica no reconocido.');
+ if(!Object.hasOwn(CLASSROOM_PLAN_AMOUNTS,plan))throw new Error('Plan no reconocido.');
  const amount=Number(requestedAmount);
  if(!Number.isFinite(amount)||amount<CLASSROOM_PLAN_AMOUNTS[plan]||amount>100000||Math.abs(amount*100-Math.round(amount*100))>1e-6)throw new Error('Cantidad ficticia fuera del rango permitido para este plan.');
  const {db,Store,uid}=session;
@@ -227,7 +227,7 @@ export async function requestVirtualPlanActivation(session,plan,studentAlias,req
  if(snap.docs.some(d=>d.data()?.status==='pending'))throw new Error('Ya hay una activación pendiente de revisión.');
  if(snap.docs.some(d=>d.data()?.status==='approved'&&d.data()?.plan===plan))throw new Error('Este plan ya tiene una activación aprobada. Revisa tu cartera.');
  const ref=await Store.addDoc(Store.collection(db,'virtualPlanRequests'),{
-  studentUid:uid,studentAlias:String(studentAlias||'Alumno').trim().slice(0,60),
+  studentUid:uid,studentAlias:String(studentAlias||'Usuario').trim().slice(0,60),
   plan,amount,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
  });
  return ref.id;
@@ -255,7 +255,7 @@ export async function reviewVirtualPlanRequest(f,requestId,decision){
  });
 }
 
-// V8.5 · Snapshot informativo del simulador, declarado por el navegador del alumno.
+// V8.5 · Snapshot informativo del simulador, declarado por el navegador del usuario.
 // No es saldo auditado ni autoriza pagos o transferencias.
 export async function saveVirtualEarningsSummary(session,amounts){
  if(session.mode!=='cloud')return;
@@ -264,7 +264,7 @@ export async function saveVirtualEarningsSummary(session,amounts){
  const doc={currency:'USDT-DEMO',updatedAt:Store.serverTimestamp()};
  for(const key of fields){
   const value=Number(amounts[key]);
-  if(!Number.isFinite(value)||value<0||value>1000000)throw new Error('Resumen de práctica no válido.');
+  if(!Number.isFinite(value)||value<0||value>1000000)throw new Error('Resumen de cuenta no válido.');
   doc[key]=key==='daysRemaining'?Math.round(value):Math.round(value*100)/100;
  }
  await Store.setDoc(Store.doc(db,'virtualEarningsSummaries',uid),doc);
@@ -274,9 +274,9 @@ export function watchAdminVirtualEarningsSummaries(f,onChange,onError){
  return Store.onSnapshot(Store.collection(db,'virtualEarningsSummaries'),snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
 }
 
-// V8.7 · Ajuste del profesor sobre una cuenta de alumno del aula.
-// Documento controlado por las reglas de Firestore: sólo profesor escribe;
-// el alumno autenticado sólo puede leer SU propio ejercicio.
+// V8.7 · Ajuste del administrador sobre una cuenta de usuario del aula.
+// Documento controlado por las reglas de Firestore: sólo administrador escribe;
+// el usuario autenticado sólo puede leer SU propio ejercicio.
 export function watchStudentTeacherSettings(session,onChange,onError){
  if(session.mode!=='cloud')return ()=>{};
  return session.Store.onSnapshot(
@@ -285,17 +285,17 @@ export function watchStudentTeacherSettings(session,onChange,onError){
   snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0},!snap.metadata.fromCache),onError);
 }
 export function watchAdminTeacherSettings(f,studentUid,onChange,onError){
- if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Identificador de alumno inválido.');
+ if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Identificador de usuario inválido.');
  return f.Store.onSnapshot(f.Store.doc(f.db,'studentTestOverrides',studentUid),
    snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0}),onError);
 }
 export async function setAdminTeacherSettings(f,studentUid,extraDays,bonus,plan=''){
- if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Selecciona un alumno válido.');
+ if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Selecciona un usuario válido.');
  const d=Number(extraDays),b=Number(bonus);
  if(!Number.isInteger(d)||d<0||d>365)throw new Error('Los días adelantados deben estar entre 0 y 365.');
- if(!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6)throw new Error('Importe de prueba inválido (máximo 100.000, dos decimales).');
+ if(!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6)throw new Error('Importe inválido (máximo 100.000, dos decimales).');
  const planNames=['','Essential','Advanced','Prime','Magnate Supremo','Platinum','Signature'];
- if(!planNames.includes(plan))throw new Error('Selecciona un plan de práctica válido.');
+ if(!planNames.includes(plan))throw new Error('Selecciona un plan válido.');
  const {Store,db}=f,ref=Store.doc(db,'studentTestOverrides',studentUid);
  // Misma selección = conservar fecha original. Cambiar de plan inicia un ciclo nuevo.
  const oldSnap=await Store.getDoc(ref),prior=oldSnap.exists()?oldSnap.data():{};

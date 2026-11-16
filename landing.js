@@ -47,7 +47,7 @@ async function showRegister(){
        if(p.referralCode)referralInput.value=p.referralCode;
      }catch{}
    }
- }catch(e){console.warn('No se pudo consultar cuenta de práctica',e);}
+ }catch(e){console.warn('No se pudo consultar cuenta',e);}
 }
 function showLogin(){updatePlanHint();hideAll();loginError.textContent='';loginOverlay.classList.remove('hidden');$('loginEmail').focus();}
 for(const id of ['openRegister','startBtn','bottomBtn'])$(id).addEventListener('click',()=>{clearPlanSelection();void showRegister();});
@@ -89,7 +89,7 @@ function errText(e){
 async function notifyRegistration(name,email,referral){
  const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),6000);
  try{
-  const r=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Invest Capital — Nuevo registro de alumno',_template:'table',nombre_y_apellidos:name,contacto:email,codigo_referido:referral||'Sin código',mensaje:'Alta académica; la contraseña no fue recopilada por este formulario.'}),signal:ctrl.signal});
+  const r=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Invest Capital — Nuevo registro de usuario',_template:'table',nombre_y_apellidos:name,contacto:email,codigo_referido:referral||'Sin código',mensaje:'Alta académica; la contraseña no fue recopilada por este formulario.'}),signal:ctrl.signal});
   const j=await r.json();localStorage.setItem('ic_v34_mail_status',r.ok&&(j.success===true||j.success==='true')?'aceptado por FormSubmit':'no confirmado');
  }catch{localStorage.setItem('ic_v34_mail_status','no confirmado');}
  finally{clearTimeout(timer);}
@@ -138,7 +138,7 @@ reg.addEventListener('submit',async e=>{
    user=created.user;
   }
   await f.Auth.updateProfile(user,{displayName:actualName});
-  // Solicita verificación al correo del nuevo alumno antes de sincronizar con Brevo.
+  // Solicita verificación al correo del nuevo usuario antes de sincronizar con Brevo.
   if (!user.emailVerified) {
    await f.Auth.sendEmailVerification(user);
   }
@@ -218,7 +218,7 @@ login.addEventListener('submit',async e=>{
   const snap=await f.Store.getDoc(f.Store.doc(f.db,'sessions',cred.user.uid));
   const oldData=snap.exists()?snap.data():{};
   const name=String(oldData.alias||cred.user.displayName||'').trim();
-  if(!name)throw new Error('No se encontró un perfil de alumno para esta cuenta. Contacta al profesor.');
+  if(!name)throw new Error('No se encontró un perfil de usuario para esta cuenta. Contacta al administrador.');
   // El referido ya está asociado a su UID en Firestore, no vuelve a elegirse al entrar.
   setStudentLocals(name,email,'',cred.user.uid);
   await solicitarVerificacionPendiente(f, cred.user);

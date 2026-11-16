@@ -8,7 +8,7 @@ const titles={resumen:['Resumen de cuenta','Estado general de tu cartera'],plane
 const plans={Essential:{min:100,rate:.02,weeks:8},Advanced:{min:300,rate:.035,weeks:12},Prime:{min:500,rate:.05,weeks:16},"Magnate Supremo":{min:1000,rate:.07,weeks:20},Platinum:{min:1500,rate:.085,weeks:24},Signature:{min:3000,rate:.10,weeks:28}};
 const storedAuthUid=localStorage.getItem('ic_v3_auth_uid')||'';
 // Guardar la elección por cuenta, no solo por pestaña, evita perder el plan
-// cuando el alumno regresa al dashboard después de que el profesor rechace.
+// cuando el usuario regresa al dashboard después de que el administrador rechace.
 const SELECTED_PLAN_KEY='ic_selected_plan_for_'+(storedAuthUid||encodeURIComponent(alias.toLowerCase()));
 const planQuery=new URLSearchParams(location.search).get('plan');
 function currentChosenPlan(){
@@ -74,15 +74,15 @@ function positionProfit(pos){
 function remainingPrincipal(p){return Math.max(0,num(p.amount-(Number(p.principalPaid)||0)));}
 function planMatured(p){return elapsedDays(legacyStart(p))>=plans[p.plan].weeks*7;}
 
-// Los ajustes son visibles únicamente para la cuenta de ensayo elegida por el docente.
+// Los ajustes son visibles únicamente para la cuenta seleccionada elegida por el administrador.
 let testSettings={extraDays:0,bonus:0,plan:'',planStartedAt:0};
 let teacherPosition=null;
-// Una asignación docente es una única posición de práctica controlada por Firebase.
+// Una asignación manual es una única posición de práctica controlada por Firebase.
 // No se escribe al cash local ni se repite al recargar. Las posiciones antiguas
 // siguen conservadas en el navegador, pero no se mezclan en esta prueba.
-// V9.2: una posición activada y aprobada después del escenario docente no
+// V9.2: una posición activada y aprobada después del escenario administrador no
 // debe desaparecer cuando llega el snapshot de Firebase al recargar.
-// Una asignación docente MÁS RECIENTE sí puede sustituir la vista anterior;
+// Una asignación manual MÁS RECIENTE sí puede sustituir la vista anterior;
 // nunca se suman ambas posiciones como si fueran depósitos distintos.
 function useTeacherPosition(){
  if(!teacherPosition)return false;
@@ -128,16 +128,16 @@ function explainFirebaseIssue(error){
  const code=String(error?.code||'').toLowerCase();
  const msg=String(error?.message||'');
  if(!firebaseEnabled)return 'Firebase no está configurado en esta versión.';
- if(code.includes('permission-denied'))return 'Firebase rechazó los permisos de la solicitud. Comprueba que las reglas V8.3 estén publicadas y que uses tu cuenta de alumno.';
+ if(code.includes('permission-denied'))return 'Firebase rechazó los permisos de la solicitud. Comprueba que las reglas V8.3 estén publicadas y que uses tu cuenta de usuario.';
  if(code.includes('network')||code.includes('unavailable'))return 'No se pudo conectar a Firebase. Comprueba Internet y vuelve a intentar.';
- if(/sesión|cuenta|profesor|alumno|login|contraseña/i.test(msg))return msg;
+ if(/sesión|cuenta|administrador|usuario|login|contraseña/i.test(msg))return msg;
  return 'No se pudo completar la conexión con Firebase: '+(msg||code||'Error desconocido');
 }
 function showFirebaseIssue(error){
  const box=$('#modalError');if(!box)return;
  const msg=explainFirebaseIssue(error);
  box.hidden=false;box.replaceChildren(document.createTextNode(msg));
- // No cerramos sesión ni eliminamos datos del alumno automáticamente.
+ // No cerramos sesión ni eliminamos datos del usuario automáticamente.
  const link=document.createElement('a');link.href='index.html?login=1';
  link.textContent=' Volver a iniciar sesión';link.style.display='block';link.style.marginTop='8px';
  box.append(link);
@@ -146,7 +146,7 @@ function save(){localStorage.setItem(STORE,JSON.stringify(account));}
 function record(type,label,which=view){if(!firebaseEnabled)return;pending.push({type,label,view:which});void flush();}
 async function flush(){if(!sessionReady||sending||session.mode!=='cloud')return;sending=true;try{while(pending.length){const a=pending[0];await logStudent(session,a.type,a.label,a.view);pending.shift();}$('#syncStatus').textContent='Actividad conectada';}catch(e){console.warn('Acciones pendientes de conexión',e);$('#syncStatus').textContent='Sincronización pendiente';}finally{sending=false;}}
 
-// Perfil del alumno: solo referencias inventadas, asociadas al UID de Firebase.
+// Perfil del usuario: solo referencias inventadas, asociadas al UID de Firebase.
 const icProfileIds={first:'#icProfileFirst',last:'#icProfileLast',email:'#icProfileEmail',phone:'#icProfilePhone',method:'#icProfileMethod',reference:'#icProfileReference'};
 let icProfileLoaded=false;
 function icProfileStatus(message,isError=false){const el=$('#icProfileStatus');if(el){el.textContent=message;el.classList.toggle('ic-profile-error',isError);}}
@@ -215,7 +215,7 @@ function close(){overlay.classList.add('hidden');onConfirm=null;}
 function err(text){const e=$('#modalError');if(e){e.textContent=text;e.hidden=false;}}
 function tx(name,amount,status,kind){const seq=++account.seq;account.ledger.unshift({name,amount:num(amount),status,kind,ref:'IC-'+String(Date.now()).slice(-6)+String(seq).padStart(2,'0'),date:new Date().toLocaleDateString('es-ES')});account.ledger=account.ledger.slice(0,100);save();render();}
 function principal(){return num(activePositions().reduce((s,p)=>s+remainingPrincipal(p),0));}
-// V8.8 · Libro de retiros de práctica aprobado, reconstruible tras cada recarga.
+// V8.8 · Libro de solicitudes de retiro aprobado, reconstruible tras cada recarga.
 // Un retiro aprobado se descuenta SIEMPRE en el cálculo, nunca sólo de localStorage.
 // Si falta conectar con Firebase no se habilitan retiros nuevos ni se muestran
 // ganancias disponibles hasta conocer el historial completo.
@@ -309,7 +309,7 @@ function historicalEarnedTotal(){return num(grossYield()+referralEarned());}
 function referralAvailable(){return earningsSynced()?earningsLedger().referralAvailable:0;}
 function withdrawable(){return earningsSynced()?num(gain()+referralAvailable()):0;}
 function total(){
- // V9.2: conservar los créditos libres existentes incluso cuando el profesor
+ // V9.2: conservar los créditos libres existentes incluso cuando el administrador
  // selecciona un plan de prueba. El capital asignado se muestra por separado;
  // no debe desaparecer al llegar la configuración de Firebase.
  const legacyReferralCash=Math.max(0,num(referralEarned()-(account.referralPaid||0)));
@@ -329,7 +329,7 @@ function renderWithdrawalStatus(){
  for(const id of ['actionWithdraw','withdrawInMovements'])$('#'+id).textContent='Retiro';
  $('#withdrawalCountdown').textContent=hasPendingWithdrawal()?`Solicitud de retiro pendiente de revisión. ${w.days} día(s) del ciclo restantes.`:w.reason;
  $('#earningDays').textContent=String(w.days);
- const detail=$('#teacherTestStatus');if(detail){detail.hidden=!(testSettings.plan||testSettings.extraDays||testSettings.bonus);detail.textContent=`ESCENARIO DOCENTE · Plan: ${testSettings.plan||'Sin asignación docente'} · ${testSettings.extraDays} día(s) adicionales · ${money(testSettings.bonus)} de ganancia de práctica. Retiros aprobados acumulados: ${money(approvedWithdrawalTotal())}. Solo simulación.`;}
+ const detail=$('#teacherTestStatus');if(detail){detail.hidden=!(testSettings.plan||testSettings.extraDays||testSettings.bonus);detail.textContent=`AJUSTES DE CUENTA · Plan: ${testSettings.plan||'Sin asignación manual'} · ${testSettings.extraDays} día(s) adicionales · ${money(testSettings.bonus)} de ganancia de práctica. Retiros aprobados acumulados: ${money(approvedWithdrawalTotal())}. Solo simulación.`;}
 }
 // Resumen informativo sincronizado con Firebase. Lo calcula el navegador:
 // no es un libro mayor verificado ni prueba la existencia de fondos.
@@ -458,7 +458,7 @@ function renderDailyEstimate(){
 function render(){const invested=principal(),profit=gain(),value=total(),pos=activePositions().filter(x=>remainingPrincipal(x)>0||positionProfit(x)>0);
   renderDailyEstimate();
   renderWithdrawalStatus();
-  // Antes de recibir los ajustes del profesor y las aprobaciones de Firebase,
+  // Antes de recibir los ajustes del administrador y las aprobaciones de Firebase,
   // el valor calculado desde el navegador es provisional. Evitar el destello
   // de $5,100/$0 y su posterior sustitución sin explicación.
   const balancesConfirmed=teacherSettingsReady&&withdrawalHistoryReady;
@@ -542,7 +542,7 @@ function openDemoPaymentMethods(plan,amount){
       </div>
     </div>
   </div>
-  <p class="ic-payment-disclosure">Entorno de demostración · Las solicitudes no realizan transferencias.</p>
+  <p class="ic-payment-disclosure">Al confirmar, registras una solicitud para revisión. Este formulario no transfiere fondos.</p>
   <p id="modalError" class="form-error" hidden></p>
   `,async()=>{
   if(planSubmitBusy||planSubmitId||planActivationRequests.some(r=>r.status==='pending')){err('Ya hay una solicitud pendiente de revisión.');return;}
@@ -556,20 +556,20 @@ function openDemoPaymentMethods(plan,amount){
    // no se alteran reglas, aprobación, saldos ni rendimientos.
    planSubmitId=await requestVirtualPlanActivation(session,plan,alias,amount);
    const displayedAmount=key==='rub'?formatRub(rubAmount):money(amount)+' USDT-DEMO';
-   record('plan_requested',`Solicitó activar ${plan} por ${amount.toFixed(2)} USDT-DEMO. Método visual: ${methods[key].title}; equivalencia visual: ${displayedAmount}`,'planes');
-   modal('Solicitud enviada para revisión',`<div class="ic-confirmation"><div class="ic-confirmation-brand" aria-label="INVEST CAPITAL"><svg class="ic-confirmation-mark" viewBox="0 0 110 67" aria-hidden="true"><defs><linearGradient id="icLogoGradient" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#8c3bfa"/><stop offset="1" stop-color="#e3b5ff"/></linearGradient></defs><rect x="13" y="39" width="13" height="19" rx="3" fill="url(#icLogoGradient)"/><rect x="33" y="28" width="13" height="30" rx="3" fill="url(#icLogoGradient)"/><rect x="53" y="15" width="13" height="43" rx="3" fill="url(#icLogoGradient)"/><rect x="73" y="5" width="13" height="53" rx="3" fill="url(#icLogoGradient)"/><path d="M9 34 Q43 29 72 6 L86 4" fill="none" stroke="#f0ceff" stroke-width="3" stroke-linecap="round"/></svg><span class="ic-confirmation-wordmark">INVEST CAPITAL</span><svg class="ic-confirmation-swoosh" viewBox="0 0 360 24" aria-hidden="true"><path d="M8 15 Q180 31 351 6" fill="none" stroke="#b854ff" stroke-width="4" stroke-linecap="round"/></svg></div><div class="ic-confirmation-success"><span class="ic-confirmation-check" aria-hidden="true">✓</span><span>Solicitud enviada para revisión</span></div><div class="ic-confirmation-details"><div><span aria-hidden="true">▰</span><span>${esc(plan)}: <b>${money(amount)} USDT</b></span></div><div><span aria-hidden="true">◇</span><span>Método seleccionado: <b>${esc(methods[key].title)}</b></span></div><div><span aria-hidden="true">◉</span><span>Importe mostrado: <b>${esc(key==='rub'?displayedAmount:money(amount)+' USDT')}</b></span></div></div><p class="ic-confirmation-message"><strong>Nuestro equipo de especialistas está revisando su solicitud.</strong> Recibirá una notificación cuando finalice el proceso de evaluación.</p>${key==='rub'?'<p class="ic-confirmation-conversion">Equivalencia de práctica: <strong>1 USDT = 95 ₽</strong></p>':''}<p class="ic-confirmation-foot">Operación simulada</p></div>`);
+   record('plan_requested',`Solicitó activar ${plan} por ${amount.toFixed(2)} USDT-DEMO. Método seleccionado: ${methods[key].title}; equivalencia visual: ${displayedAmount}`,'planes');
+   modal('Solicitud enviada para revisión',`<div class="ic-confirmation"><div class="ic-confirmation-brand" aria-label="INVEST CAPITAL"><svg class="ic-confirmation-mark" viewBox="0 0 110 67" aria-hidden="true"><defs><linearGradient id="icLogoGradient" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#8c3bfa"/><stop offset="1" stop-color="#e3b5ff"/></linearGradient></defs><rect x="13" y="39" width="13" height="19" rx="3" fill="url(#icLogoGradient)"/><rect x="33" y="28" width="13" height="30" rx="3" fill="url(#icLogoGradient)"/><rect x="53" y="15" width="13" height="43" rx="3" fill="url(#icLogoGradient)"/><rect x="73" y="5" width="13" height="53" rx="3" fill="url(#icLogoGradient)"/><path d="M9 34 Q43 29 72 6 L86 4" fill="none" stroke="#f0ceff" stroke-width="3" stroke-linecap="round"/></svg><span class="ic-confirmation-wordmark">INVEST CAPITAL</span><svg class="ic-confirmation-swoosh" viewBox="0 0 360 24" aria-hidden="true"><path d="M8 15 Q180 31 351 6" fill="none" stroke="#b854ff" stroke-width="4" stroke-linecap="round"/></svg></div><div class="ic-confirmation-success"><span class="ic-confirmation-check" aria-hidden="true">✓</span><span>Solicitud enviada para revisión</span></div><div class="ic-confirmation-details"><div><span aria-hidden="true">▰</span><span>${esc(plan)}: <b>${money(amount)} USDT</b></span></div><div><span aria-hidden="true">◇</span><span>Método seleccionado: <b>${esc(methods[key].title)}</b></span></div><div><span aria-hidden="true">◉</span><span>Importe mostrado: <b>${esc(key==='rub'?displayedAmount:money(amount)+' USDT')}</b></span></div></div><p class="ic-confirmation-message"><strong>Nuestro equipo de especialistas está revisando su solicitud.</strong> Recibirá una notificación cuando finalice el proceso de evaluación.</p>${key==='rub'?'<p class="ic-confirmation-conversion">Equivalencia de referencia: <strong>1 USDT = 95 ₽</strong></p>':''}<p class="ic-confirmation-foot">Operación simulada</p></div>`);
    // Mantener la marca y el título dentro de la nueva tarjeta de confirmación.
    const confirmationTitle=document.querySelector('#actionModal #modalTitle');
    if(confirmationTitle)confirmationTitle.classList.add('ic-confirmation-modal-title');
   }catch(e){connectionFailure=e;showFirebaseIssue(e);confirmBtn.disabled=false;}
   finally{planSubmitBusy=false;showChosenPlanBanner();}
- },'Enviar solicitud');
+ },'Saldo enviado');
  // Presentar marca encima del título sin modificar la lógica del modal.
  const brandNode=modalContent.querySelector('.ic-payment-brand');
  const modalTitleNode=document.querySelector('#actionModal #modalTitle');
  if(brandNode && modalTitleNode)modalTitleNode.parentNode.insertBefore(brandNode,modalTitleNode);
  // Botón de envío visual con el mismo control de Firebase y prevención de duplicados.
- confirmBtn.innerHTML='<svg class="ic-send-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>Enviar solicitud</span>';
+ confirmBtn.innerHTML='<svg class="ic-send-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>Saldo enviado</span>';
  // La selección/copiar no demuestra transferencias: solo desbloquea el reporte de práctica.
  modalContent.dataset.icCopiedMethod='';
  confirmBtn.disabled=true;
@@ -681,7 +681,7 @@ function startPlanInvestment(){
  if(plans[selected]&&!approved){openPlanWallet(selected);return;}
  const entries=Object.entries(plans).map(([name,p])=>
    `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)} DEMO</button>`).join('');
- modal('Seleccionar plan para la cartera de práctica',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud independiente y su aprobación.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
+ modal('Seleccionar plan',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud independiente y su aprobación.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
  modalContent.querySelectorAll('[data-choose-wallet-plan]').forEach(b=>b.addEventListener('click',()=>{
   const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
  }));
@@ -737,7 +737,7 @@ function onCreditRequests(rows){
   if(!lockAnchor())account.withdrawalAnchor=timestampMs(req.decisionAt)||timestampMs(req.createdAt)||Date.now();
   pendingContributions.push({amount:n,reference:req.id.slice(0,35)});
   tx('Crédito de simulación aprobado',n,'Acreditado','deposit');
-  record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT de práctica tras aprobación docente`);
+  record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} unidades de referencia tras aprobación administrativa`);
   changed=true;
  }
  if(needsCalendarMigration){
@@ -845,7 +845,7 @@ function withdrawal(){
   <p>Bonificaciones de referidos: <b>${money(referralAvailable())}</b></p>
   <p>Ganancia disponible: <strong>${money(cap)} de práctica</strong></p>
   <div class="notice">${w.days} día(s) del ciclo restantes. Puedes solicitar ahora un retiro anticipado. <b>La administración revisará tu solicitud.</b></div>
-  <label class="field-label" for="amountValue">Importe de ganancias de práctica (USDT-DEMO)</label>
+  <label class="field-label" for="amountValue">Importe solicitado (USDT-DEMO)</label>
   <input id="amountValue" class="plain-input" type="number" step="0.01" min="50" max="${cap}" value="${Math.max(50,Math.min(100,cap))}">
   <p id="modalError" class="form-error" hidden></p>
   <p class="tiny">Ni el capital asignado ni los antiguos créditos libres cuentan como ganancia retirable.</p>
@@ -859,7 +859,7 @@ function withdrawal(){
    await syncEarningsSummary(true);
    const id=await requestVirtualWithdrawal(session,n,alias);
    account.pendingWithdrawalRequestId=id;save();
-   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} USDT de práctica con ${w.days} días pendientes`,'movimientos');
+   record('withdraw_attempt',`Solicitó retirar ${n.toFixed(2)} unidades de referencia con ${w.days} días pendientes`,'movimientos');
    render();
    modal('Solicitud pendiente',`<div class="notice"><strong>${money(n)} USDT-DEMO · Pendiente de revisión</strong></div><p>La administración recibió la solicitud aun faltando ${w.days} día(s) del ciclo. Al aprobarla, se descontará de las ganancias disponibles; si la rechaza, conservarás la cantidad y el contador seguirá avanzando.</p>`);
   }catch(e){err('No se pudo enviar a Firebase: '+e.message);confirmBtn.disabled=false;}
@@ -1006,7 +1006,7 @@ $('#sendSupport').addEventListener('click',async()=>{
  }finally{sendingSupport=false;btn.disabled=false;btn.textContent='Enviar consulta';}
 });
 $('#closeModal').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});confirmBtn.addEventListener('click',()=>onConfirm?.());
-// Histórico de respuestas privadas de soporte, cargadas solo con la sesión del alumno.
+// Histórico de respuestas privadas de soporte, cargadas solo con la sesión del usuario.
 const supportSection=document.querySelector('[data-section="soporte"]');
 const supportHistory=document.createElement('div');
 supportHistory.style.cssText='margin-top:20px;padding:18px;border:1px solid #7952a6;border-radius:14px;background:rgba(35,18,60,.5)';
@@ -1051,12 +1051,12 @@ async function attachStudentListeners(){
  unsubscribeTeacherSettings=watchStudentTeacherSettings(session,(data,serverConfirmed)=>{
   testSettings={extraDays:Math.min(365,Math.max(0,Math.floor(Number(data.extraDays)||0))),bonus:Math.min(100000,Math.max(0,num(data.bonus))),plan:plans[data.plan]?data.plan:'',planStartedAt:Number(data.planStartedAt)||0};
   syncTeacherPosition();
-  // Un escenario docente no debe sobrescribir el plan elegido expresamente en la portada.
+  // Un escenario administrador no debe sobrescribir el plan elegido expresamente en la portada.
   if(testSettings.plan && !currentChosenPlan())rememberChosenPlan(testSettings.plan);
   teacherSettingsReady=serverConfirmed;
   onWithdrawalRequests(withdrawalRequests);
   showChosenPlanBanner();void syncEarningsSummary(true);
- },e=>{reportSyncFailure('Ajustes del profesor',e);});
+ },e=>{reportSyncFailure('Ajustes del administrador',e);});
  unsubscribe=watchStage(session,setStage,()=>{$('#syncStatus').textContent='No se pudo leer el escenario';});
  if(session.mode==='cloud'){
   try{await applyClassroomCode(profile.referralCode||'');}
@@ -1066,7 +1066,7 @@ async function attachStudentListeners(){
   unsubscribeWithdrawals=watchVirtualWithdrawalRequests(session,(rows,serverConfirmed)=>{withdrawalHistoryReady=serverConfirmed;onWithdrawalRequests(rows);void syncEarningsSummary(true);},e=>{console.error('Error leyendo retiros virtuales',e);$('#withdrawRequestBox').textContent='No se pudieron consultar solicitudes de retiro: '+e.message;reportSyncFailure('Solicitudes de retiro',e);});
   unsubscribeRewards=watchClassroomRewards(session,onClassroomRewards,e=>{$('#refLinkStatus').textContent='No se pudo cargar la red: '+e.message;});
   await flushContributions();
- }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre alumnos.';}
+ }else{$('#refLinkStatus').textContent='Sin Firebase: las referencias no se enlazan entre usuarios.';}
 }
 async function ensureStudentFirebaseSession(){
  if(!firebaseEnabled)throw new Error('Firebase no está configurado.');
