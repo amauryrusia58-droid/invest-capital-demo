@@ -268,7 +268,7 @@ function withdrawalAuditStatus(){
  if(withdrawalAuditConflict)return 'Revisión necesaria: hay retiros aprobados guardados en esta cuenta que no aparecen en la consulta actual de Firebase. Se bloquean nuevos retiros para evitar duplicados.';
  const approved=withdrawalRequests.filter(r=>r.status==='approved');
  const paid=approvedWithdrawalTotal();
- return `Retiros aprobados descontados: ${approved.length} registrado(s) en Firebase · ${money(paid)} en total. Ganancias disponibles ahora: ${money(withdrawable())}.`;
+ return `Retiros procesados: ${approved.length} · ${money(paid)} en total. Saldo calculado disponible: ${money(withdrawable())}.`;
 }
 function earningsLedger(upToDay=null){
  const paid=approvedWithdrawalTotal(upToDay);
@@ -639,12 +639,12 @@ function openDemoPaymentMethods(plan,amount){
 function renderPlanActivationRequests(){
  const box=$('#planActivationBox');if(!box)return;box.replaceChildren();
  const h=document.createElement('h2');h.textContent='Activaciones de planes';box.append(h);
- const tip=document.createElement('p');tip.className='tiny';tip.textContent='Solicitudes de cartera de práctica (USDT DEMO). Solo una aprobación docente activa el plan elegido.';box.append(tip);
+ const tip=document.createElement('p');tip.className='tiny';tip.textContent='Solicitudes de activación de planes sujetas a validación administrativa.';box.append(tip);
  if(!planActivationRequests.length){const p=document.createElement('p');p.className='muted';p.textContent='Aún no has solicitado activar ningún plan.';box.append(p);return;}
  const sorted=[...planActivationRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  for(const r of sorted.slice(0,8)){
   const line=document.createElement('div');line.className='credit-request-row';
-  const label=document.createElement('strong');label.textContent=`${r.plan} · ${money(r.amount)} DEMO`;
+  const label=document.createElement('strong');label.textContent=`${r.plan} · ${money(r.amount)} USDT (valor ilustrativo)`;
   const state=document.createElement('span');state.className='tag '+(r.status==='approved'?'ic-plan-activated':r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
   state.textContent=r.status==='approved'?'Plan activado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
   line.append(label,state);box.append(line);
