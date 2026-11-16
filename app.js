@@ -681,7 +681,7 @@ function startPlanInvestment(){
  if(plans[selected]&&!approved){openPlanWallet(selected);return;}
  const entries=Object.entries(plans).map(([name,p])=>
    `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)} DEMO</button>`).join('');
- modal('Seleccionar plan para la cartera de práctica',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud propia y la aprobación del profesor.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
+ modal('Seleccionar plan para la cartera de práctica',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud independiente y su aprobación.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
  modalContent.querySelectorAll('[data-choose-wallet-plan]').forEach(b=>b.addEventListener('click',()=>{
   const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
  }));
@@ -695,7 +695,7 @@ function renderCreditRequests(){
  const rows=[...creditRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  const pending=rows.filter(r=>r.status==='pending');
  const heading=document.createElement('h2');heading.textContent=`Solicitudes de inversión virtual ${pending.length?'· '+pending.length+' pendiente(s)':''}`;box.append(heading);
- const note=document.createElement('p');note.className='tiny';note.textContent='Importes de práctica para el aula. Ninguna solicitud aumenta tu saldo antes de la aprobación del profesor.';box.append(note);
+ const note=document.createElement('p');note.className='tiny';note.textContent='Importes de práctica para el aula. El saldo se actualiza cuando se aprueba la solicitud.';box.append(note);
  if(!rows.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Todavía no has enviado solicitudes.';box.append(empty);return;}
  for(const req of rows.slice(0,8)){
   const line=document.createElement('div');line.className='credit-request-row';
@@ -714,7 +714,7 @@ function renderCreditRequests(){
   for(const r of approved){const n=num(r.amount);amounts.set(n,(amounts.get(n)||0)+1);}
   const repeated=[...amounts].filter(([n,c])=>n>=1&&c>1);
   if(repeated.length){const warning=document.createElement('p');warning.className='notice';
-   warning.textContent='Hay varias aprobaciones por el mismo importe ('+repeated.map(([n,c])=>c+' × '+money(n)).join(', ')+'). Pide al profesor que compruebe si corresponden a solicitudes distintas o a un duplicado.';
+   warning.textContent='Hay varias aprobaciones por el mismo importe ('+repeated.map(([n,c])=>c+' × '+money(n)).join(', ')+'). Solicita al administrador que compruebe si corresponden a solicitudes distintas o a un duplicado.';
    box.append(warning);
   }
  }
@@ -736,7 +736,7 @@ function onCreditRequests(rows){
   account.cash=num(account.cash+n);
   if(!lockAnchor())account.withdrawalAnchor=timestampMs(req.decisionAt)||timestampMs(req.createdAt)||Date.now();
   pendingContributions.push({amount:n,reference:req.id.slice(0,35)});
-  tx('Crédito virtual aprobado por el profesor',n,'Acreditado','deposit');
+  tx('Crédito de simulación aprobado',n,'Acreditado','deposit');
   record('deposit_confirmed',`Se acreditaron ${n.toFixed(2)} USDT de práctica tras aprobación docente`);
   changed=true;
  }
