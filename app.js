@@ -639,12 +639,12 @@ function openDemoPaymentMethods(plan,amount){
 function renderPlanActivationRequests(){
  const box=$('#planActivationBox');if(!box)return;box.replaceChildren();
  const h=document.createElement('h2');h.textContent='Activaciones de planes';box.append(h);
- const tip=document.createElement('p');tip.className='tiny';tip.textContent='Solicitudes de activación de planes sujetas a validación administrativa.';box.append(tip);
+ const tip=document.createElement('p');tip.className='tiny';tip.textContent='Planes con fondos de práctica sujetos a revisión.';box.append(tip);
  if(!planActivationRequests.length){const p=document.createElement('p');p.className='muted';p.textContent='Aún no has solicitado activar ningún plan.';box.append(p);return;}
  const sorted=[...planActivationRequests].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
  for(const r of sorted.slice(0,8)){
   const line=document.createElement('div');line.className='credit-request-row';
-  const label=document.createElement('strong');label.textContent=`${r.plan} · ${money(r.amount)} USDT (valor ilustrativo)`;
+  const label=document.createElement('strong');label.textContent=`${r.plan} · ${money(r.amount)} USDT`;
   const state=document.createElement('span');state.className='tag '+(r.status==='approved'?'ic-plan-activated':r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
   state.textContent=r.status==='approved'?'Plan activado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
   line.append(label,state);box.append(line);
@@ -765,13 +765,13 @@ function renderWithdrawalRequests(){
  const ordered=[...withdrawalRequests].sort((a,b)=>(timestampMs(b.createdAt)||0)-(timestampMs(a.createdAt)||0));
  const pending=ordered.filter(r=>r.status==='pending');
  const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
- box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Simulación educativa: ninguna aprobación transfiere dinero ni criptomonedas.'}));
+ box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Los retiros de práctica no transfieren dinero.'}));
  if(!ordered.length){box.append(Object.assign(document.createElement('p'),{className:'muted',textContent:'Todavía no hay solicitudes de retiro.'}));return;}
  for(const r of ordered.slice(0,8)){
   const row=document.createElement('div');row.className='credit-request-row';
-  const amount=document.createElement('strong');amount.textContent=money(r.amount)+' · virtual';
+  const amount=document.createElement('strong');amount.textContent=money(r.amount);
   const state=document.createElement('span');state.className='tag '+(r.status==='approved'?'ic-withdrawal-approved':r.status==='pending'?'warn':r.status==='rejected'?'danger':'');
-  state.textContent=r.status==='approved'?'Aprobada · saldo virtual descontado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
+  state.textContent=r.status==='approved'?'Retiro aprobado':r.status==='rejected'?'Rechazada':'Pendiente de revisión';
   row.append(amount,state);box.append(row);
  }
 }
