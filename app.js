@@ -680,7 +680,7 @@ function startPlanInvestment(){
  const approved=planActivationRequests.some(r=>r.plan===selected&&r.status==='approved');
  if(plans[selected]&&!approved){openPlanWallet(selected);return;}
  const entries=Object.entries(plans).map(([name,p])=>
-   `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)} DEMO</button>`).join('');
+   `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)}</button>`).join('');
  modal('Seleccionar plan',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud independiente y su aprobación.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
  modalContent.querySelectorAll('[data-choose-wallet-plan]').forEach(b=>b.addEventListener('click',()=>{
   const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
