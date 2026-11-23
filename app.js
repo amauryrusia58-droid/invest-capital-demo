@@ -680,7 +680,7 @@ function startPlanInvestment(){
  const approved=planActivationRequests.some(r=>r.plan===selected&&r.status==='approved');
  if(plans[selected]&&!approved){openPlanWallet(selected);return;}
  const entries=Object.entries(plans).map(([name,p])=>
-   `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)}</button>`).join('');
+   `<button type="button" class="btn btn-soft" data-choose-wallet-plan="${esc(name)}" style="width:100%;justify-content:space-between;margin:5px 0">${esc(name)} · ${money(p.min)} DEMO</button>`).join('');
  modal('Seleccionar plan',`<p>Elige el plan que deseas activar. Cada plan requiere una solicitud independiente y su aprobación.</p><div>${entries}</div><p class="tiny">Todo el proceso es de práctica; no se envían criptomonedas.</p>`);
  modalContent.querySelectorAll('[data-choose-wallet-plan]').forEach(b=>b.addEventListener('click',()=>{
   const p=b.dataset.chooseWalletPlan;rememberChosenPlan(p);showChosenPlanBanner();openPlanWallet(p);
@@ -765,7 +765,7 @@ function renderWithdrawalRequests(){
  const ordered=[...withdrawalRequests].sort((a,b)=>(timestampMs(b.createdAt)||0)-(timestampMs(a.createdAt)||0));
  const pending=ordered.filter(r=>r.status==='pending');
  const heading=document.createElement('h2');heading.textContent='Solicitudes de retiro'+(pending.length?` · ${pending.length} pendiente(s)`:'');box.append(heading);
- box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Los retiros de práctica no transfieren dinero.'}));
+ box.append(Object.assign(document.createElement('p'),{className:'tiny',textContent:'Estado de las solicitudes registradas. Operaciones simuladas, sin transferencias monetarias reales.'}));
  if(!ordered.length){box.append(Object.assign(document.createElement('p'),{className:'muted',textContent:'Todavía no hay solicitudes de retiro.'}));return;}
  for(const r of ordered.slice(0,8)){
   const row=document.createElement('div');row.className='credit-request-row';
