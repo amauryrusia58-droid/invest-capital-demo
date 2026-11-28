@@ -1,0 +1,86 @@
+/* Invest Capital · actualización de interfaz del modal "Invertir".
+   Ámbito exclusivo: #actionModal cuando contiene .ic-invest-v2.
+   No altera la portada, Firebase, perfiles, planes ni otros modales. */
+#actionModal .dialog:has(.ic-invest-v2){
+  box-sizing:border-box;width:min(94vw,680px);max-width:680px;max-height:min(92dvh,880px);
+  overflow-y:auto;padding:clamp(18px,3vw,30px);border:1px solid rgba(183,114,245,.45);
+  border-radius:24px;background:radial-gradient(ellipse at 95% -5%,rgba(102,43,153,.30),transparent 58%),linear-gradient(145deg,#150f20,#0e0c15 80%);
+  box-shadow:0 28px 80px rgba(0,0,0,.65),0 0 30px rgba(113,35,168,.13);
+  color:#f6f1ff;
+}
+#actionModal .dialog:has(.ic-invest-v2) #modalTitle{margin:2px 0 14px;text-align:left;font-size:clamp(21px,3.7vw,28px);letter-spacing:-.035em;color:#faf5ff}
+#actionModal .dialog:has(.ic-invest-v2) .ic-payment-brand{flex-direction:row;gap:12px;margin:0 0 12px;align-items:center;justify-content:flex-start}
+#actionModal .dialog:has(.ic-invest-v2) .ic-payment-brand strong{font:800 clamp(18px,3.5vw,25px)/1.1 system-ui,-apple-system,sans-serif;letter-spacing:.055em;text-shadow:none}
+#actionModal .dialog:has(.ic-invest-v2) .ic-payment-brand-bars{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6c2dbb,#b170ef);width:38px;height:38px;border-radius:11px;font-size:22px;letter-spacing:-.2em;color:#fff;text-shadow:none}
+#actionModal .dialog:has(.ic-invest-v2) #modalContent{color:#dfd3e7}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-v2{display:flex;flex-direction:column;gap:13px;min-width:0}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-v2 [hidden]{display:none!important}
+#actionModal .dialog:has(.ic-invest-v2) .ic-demo-fixed-sum{margin:0;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left!important;background:#20172d!important;border:1px solid #513267!important;padding:14px 16px!important;border-radius:13px!important;color:#cbbadb!important;font-size:13px!important}
+#actionModal .dialog:has(.ic-invest-v2) .ic-demo-fixed-sum strong{white-space:nowrap;font-size:clamp(15px,2.8vw,20px);color:white}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-picker,
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected{min-width:0}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-section-title{display:flex;gap:12px;align-items:center;margin:18px 0 14px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-section-title h3{font-size:16px;font-weight:750;margin:0 0 3px;color:#fff}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-section-title p{margin:0;font-size:12px;color:#b8a8c9}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-step{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font:800 11px/1 system-ui,sans-serif;color:#dec4ff;background:#342049;border:1px solid #745196;border-radius:999px;padding:8px 10px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-method-grid{display:flex;flex-direction:column;gap:10px;margin:0}
+#actionModal .dialog:has(.ic-invest-v2) .ic-method-choice.ic-showcase-choice{box-sizing:border-box;width:100%;min-height:90px;display:flex;flex-direction:row;justify-content:flex-start;align-items:center;text-align:left;gap:16px;padding:14px 16px;border:1px solid #49345d;border-radius:15px;background:linear-gradient(120deg,#251832,#191423);box-shadow:inset 0 1px 0 #ffffff0b;transition:border-color .16s,background .16s,box-shadow .16s,transform .16s;cursor:pointer;color:#f7f1ff}
+#actionModal .dialog:has(.ic-invest-v2) .ic-method-choice.ic-showcase-choice:hover{border-color:#aa64db;background:#2d1e42;transform:translateY(-1px);box-shadow:0 8px 18px #0003}
+#actionModal .dialog:has(.ic-invest-v2) .ic-method-choice.ic-showcase-choice:focus-visible,
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-copy:focus-visible,
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-change:focus-visible{outline:3px solid #ce9bff;outline-offset:3px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-logo,
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-mark{display:inline-flex;align-items:center;justify-content:center;min-width:58px;width:58px;height:58px;flex:0 0 58px;background:#130d1d;border:1px solid #67417d;border-radius:15px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-logo .ic-sber-logo,
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-mark .ic-sber-logo{width:39px;height:39px;flex-basis:39px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-logo .ic-crypto-symbols,
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-mark .ic-crypto-symbols{gap:2px;transform:scale(.78)}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-info{display:flex;flex:1;flex-direction:column;gap:5px;min-width:0}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-info strong{color:#fff;font-size:clamp(15px,2.9vw,18px);line-height:1.2;letter-spacing:.02em}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-info small{color:#a999bc;font-size:12px;line-height:1.35}
+#actionModal .dialog:has(.ic-invest-v2) .ic-choice-chevron{margin-left:auto;color:#d5b6ed;font-size:29px;font-weight:400;line-height:1;transform:translateY(-2px)}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:13px 0 17px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-change{color:#d6b7f2;border:1px solid #6e448c;background:#271b38;cursor:pointer;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-change:hover{background:#402657}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-head{display:flex;align-items:center;gap:13px;min-width:0;margin:0 0 14px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-head>div{min-width:0;display:flex;flex-direction:column;gap:5px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-head strong{font-size:18px;font-weight:800;color:#fff}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-selected-head small{font-size:12px;color:#bbabc9}
+#actionModal .dialog:has(.ic-invest-v2) .ic-conversion-display{margin:0 0 12px;background:#1f172b!important;border:1px solid #57406a!important;border-radius:13px!important;padding:12px 16px!important}
+#actionModal .dialog:has(.ic-invest-v2) .ic-conversion-display strong{font-size:21px;color:#fff}
+#actionModal .dialog:has(.ic-invest-v2) .ic-method-detail{margin:0;background:#17111f!important;border:1px solid #57406a!important;border-radius:16px!important;padding:12px!important;min-height:0}
+#actionModal .dialog:has(.ic-invest-v2) .ic-wallet-head{display:flex;justify-content:space-between;gap:10px;margin:3px 3px 9px;color:#c8b6d7;font-size:12px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-wallet-head b{color:#bb8ed8;letter-spacing:.07em;font-size:10px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-sber-card,
+#actionModal .dialog:has(.ic-invest-v2) .ic-usdt-card{border-radius:15px;background:linear-gradient(135deg,#34214c,#24172f 63%,#1b1423)!important;border:1px solid #785297!important;box-shadow:inset 0 1px 0 #ffffff12,0 12px 30px #0003;padding:18px;margin:0;color:#fff}
+#actionModal .dialog:has(.ic-invest-v2) .ic-sber-card-heading,
+#actionModal .dialog:has(.ic-invest-v2) .ic-usdt-card-heading{font-size:15px;align-items:center}
+#actionModal .dialog:has(.ic-invest-v2) .ic-sber-card-heading small,
+#actionModal .dialog:has(.ic-invest-v2) .ic-usdt-card-heading small{color:#d0bddb}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-reference{display:flex;align-items:center;gap:12px;justify-content:space-between;min-width:0;padding:14px 0 10px;font-size:clamp(13px,2.5vw,17px);letter-spacing:.025em;line-height:1.5}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-reference>span{min-width:0;flex:1;overflow-wrap:anywhere;word-break:break-word;user-select:text}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-copy{border:1px solid #cb8cfa;background:linear-gradient(120deg,#a84ceb,#7623bb);box-shadow:0 4px 12px #6d22a744;color:#fff;font-weight:800;font-size:13px;border-radius:10px;min-height:43px;min-width:83px;padding:10px 13px;flex:0 0 auto;cursor:pointer;letter-spacing:0}
+#actionModal .dialog:has(.ic-invest-v2) .ic-invest-copy:hover{background:linear-gradient(120deg,#bb62f5,#892cd1)}
+#actionModal .dialog:has(.ic-invest-v2) .ic-demo-copy-feedback{font-size:12px;color:#d8b0ef;margin:10px 5px 2px}
+#actionModal .dialog:has(.ic-invest-v2) .ic-payment-disclosure{font-size:11px!important;color:#9c8bae!important;opacity:.8;text-align:left!important;margin:12px 0 0!important}
+#actionModal .dialog:has(.ic-invest-v2) .dialog-actions{padding-top:12px;border-top:1px solid #49335a;margin-top:17px;gap:10px}
+#actionModal .dialog:has(.ic-invest-v2) .dialog-actions .btn{min-height:43px;border-radius:11px;min-width:110px}
+#actionModal .dialog:has(.ic-invest-v2) #confirmModal:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+@media(max-width:570px){
+ #actionModal .dialog:has(.ic-invest-v2){width:min(96vw,480px);max-height:94dvh;padding:17px 15px;border-radius:19px}
+ #actionModal .dialog:has(.ic-invest-v2) #modalTitle{margin:1px 0 12px;font-size:23px}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-method-choice.ic-showcase-choice{min-height:78px;padding:12px;gap:12px;border-radius:13px}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-choice-logo,.ic-invest-selected-mark{min-width:49px;width:49px;height:49px;flex-basis:49px}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-choice-info strong{font-size:16px}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-demo-fixed-sum{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 13px!important}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-invest-reference{align-items:flex-start;gap:9px;font-size:12px}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-invest-copy{min-width:74px;font-size:12px;padding:8px 10px}
+ #actionModal .dialog:has(.ic-invest-v2) .ic-sber-card,#actionModal .dialog:has(.ic-invest-v2) .ic-usdt-card{padding:13px}
+ #actionModal .dialog:has(.ic-invest-v2) .dialog-actions{display:grid;grid-template-columns:1fr 1fr}
+ #actionModal .dialog:has(.ic-invest-v2) .dialog-actions button{min-width:0;width:100%}
+}
+@media(prefers-reduced-motion:reduce){#actionModal .dialog:has(.ic-invest-v2) .ic-method-choice.ic-showcase-choice{transition:none}}
+/* El aviso de simulación ya existe dentro del contenido: ocultar el duplicado automático. */
+#actionModal .dialog:has(.ic-invest-v2)::after{display:none!important}
+/* Acciones visibles también al desplazarse por referencias largas en móvil. */
+#actionModal .dialog:has(.ic-invest-v2) .dialog-actions{position:sticky;bottom:-3px;z-index:2;background:linear-gradient(180deg,rgba(18,12,28,.92),#130e1d);padding:13px 1px 4px}

@@ -1,0 +1,310 @@
+import {firebaseConfig, firebaseEnabled, ADMIN_EMAIL} from './firebase-config.js';
+let firebaseCache;
+export {firebaseEnabled, ADMIN_EMAIL};
+let authCache;
+export function getFirebaseAuth(){
+ if(!firebaseEnabled)return Promise.resolve(null);
+ if(!authCache)authCache=(async()=>{
+   const [App,Auth]=await Promise.all([
+     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
+     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js')
+   ]);
+   const app=App.getApps().length?App.getApp():App.initializeApp(firebaseConfig);
+   const auth=Auth.getAuth(app);
+   await Auth.setPersistence(auth,Auth.browserSessionPersistence);
+   return {app,auth,Auth};
+ })().catch(error=>{authCache=undefined;throw error;});
+ return authCache;
+}
+export async function getFirebase(){
+ if(!firebaseEnabled)return null;
+ if(!firebaseCache)firebaseCache=Promise.all([
+   getFirebaseAuth(),import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
+ ]).then(([base,Store])=>({...base,Store,db:Store.getFirestore(base.app)}))
+   .catch(error=>{firebaseCache=undefined;throw error;});
+ return firebaseCache;
+}
+async function authUser(auth,Auth){return await new Promise((resolve,reject)=>{let off=()=>{};off=Auth.onAuthStateChanged(auth,u=>{off();resolve(u);},reject);});}
+export async function studentStart(profile){
+ const name=String(profile?.name||profile?.alias||'').trim().slice(0,60);
+ const email=String(profile?.email||'').trim().toLowerCase().slice(0,120);
+ const group=String(profile?.group||'').trim().slice(0,40);
+ const alias=name;
+ const f=await getFirebase();if(!f)return {mode:'local',uid:'local'};
+ const {auth,db,Auth,Store}=f;
+ let user=await authUser(auth,Auth);
+ if(!user) throw new Error('Tu sesión de usuario ha terminado. Vuelve a iniciar sesión desde la portada.');
+ const token=await user.getIdTokenResult();
+ if(user.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase())throw new Error('La cuenta administradora debe acceder desde su consola privada.');
+ if(!user.isAnonymous&&token.signInProvider!=='password')throw new Error('Inicia sesión con el correo y contraseña del usuario desde la portada.');
+ if(email&&user.email&&user.email.toLowerCase()!==email) throw new Error('La sesión de Firebase corresponde a otro usuario. Inicia sesión con la cuenta correcta.');
+ const ref=Store.doc(db,'sessions',user.uid);
+ const snap=await Store.getDoc(ref);
+ const data={view:'resumen',lastAction:'Acceso al panel',lastSeen:Store.serverTimestamp()};
+ if(!snap.exists()) await Store.setDoc(ref,{alias,email,group,createdAt:Store.serverTimestamp(),...data});
+ else await Store.updateDoc(ref,data);
+ return {mode:'cloud',uid:user.uid,db,Store};
+}
+export async function logStudent(session,type,label,view){
+ if(session.mode!=='cloud')return;
+ const {uid,db,Store}=session;
+ const safeType=String(type).slice(0,30),safeLabel=String(label).slice(0,120),safeView=String(view).slice(0,30);
+ const batch=Store.writeBatch(db);
+ const evt=Store.doc(Store.collection(db,'sessions',uid,'events'));
+ batch.set(evt,{type:safeType,label:safeLabel,view:safeView,createdAt:Store.serverTimestamp()});
+ batch.update(Store.doc(db,'sessions',uid),{lastAction:safeLabel,view:safeView,lastSeen:Store.serverTimestamp()});
+ await batch.commit();
+}
+export function watchStage(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store}=session;
+ return Store.onSnapshot(Store.doc(db,'control','global'),snap=>onChange(snap.exists()?Number(snap.data().stage)||0:0),onError);
+}
+export async function adminLogin(){
+ const f=await getFirebase();if(!f)throw new Error('Primero configura Firebase en firebase-config.js.');
+ const {Auth,auth}=f;
+ const provider=new Auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});
+ const result=await Auth.signInWithPopup(auth,provider);
+ if(result.user.email?.toLowerCase()!==ADMIN_EMAIL || !result.user.emailVerified){await Auth.signOut(auth);throw new Error('Esta cuenta no está autorizada como administrador.');}
+ return f;
+}
+export async function adminCurrent(){
+ const f=await getFirebase();if(!f)return null;
+ const user=await authUser(f.auth,f.Auth);
+ return (user?.email?.toLowerCase()===ADMIN_EMAIL && user.emailVerified && user.providerData.some(p=>p.providerId==='google.com'))?f:null;
+}
+
+
+// REFERIDOS DE AULA - sin direcciones de pago, invitaciones públicas ni fondos reales.
+// Se usa el UID completo de Firebase para evitar colisiones de códigos por alias.
+export function classroomCode(uid){return 'IC-'+String(uid||'');}
+export function uidFromCode(code){
+ const text=String(code||'').trim();
+ return /^IC-[A-Za-z0-9_-]{16,64}$/.test(text)?text.slice(3):null;
+}
+export async function getClassroomLink(session){
+ if(session.mode!=='cloud')return null;
+ const {db,Store,uid}=session;
+ const ref=Store.doc(db,'referralLinks',uid);
+ const snap=await Store.getDoc(ref);
+ return snap.exists()?snap.data().inviterUid:null;
+}
+export async function linkClassroomMember(session,code){
+ if(session.mode!=='cloud')throw new Error('Necesitas Firebase para vincular cuentas del aula.');
+ const inviterUid=uidFromCode(code);
+ if(!inviterUid)throw new Error('El código debe comenzar por IC- y pertenecer a una cuenta.');
+ if(inviterUid===session.uid)throw new Error('No puedes asociarte a tu propia cuenta.');
+ const {db,Store,uid}=session;
+ const ref=Store.doc(db,'referralLinks',uid);
+ const previous=await Store.getDoc(ref);
+ if(previous.exists()){
+   if(previous.data().inviterUid===inviterUid)return inviterUid;
+   throw new Error('Tu sesión ya está vinculada a otro compañero; esa relación no puede cambiarse.');
+ }
+ // Firestore verifica que el invitador existe y se registró antes que esta cuenta.
+ await Store.setDoc(ref,{inviterUid,createdAt:Store.serverTimestamp()});
+ return inviterUid;
+}
+export async function classroomAncestors(session){
+ if(session.mode!=='cloud')return [];
+ const result=[],visited=new Set([session.uid]);let uid=session.uid;
+ for(let i=0;i<3;i++){
+   const snap=await session.Store.getDoc(session.Store.doc(session.db,'referralLinks',uid));
+   if(!snap.exists())break;
+   const parent=snap.data().inviterUid;
+   if(typeof parent!=='string'||visited.has(parent))break;
+   visited.add(parent);result.push(parent);uid=parent;
+ }
+ return result;
+}
+export async function recordClassroomContribution(session,amount,reference){
+ if(session.mode!=='cloud')return false;
+ const ancestors=await classroomAncestors(session);
+ if(!ancestors.length)return false;
+ const {db,Store,uid}=session;
+ const n=Math.round(Number(amount)*100)/100;
+ if(!(n>=1&&n<=100000))throw new Error('Importe fuera de rango.');
+ const safeRef=String(reference).slice(0,35);
+ const docId=uid+'_'+safeRef;
+ await Store.setDoc(Store.doc(db,'virtualContributions',docId),{
+   sourceUid:uid,sourceTag:'AL-'+uid.slice(0,6),ancestors,
+   reference:safeRef,amount:n,createdAt:Store.serverTimestamp()
+ });
+ return true;
+}
+export function watchClassroomRewards(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store,uid}=session;
+ const q=Store.query(Store.collection(db,'virtualContributions'),Store.where('ancestors','array-contains',uid));
+ return Store.onSnapshot(q,snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+
+// V5 · Solicitudes de saldo exclusivamente virtual. No pagos, carteras ni transferencias.
+export async function requestVirtualCredit(session, amount, studentAlias){
+ if(session.mode!=='cloud')throw new Error('La solicitud requiere conexión con Firebase.');
+ const n=Math.round(Number(amount)*100)/100;
+ if(!Number.isFinite(n)||n<1||n>100000)throw new Error('Cantidad ficticia fuera de rango.');
+ const {db,Store,uid}=session;
+ // Verificación adicional en servidor. Evita duplicados accidentales entre recargas,
+ // navegadores y solicitudes repetidas mientras hay una revisión pendiente.
+ const pendingQuery=Store.query(Store.collection(db,'virtualCreditRequests'),Store.where('studentUid','==',uid));
+ const current=await Store.getDocs(pendingQuery);
+ if(current.docs.some(d=>d.data()?.status==='pending')){
+  throw new Error('Ya tienes una solicitud de capital ficticio pendiente de aprobación. No la envíes otra vez.');
+ }
+ const ref=await Store.addDoc(Store.collection(db,'virtualCreditRequests'),{
+  studentUid:uid,studentAlias:String(studentAlias||'Usuario').trim().slice(0,60),
+  amount:n,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
+ });
+ return ref.id;
+}
+export function watchVirtualCreditRequests(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store,uid}=session;
+ // El filtro de propietario es indispensable para cumplir las reglas Firestore.
+ const q=Store.query(Store.collection(db,'virtualCreditRequests'),Store.where('studentUid','==',uid));
+ return Store.onSnapshot(q,snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export function watchAdminVirtualCreditRequests(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualCreditRequests'),Store.orderBy('createdAt','desc'),Store.limit(200)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export async function reviewVirtualCreditRequest(f,requestId,decision){
+ if(!['approved','rejected'].includes(decision))throw new Error('Decisión no válida.');
+ if(!/^[A-Za-z0-9]{15,40}$/.test(String(requestId)))throw new Error('Referencia de solicitud no válida.');
+ const {db,Store}=f,ref=Store.doc(db,'virtualCreditRequests',requestId);
+ await Store.runTransaction(db,async tx=>{
+  const snap=await tx.get(ref);
+  if(!snap.exists())throw new Error('No se encuentra la solicitud.');
+  if(snap.data().status!=='pending')throw new Error('La solicitud ya fue revisada.');
+  tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
+ });
+}
+
+// V6 · Peticiones de retirada de saldo exclusivamente ficticio.
+export async function requestVirtualWithdrawal(session, amount, studentAlias){
+ if(session.mode!=='cloud')throw new Error('Necesitas conexión con Firebase para solicitar el retiro.');
+ const n=Math.round(Number(amount)*100)/100;
+ if(!Number.isFinite(n)||n<50||n>100000)throw new Error('El retiro mínimo es de 50 USDT ficticios.');
+ const {db,Store,uid}=session;
+ const ref=await Store.addDoc(Store.collection(db,'virtualWithdrawalRequests'),{
+  studentUid:uid,studentAlias:String(studentAlias||'Usuario').trim().slice(0,60),
+  amount:n,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
+ });
+ return ref.id;
+}
+export function watchVirtualWithdrawalRequests(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store,uid}=session;
+ const q=Store.query(Store.collection(db,'virtualWithdrawalRequests'),Store.where('studentUid','==',uid));
+ return Store.onSnapshot(q,{includeMetadataChanges:true},snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()})),!snap.metadata.fromCache),onError);
+}
+export function watchAdminVirtualWithdrawalRequests(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualWithdrawalRequests'),Store.orderBy('createdAt','desc'),Store.limit(200)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export async function reviewVirtualWithdrawalRequest(f,requestId,decision){
+ if(!['approved','rejected'].includes(decision))throw new Error('Decisión inválida.');
+ if(!/^[A-Za-z0-9]{15,40}$/.test(String(requestId)))throw new Error('Referencia inválida.');
+ const {db,Store}=f,ref=Store.doc(db,'virtualWithdrawalRequests',requestId);
+ await Store.runTransaction(db,async tx=>{
+  const snap=await tx.get(ref);
+  if(!snap.exists())throw new Error('La solicitud no existe.');
+  if(snap.data().status!=='pending')throw new Error('La solicitud ya tiene una decisión.');
+  tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
+ });
+}
+
+// V8.3 · Activación de PLAN con USDT DEMO. Nunca se envía dinero ni una transacción blockchain.
+const CLASSROOM_PLAN_AMOUNTS={Essential:100,Advanced:300,Prime:500,'Magnate Supremo':1000,Platinum:1500,Signature:3000};
+export async function requestVirtualPlanActivation(session,plan,studentAlias,requestedAmount=CLASSROOM_PLAN_AMOUNTS[plan]){
+ if(session.mode!=='cloud')throw new Error('Debes estar conectado a Firebase para este ejercicio.');
+ if(!Object.hasOwn(CLASSROOM_PLAN_AMOUNTS,plan))throw new Error('Plan no reconocido.');
+ const amount=Number(requestedAmount);
+ if(!Number.isFinite(amount)||amount<CLASSROOM_PLAN_AMOUNTS[plan]||amount>100000||Math.abs(amount*100-Math.round(amount*100))>1e-6)throw new Error('Cantidad ficticia fuera del rango permitido para este plan.');
+ const {db,Store,uid}=session;
+ const q=Store.query(Store.collection(db,'virtualPlanRequests'),Store.where('studentUid','==',uid));
+ const snap=await Store.getDocs(q);
+ if(snap.docs.some(d=>d.data()?.status==='pending'))throw new Error('Ya hay una activación pendiente de revisión.');
+ if(snap.docs.some(d=>d.data()?.status==='approved'&&d.data()?.plan===plan))throw new Error('Este plan ya tiene una activación aprobada. Revisa tu cartera.');
+ const ref=await Store.addDoc(Store.collection(db,'virtualPlanRequests'),{
+  studentUid:uid,studentAlias:String(studentAlias||'Usuario').trim().slice(0,60),
+  plan,amount,currency:'USDT-DEMO',status:'pending',createdAt:Store.serverTimestamp()
+ });
+ return ref.id;
+}
+export function watchVirtualPlanRequests(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ const {db,Store,uid}=session;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualPlanRequests'),Store.where('studentUid','==',uid)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export function watchAdminVirtualPlanRequests(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.query(Store.collection(db,'virtualPlanRequests'),Store.orderBy('createdAt','desc'),Store.limit(200)),
+  snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+export async function reviewVirtualPlanRequest(f,requestId,decision){
+ if(!['approved','rejected'].includes(decision))throw new Error('Decisión no válida.');
+ if(!/^[A-Za-z0-9]{15,40}$/.test(String(requestId)))throw new Error('Identificador no válido.');
+ const {db,Store}=f,ref=Store.doc(db,'virtualPlanRequests',requestId);
+ await Store.runTransaction(db,async tx=>{
+  const snap=await tx.get(ref);
+  if(!snap.exists())throw new Error('No se encontró la solicitud.');
+  if(snap.data().status!=='pending')throw new Error('La solicitud ya fue revisada.');
+  tx.update(ref,{status:decision,decisionAt:Store.serverTimestamp(),decidedBy:ADMIN_EMAIL});
+ });
+}
+
+// V8.5 · Snapshot informativo del simulador, declarado por el navegador del usuario.
+// No es saldo auditado ni autoriza pagos o transferencias.
+export async function saveVirtualEarningsSummary(session,amounts){
+ if(session.mode!=='cloud')return;
+ const {db,Store,uid}=session;
+ const fields=['grossPlanYield','unpaidPlanYield','referralEarned','referralAvailable','availableToRequest','daysRemaining'];
+ const doc={currency:'USDT-DEMO',updatedAt:Store.serverTimestamp()};
+ for(const key of fields){
+  const value=Number(amounts[key]);
+  if(!Number.isFinite(value)||value<0||value>1000000)throw new Error('Resumen de cuenta no válido.');
+  doc[key]=key==='daysRemaining'?Math.round(value):Math.round(value*100)/100;
+ }
+ await Store.setDoc(Store.doc(db,'virtualEarningsSummaries',uid),doc);
+}
+export function watchAdminVirtualEarningsSummaries(f,onChange,onError){
+ const {db,Store}=f;
+ return Store.onSnapshot(Store.collection(db,'virtualEarningsSummaries'),snap=>onChange(snap.docs.map(d=>({id:d.id,...d.data()}))),onError);
+}
+
+// V8.7 · Ajuste del administrador sobre una cuenta de usuario del aula.
+// Documento controlado por las reglas de Firestore: sólo administrador escribe;
+// el usuario autenticado sólo puede leer SU propio ejercicio.
+export function watchStudentTeacherSettings(session,onChange,onError){
+ if(session.mode!=='cloud')return ()=>{};
+ return session.Store.onSnapshot(
+  session.Store.doc(session.db,'studentTestOverrides',session.uid),
+  {includeMetadataChanges:true},
+  snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0},!snap.metadata.fromCache),onError);
+}
+export function watchAdminTeacherSettings(f,studentUid,onChange,onError){
+ if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Identificador de usuario inválido.');
+ return f.Store.onSnapshot(f.Store.doc(f.db,'studentTestOverrides',studentUid),
+   snap=>onChange(snap.exists()?snap.data():{extraDays:0,bonus:0}),onError);
+}
+export async function setAdminTeacherSettings(f,studentUid,extraDays,bonus,plan=''){
+ if(!/^[A-Za-z0-9_-]{16,128}$/.test(String(studentUid)))throw new Error('Selecciona un usuario válido.');
+ const d=Number(extraDays),b=Number(bonus);
+ if(!Number.isInteger(d)||d<0||d>365)throw new Error('Los días adelantados deben estar entre 0 y 365.');
+ if(!Number.isFinite(b)||b<0||b>100000||Math.abs(Math.round(b*100)-b*100)>1e-6)throw new Error('Importe inválido (máximo 100.000, dos decimales).');
+ const planNames=['','Essential','Advanced','Prime','Magnate Supremo','Platinum','Signature'];
+ if(!planNames.includes(plan))throw new Error('Selecciona un plan válido.');
+ const {Store,db}=f,ref=Store.doc(db,'studentTestOverrides',studentUid);
+ // Misma selección = conservar fecha original. Cambiar de plan inicia un ciclo nuevo.
+ const oldSnap=await Store.getDoc(ref),prior=oldSnap.exists()?oldSnap.data():{};
+ const started=plan?(prior.plan===plan && Number.isSafeInteger(prior.planStartedAt)&&prior.planStartedAt>0?prior.planStartedAt:Date.now()):0;
+ await Store.setDoc(ref,{
+  extraDays:d,bonus:b,plan,planStartedAt:started,
+  currency:'USDT-DEMO',updatedBy:ADMIN_EMAIL,updatedAt:Store.serverTimestamp()
+ });
+}
