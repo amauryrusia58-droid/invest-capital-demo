@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const cfg = window.INVEST_DEMO_CONFIG;
-const { auth } = window.supabase.createClient(cfg.supabaseUrl, cfg.publishableKey);
+const cliente = window.supabase.createClient(cfg.supabaseUrl, cfg.publishableKey);
+const { auth } = cliente;
 const step = new URLSearchParams(location.search).get('paso');
 function view(id, title, status = '') {
   for (const section of ['verify','change','profile']) $(section).hidden = section !== id;
@@ -25,6 +26,21 @@ function submit(id, action) {
     finally { btn.disabled = false; }
   };
 }
+let intento = null;
+submit('solicitud', async fields => {
+  const tipo = fields.tipo.value;
+  const importe = Number(fields.importe.value);
+  const { data, error: authError } = await auth.getUser();
+  if (authError || !data.user) throw Error('Vuelve a iniciar sesión para enviar la solicitud.');
+  const contenido = JSON.stringify([data.user.id, tipo, importe]);
+  if (intento?.contenido !== contenido) intento = { contenido, id: crypto.randomUUID() };
+  const { error } = await cliente.from('aula_solicitudes').insert({id:intento.id,tipo,importe});
+  if (error && error.code !== '23505') throw Error('No se pudo confirmar el envío. Vuelve a intentarlo.');
+  intento = null;
+  $('solicitud').reset();
+  $('status').textContent = '';
+  $('avisoSolicitud').textContent = 'Solicitud recibida para revisión.';
+});
 submit('verify', async fields => {
   const recovery = step === 'codigo-recuperacion';
   const { error } = await auth.verifyOtp({ type: recovery ? 'recovery' : 'email', email: fields.email.value.trim(), token: fields.token.value.trim() });
