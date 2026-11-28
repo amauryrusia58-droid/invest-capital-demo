@@ -640,7 +640,7 @@
 
   
 <div aria-labelledby="consentTitle" aria-modal="true" class="overlay hidden" id="consent" role="dialog">
-<form class="dialog register-dialog auth-dialog" id="registrationForm" novalidate="">
+<form class="dialog register-dialog auth-dialog" id="registrationForm" method="post" novalidate="">
 <p class="dialog-kicker">INVEST CAPITAL · REGISTRO</p>
 <h2 id="consentTitle">Crear cuenta</h2>
 <p>Crea tus credenciales de acceso a Invest Capital.</p><p class="ic-selected-plan-hint hidden" id="selectedPlanReg" role="status"></p>
@@ -666,7 +666,7 @@
 <p class="switch-auth">¿Ya tienes una cuenta? <button class="auth-link" id="goLogin" type="button">Iniciar sesión</button></p>
 </form>
 </div><div aria-labelledby="loginTitle" aria-modal="true" class="overlay hidden" id="loginOverlay" role="dialog">
-<form class="dialog auth-dialog login-dialog" id="loginForm" novalidate="">
+<form class="dialog auth-dialog login-dialog" id="loginForm" method="post" novalidate="">
 <p class="dialog-kicker">INVEST CAPITAL · ACCESO</p>
 <h2 id="loginTitle">Iniciar sesión</h2>
 <p>Entra con el correo y la contraseña de tu cuenta.</p><p class="ic-selected-plan-hint hidden" id="selectedPlanLogin" role="status"></p>
@@ -676,7 +676,7 @@
 <div class="dialog-actions"><button class="btn btn-soft" id="cancelLogin" type="button">Cancelar</button><button class="btn btn-primary" id="submitLogin" type="submit">Entrar a mi cuenta</button></div>
 <p aria-live="polite" class="form-error" id="loginError" role="status"></p>
 <p class="switch-auth">¿No tienes una cuenta? <button class="auth-link" id="goRegister" type="button">Registrarse</button></p>
-<p class="tiny">¿Tenías una cuenta antigua sin contraseña? Ábrela primero en el mismo navegador y utiliza la opción para conservarla al registrarte.</p>
+<p class="tiny">¿Tu cuenta usa el panel anterior? <a href="acceso-anterior.html">Entrar al panel anterior</a>.</p>
 </form>
-</div><button class="hidden" id="bottomBtn" type="button">Crear cuenta</button><script src="landing.js?v=95" type="module"></script><script>document.getElementById('heroLogin')?.addEventListener('click',()=>document.getElementById('openApp').click());</script><script>if(document.getElementById("sim-amount")) updateSimulator(1000);</script></body>
+</div><button class="hidden" id="bottomBtn" type="button">Crear cuenta</button><script src="config.js"></script><script src="supabase.js"></script><script src="landing.js?v=supabase1" type="module"></script><script>document.getElementById('heroLogin')?.addEventListener('click',()=>document.getElementById('openApp').click());</script><script>if(document.getElementById("sim-amount")) updateSimulator(1000);</script></body>
 </html>

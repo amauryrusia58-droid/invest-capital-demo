@@ -88,6 +88,10 @@
 <main class="ic-admin-main">
 <section class="pane" id="adminGate" style="max-width:630px;margin:45px auto"><div class="eyebrow">ADMINISTRACIÓN</div><h1>Acceso del administrador</h1><p class="muted">Entra utilizando la cuenta de Google autorizada. Las acciones se muestran por usuario, sin contraseñas ni datos financieros.</p><button class="btn btn-primary btn-large" id="loginAdmin">Acceder con Google</button><p aria-live="polite" class="form-error" id="loginError"></p><p class="tiny">Si esta instalación todavía no tiene configurado Firebase, consulta el archivo INSTRUCCIONES.md.</p></section>
 <section class="hidden" id="adminContent">
+  <section id="directorioSupabase" class="pane"><h2>Alumnos de Supabase</h2>
+  <button type="button" data-recargar>Actualizar</button> <button type="button" data-volver hidden>Volver a alumnos</button>
+  <p role="status"></p><ul></ul><button type="button" data-anterior disabled>Anterior</button>
+  <button type="button" data-siguiente disabled>Siguiente</button></section>
   <section class="ic-overview-strip" id="icHome" aria-label="Resumen general"><div class="ic-overview-heading"><b>Resumen del aula</b><span id="connectionBadge" class="ic-sync-state">Conectando…</span></div>
    <div class="ic-general-kpis"><div><small>Usuarios registrados</small><strong id="sessionsCount">0</strong></div><div><small>Activos (5 min)</small><strong id="activeCount">0</strong></div><div><small>Inversiones pendientes</small><strong id="pendingPlanApprovals">0</strong></div><div><small>Retiros pendientes</small><strong id="pendingWithdrawals">0</strong></div><div><small>Escenario</small><strong id="scenarioLabel">Normal</strong></div><div class="hidden"><span id="pendingApprovals">0</span><span id="withdrawCount">0</span></div></div>
   </section>
@@ -152,5 +156,5 @@
   <p class="ic-admin-edu-note">Invest Capital · Los importes del panel son registros de referencia. Los datos del perfil se consultan con autorización administrador.</p>
  </section>
 </main></div>
-<script type="module" src="admin.js?v=105"></script>
+<script src="config.js"></script><script type="module" src="admin.js?v=106"></script>
 </body></html>
