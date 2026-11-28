@@ -1,4 +1,3 @@
-import {abrirDirectorio} from './admin-supabase.js';
 import {adminLogin,adminCurrent,firebaseEnabled,ADMIN_EMAIL,watchAdminVirtualCreditRequests,reviewVirtualCreditRequest,watchAdminVirtualWithdrawalRequests,reviewVirtualWithdrawalRequest,watchAdminVirtualPlanRequests,reviewVirtualPlanRequest,watchAdminVirtualEarningsSummaries,watchAdminTeacherSettings,setAdminTeacherSettings} from './backend.js?v=93';
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
@@ -199,9 +198,7 @@ const shortDate=x=>{const d=date(x);return d?d.toLocaleString('es-ES',{dateStyle
 function setError(s){$('#loginError').textContent=s;}
 function teacherReady(f){
  firebase=f;$('#adminGate').classList.add('hidden');$('#adminContent').classList.remove('hidden');$('#logoutAdmin').classList.remove('hidden');$('#icSidebar').classList.remove('hidden');
- $('#adminIdentity').textContent=f.auth.currentUser.email;
- abrirDirectorio(f, window.INVEST_DEMO_CONFIG.supabaseUrl + '/functions/v1/aula-admin-alumnos');
- watch();
+ $('#adminIdentity').textContent=f.auth.currentUser.email;watch();
 }
 function watch(){
  const {db,Store}=firebase;
