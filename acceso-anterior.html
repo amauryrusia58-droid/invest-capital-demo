@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Acceso anterior · Invest Capital</title>
+<style>body{max-width:28rem;margin:8vh auto;padding:1.25rem;background:#161222;color:#faf8ff;font:1rem/1.5 system-ui}label,input{display:block}input,button{box-sizing:border-box;padding:.7rem;font:inherit;border-radius:.5rem}input{width:100%;margin:.3rem 0 1rem}a{color:#dabfff}</style>
+<main><h1>Acceso con cuenta anterior</h1><form id="login" method="post"><label>Correo electrónico<input id="email" type="email" autocomplete="username" required></label><label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label><button disabled>Iniciar sesión</button></form><p id="status" role="status">Cargando acceso…</p><a href="index.html?login=1">Volver al acceso de alumnos</a></main>
+<script type="module">
+import {getFirebaseAuth,ADMIN_EMAIL} from './backend.js?v=95';
+const form=document.getElementById('login'), button=form.querySelector('button'), status=document.getElementById('status');
+form.onsubmit=async event=>{
+  event.preventDefault();
+  if(button.disabled)return;
+  button.disabled=true; status.textContent='Comprobando la cuenta…';
+  try{
+    const email=document.getElementById('email').value.trim();
+    if(email.toLowerCase()===ADMIN_EMAIL.toLowerCase())throw Error();
+    const f=await getFirebaseAuth();
+    await f.Auth.signInWithEmailAndPassword(f.auth,email,document.getElementById('password').value);
+    form.reset();location.replace('app.html');
+  }catch{status.textContent='No se pudo iniciar sesión. Revisa tus datos y tu conexión.';button.disabled=false;}
+};
+button.disabled=false;status.textContent='';
+</script></html>
