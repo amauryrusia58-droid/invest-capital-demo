@@ -1,6 +1,6 @@
 // Invest Capital V4.0: registro y acceso separados, con Firebase Authentication.
 // No se almacena ninguna contraseña en localStorage, Firestore ni formularios de correo.
-import {getFirebaseAuth,getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js?v=95';
+import {getFirebase, firebaseEnabled, ADMIN_EMAIL} from './backend.js?v=93';
 const $=id=>document.getElementById(id);
 const registerOverlay=$('consent'),loginOverlay=$('loginOverlay');
 const reg=$('registrationForm'),login=$('loginForm');
@@ -37,7 +37,7 @@ async function showRegister(){
  updatePlanHint();hideAll();regError.textContent='';displayExistingSession(null);legacyCheckbox.checked=false;legacyRow.classList.add('hidden');registerOverlay.classList.remove('hidden');nameInput.focus();
  // Solo ofrecemos conservar una cuenta cuando la cuenta anónima está abierta aquí.
  if(!firebaseEnabled)return;
- try{const f=await getFirebaseAuth();await f.auth.authStateReady();const u=f.auth.currentUser;
+ try{const f=await getFirebase();await f.auth.authStateReady();const u=f.auth.currentUser;
    if(registerOverlay.classList.contains('hidden'))return;
    displayExistingSession(u);
    if(u?.isAnonymous && isLegacy()){
@@ -60,7 +60,7 @@ $('changeStudentAccount').addEventListener('click',async()=>{
  if(busy)return;
  const button=$('changeStudentAccount');busy=true;button.disabled=true;button.textContent='Cerrando sesión…';regError.textContent='';
  try{
-  const f=await getFirebaseAuth();if(!f)throw new Error('Firebase no está disponible.');
+  const f=await getFirebase();if(!f)throw new Error('Firebase no está disponible.');
   await f.auth.authStateReady();
   if(f.auth.currentUser)await f.Auth.signOut(f.auth);
   // Borra solo los datos de acceso del navegador, NO las carteras guardadas por UID.
@@ -89,7 +89,7 @@ function errText(e){
 async function notifyRegistration(name,email,referral){
  const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),6000);
  try{
-  const r=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Invest Capital — Nuevo registro de usuario',_template:'table',nombre_y_apellidos:name,contacto:email,codigo_referido:referral||'Sin código',mensaje:'Alta académica; la contraseña no fue recopilada por este formulario.'}),signal:ctrl.signal});
+  const r=await fetch('https://formsubmit.co/ajax/investcapital8310@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Invest Capital — Nuevo registro de usuario',_template:'table',nombre_y_apellidos:name,contacto:email,codigo_referido:referral||'Sin código',mensaje:'Alta académica; la contraseña no fue recopilada por este formulario.'}),signal:ctrl.signal});
   const j=await r.json();localStorage.setItem('ic_v34_mail_status',r.ok&&(j.success===true||j.success==='true')?'aceptado por FormSubmit':'no confirmado');
  }catch{localStorage.setItem('ic_v34_mail_status','no confirmado');}
  finally{clearTimeout(timer);}
@@ -100,21 +100,6 @@ function setStudentLocals(name,email,referral,uid){
  localStorage.setItem('ic_v3_alias',name);
  localStorage.setItem('ic_v3_consent','yes');
  localStorage.setItem('ic_v3_auth_uid',uid);
-}
-function registrationKey(user){return 'ic_registration_'+user.uid;}
-function readSaved(key){
- try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}
-}
-async function finishRegistration(f,user,draft){
- if(user.displayName!==draft.name)await f.Auth.updateProfile(user,{displayName:draft.name});
- if(!user.emailVerified && !localStorage.getItem('ic_verificacion_enviada_'+user.uid)){
-   await f.Auth.sendEmailVerification(user);
-   localStorage.setItem('ic_verificacion_enviada_'+user.uid,String(Date.now()));
- }
- setStudentLocals(draft.name,user.email,draft.referral,user.uid);
- localStorage.setItem('ic_referral_'+user.uid,draft.referral||'');
- localStorage.removeItem(registrationKey(user));
- void notifyRegistration(draft.name,user.email,draft.referral);
 }
 function oldLedgerKey(name,group=''){return 'ic_v34_'+encodeURIComponent((name+'|'+group).toLowerCase());}
 reg.addEventListener('submit',async e=>{
@@ -127,9 +112,8 @@ reg.addEventListener('submit',async e=>{
  if(referral && !/^IC-[A-Za-z0-9_-]{16,64}$/.test(referral)){regError.textContent='El código debe comenzar por IC- y ser el código completo de Firebase.';return;}
  if(!firebaseEnabled){regError.textContent='Primero debes configurar Firebase; el registro con contraseña no funciona sin conexión.';return;}
  busy=true;const btn=$('acceptBtn');btn.disabled=true;btn.textContent='Creando cuenta…';
- let confirmedUser;
  try{
-  const f=await getFirebaseAuth();await f.auth.authStateReady();
+  const f=await getFirebase();await f.auth.authStateReady();
   const current=f.auth.currentUser;const upgrade=legacyCheckbox.checked;
   let user,actualName=name,actualReferral=referral;
   if(upgrade){
@@ -150,27 +134,19 @@ reg.addEventListener('submit',async e=>{
   }else{
    if(current&&!current.isAnonymous){displayExistingSession(current);throw new Error('Esta cuenta sigue iniciada. Pulsa «Cerrar sesión y registrar otra cuenta» antes de continuar.');}
    if(current?.isAnonymous)await f.Auth.signOut(f.auth);
-   // Si el servidor acepta el alta pero la respuesta se pierde, conserva solo los datos del perfil.
-   const prior=readSaved('ic_attempt_'+email);
-   if(!prior || Date.now()-prior.startedAt>86400000)localStorage.setItem('ic_attempt_'+email,JSON.stringify({name,referral,startedAt:Date.now()}));
    const created=await f.Auth.createUserWithEmailAndPassword(f.auth,email,password);
    user=created.user;
   }
-  confirmedUser=user;
-  const draft={name:actualName,referral:actualReferral};
-  localStorage.setItem(registrationKey(user),JSON.stringify(draft));
-  localStorage.removeItem('ic_attempt_'+email);
-  btn.textContent='Cuenta creada';
-  regError.textContent='Cuenta creada. Completando tu perfil y solicitando la verificación…';
-  await finishRegistration(f,user,draft);
-  location.href=planDestination();
- }catch(e){
-  regError.textContent=confirmedUser?'Cuenta creada. Inicia sesión con el mismo correo para completar tu perfil. '+errText(e):errText(e);
-  if(!confirmedUser && e?.code==='auth/network-request-failed'){
-   regError.textContent='Se perdió la conexión. Inicia sesión con el mismo correo para comprobar si se creó la cuenta.';
+  await f.Auth.updateProfile(user,{displayName:actualName});
+  // Solicita verificación al correo del nuevo usuario antes de sincronizar con Brevo.
+  if (!user.emailVerified) {
+   await f.Auth.sendEmailVerification(user);
   }
-  $('loginEmail').value=email;
- }
+  setStudentLocals(actualName,email,actualReferral,user.uid);
+  // Solo el nombre/correo del registro: jamás se transmiten contraseñas.
+  await notifyRegistration(actualName,email,actualReferral);
+  location.href=planDestination();
+ }catch(e){regError.textContent=errText(e);}
  finally{busy=false;btn.textContent='Crear cuenta';btn.disabled=!$('existingSessionNotice').classList.contains('hidden');}
 });
 const BREVO_WORKER_URL =
@@ -236,42 +212,17 @@ login.addEventListener('submit',async e=>{
  if(!firebaseEnabled){loginError.textContent='Firebase aún no está configurado.';return;}
  busy=true;const btn=$('submitLogin');btn.disabled=true;btn.textContent='Verificando…';
  try{
-  const f=await getFirebaseAuth();
+  const f=await getFirebase();
   const cred=await f.Auth.signInWithEmailAndPassword(f.auth,email,password);
   if(cred.user.email?.toLowerCase()===ADMIN_EMAIL){await f.Auth.signOut(f.auth);throw new Error('El administrador accede desde su consola privada con Google.');}
-  const user=cred.user;
-  let pending=readSaved(registrationKey(user));
-  const attempt=readSaved('ic_attempt_'+email);
-  if(!pending && attempt && !user.displayName && Math.abs(Date.parse(user.metadata?.creationTime)-attempt.startedAt)<120000){
-   pending={name:attempt.name,referral:attempt.referral};
-   localStorage.setItem(registrationKey(user),JSON.stringify(pending));
-  }
-  localStorage.removeItem('ic_attempt_'+email);
-  if(pending){
-   loginError.textContent='Cuenta encontrada. Completando tu perfil…';
-   await finishRegistration(f,user,pending);
-  }else{
-   const local=localStorage.getItem('ic_v3_auth_uid')===user.uid?readSaved('ic_v3_profile'):null;
-   let name=user.displayName||local?.name;
-   const referral=localStorage.getItem('ic_referral_'+user.uid)||local?.referralCode||'';
-   if(!name){
-    const {Store,db}=await getFirebase();
-    const snap=await Store.getDoc(Store.doc(db,'sessions',user.uid));
-    name=snap.exists()?snap.data().alias:'';
-    if(!name){
-     name=(window.prompt('Completa tu perfil: escribe tu nombre y apellidos.')||'').trim();
-     if(name.length<3||name.length>60||name.split(/\s+/).length<2)throw new Error('Introduce un nombre y apellidos válidos para continuar.');
-     const recovered=(window.prompt('Código de referido original (si tenías uno):',referral)||'').trim();
-     if(recovered&&!/^IC-[A-Za-z0-9_-]{16,64}$/.test(recovered))throw new Error('Revisa el código de referido.');
-     const draft={name,referral:recovered};
-     localStorage.setItem(registrationKey(user),JSON.stringify(draft));
-     await finishRegistration(f,user,draft);
-    }
-   }
-   setStudentLocals(name,email,localStorage.getItem('ic_referral_'+user.uid)||referral,user.uid);
-   await solicitarVerificacionPendiente(f,user);
-   await sincronizarBienvenidaBrevo(user);
-  }
+  const snap=await f.Store.getDoc(f.Store.doc(f.db,'sessions',cred.user.uid));
+  const oldData=snap.exists()?snap.data():{};
+  const name=String(oldData.alias||cred.user.displayName||'').trim();
+  if(!name)throw new Error('No se encontró un perfil de usuario para esta cuenta. Contacta al administrador.');
+  // El referido ya está asociado a su UID en Firestore, no vuelve a elegirse al entrar.
+  setStudentLocals(name,email,'',cred.user.uid);
+  await solicitarVerificacionPendiente(f, cred.user);
+  await sincronizarBienvenidaBrevo(cred.user);
   location.href=planDestination();
  }catch(e){loginError.textContent=errText(e);}
  finally{busy=false;btn.disabled=false;btn.textContent='Entrar a mi cuenta';}
@@ -279,7 +230,7 @@ login.addEventListener('submit',async e=>{
 $('resetPassword').addEventListener('click',async()=>{
  loginError.textContent='';const email=$('loginEmail').value.trim().toLowerCase();
  if(!emailRe.test(email)){loginError.textContent='Escribe primero tu correo para solicitar la recuperación.';return;}
- try{if(!firebaseEnabled)throw new Error('Firebase no configurado.');const f=await getFirebaseAuth();await f.Auth.sendPasswordResetEmail(f.auth,email);
+ try{if(!firebaseEnabled)throw new Error('Firebase no configurado.');const f=await getFirebase();await f.Auth.sendPasswordResetEmail(f.auth,email);
    loginError.textContent='Si el correo corresponde a una cuenta, recibirás instrucciones para restablecer tu contraseña.';
  }catch(e){loginError.textContent=errText(e);}
 });

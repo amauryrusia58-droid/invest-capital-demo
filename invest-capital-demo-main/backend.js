@@ -1,27 +1,24 @@
 import {firebaseConfig, firebaseEnabled, ADMIN_EMAIL} from './firebase-config.js';
 let firebaseCache;
 export {firebaseEnabled, ADMIN_EMAIL};
-let authCache;
-export function getFirebaseAuth(){
- if(!firebaseEnabled)return Promise.resolve(null);
- if(!authCache)authCache=(async()=>{
-   const [App,Auth]=await Promise.all([
-     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
-     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js')
-   ]);
-   const app=App.getApps().length?App.getApp():App.initializeApp(firebaseConfig);
-   const auth=Auth.getAuth(app);
-   await Auth.setPersistence(auth,Auth.browserSessionPersistence);
-   return {app,auth,Auth};
- })().catch(error=>{authCache=undefined;throw error;});
- return authCache;
-}
 export async function getFirebase(){
- if(!firebaseEnabled)return null;
- if(!firebaseCache)firebaseCache=Promise.all([
-   getFirebaseAuth(),import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
- ]).then(([base,Store])=>({...base,Store,db:Store.getFirestore(base.app)}))
-   .catch(error=>{firebaseCache=undefined;throw error;});
+ if(!firebaseEnabled) return null;
+ if(firebaseCache) return firebaseCache;
+ firebaseCache=(async()=>{
+   const [{initializeApp,getApps,getApp},Auth,Store]=await Promise.all([
+     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
+     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js'),
+     import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
+   ]);
+   const app=getApps().length?getApp():initializeApp(firebaseConfig);
+   const auth=Auth.getAuth(app);
+   // Cuenta administrador y usuario en distintas pestañas del mismo navegador.
+   // Firebase por defecto usa persistencia LOCAL compartida, que sustituye
+   // una cuenta al iniciar otra. SESSION separa el inicio de sesión por pestaña.
+   // La primera migración puede requerir volver a iniciar sesión una vez.
+   await Auth.setPersistence(auth,Auth.browserSessionPersistence);
+   return {app,auth,db:Store.getFirestore(app),Auth,Store};
+ })().catch(error=>{firebaseCache=undefined;throw error;});
  return firebaseCache;
 }
 async function authUser(auth,Auth){return await new Promise((resolve,reject)=>{let off=()=>{};off=Auth.onAuthStateChanged(auth,u=>{off();resolve(u);},reject);});}
